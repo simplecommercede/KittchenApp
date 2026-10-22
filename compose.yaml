@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: kitchen
+      MARIADB_USER: kitchen
+      MARIADB_PASSWORD: local-kitchen-only
+      MARIADB_ROOT_PASSWORD: local-root-only
+    volumes:
+      - kitchen-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8087:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: kitchen
+      DB_USER: kitchen
+      DB_PASSWORD: local-kitchen-only
+      DEMO_PASSWORD: Stimbeck-Demo-2026!
+      APP_ENV: local
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  kitchen-db:
