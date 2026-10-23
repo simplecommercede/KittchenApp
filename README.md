@@ -6,12 +6,15 @@ Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, MariaDB 11.4. K
 
 ## Start mit Docker
 
+Voraussetzung: Docker Engine oder Docker Desktop muss laufen; Docker Compose ist erforderlich. Node.js und PHP müssen für diesen Weg nicht auf dem Host installiert sein. Port `127.0.0.1:8087` muss frei sein.
+
 ```sh
 docker compose up -d --build
-docker compose exec app php /var/www/html/api/migrate.php
+docker compose exec -T app php /var/www/html/api/migrate.php
+docker compose ps
 ```
 
-Öffnen: http://localhost:8087
+Die Migration ist beim ersten Start ein eigener, notwendiger Schritt. Danach die App unter http://127.0.0.1:8087/ öffnen. `db` sollte in `docker compose ps` als `healthy` erscheinen; `app` sollte laufen. Die Migration kann erneut ausgeführt werden und ergänzt bei bestehenden Datenbanken die Spalten für Tischaktivierung und Tischbesuche.
 
 Alle Demo-Zugänge verwenden **Stimbeck-Demo-2026!**:
 
@@ -26,10 +29,15 @@ Für parallele Rollen unterschiedliche Browserprofile oder private Fenster verwe
 
 ## Tests
 
-Nach dem Start und der Migration:
+Optional nach dem Start und der Migration; die Integrationstests benötigen Python 3 auf dem Host und schreiben Testdaten in die **lokale** Datenbank:
 
 ```sh
 python3 tests/integration.py
+```
+
+Für einen zusätzlichen Host-Build sind Node.js und npm erforderlich. Der Docker-Build führt denselben Frontend-Build bereits aus:
+
+```sh
 npm ci
 npm run build
 ```
@@ -65,6 +73,8 @@ Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Ve
 Enthalten sind Login, Rollen, Mehrfachrollen, Speisekarte, Bestellungen, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Archiv und grundlegende Adminanlage.
 
 Noch nicht enthalten: Mitarbeiter sperren/Rollen bearbeiten/Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Storno/Nachkorrektur, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, Kassensystem, automatisierte Deployment-/Backupjobs. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
+
+Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übernimmt Service die Tresenarbeiten und kann Getränkebons bis „Abholbereit“ bearbeiten. Dafür fehlen derzeit die stationsweite Anwesenheitserkennung und die entsprechende Freigabe; Details stehen in [UEBERGABE.md](UEBERGABE.md).
 
 ## Stoppen
 

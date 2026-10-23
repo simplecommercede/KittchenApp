@@ -13,6 +13,7 @@ Für Robin als Koch und das Serviceteam des Restaurants **Zum Stimbeck in Steinb
 - Service erkennt den Fortschritt und bestätigt die Abholung.
 - Abgeschlossene Bons bleiben zum Nachschlagen erhalten.
 - Anmeldung und Rollen: Service, Küche, Tresen, Admin; mehrere Rollen pro Mitarbeiter.
+- Geplante Vertretung: Ist kein Tresen-Mitarbeiter aktiv, aber Service online, übernimmt Service auch die Tresenarbeiten und bearbeitet die Getränkebons bis „Abholbereit“.
 - Bedienung auf iPad und Smartphone, große Schaltflächen für den Restaurantalltag.
 - Später eventuell Drag-and-drop, Probleme melden, Spracheingabe und Kassensystem. Das gehört nicht zum bisher fertigen Umfang.
 
@@ -217,6 +218,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 
 ### Priorität 2: Alltagstauglichkeit
 
+- **Service übernimmt den Tresen bei unbesetzter Station:** Anwesenheit/Verfügbarkeit der Tresen-Mitarbeiter und des Service verlässlich erfassen. Sobald kein Tresen aktiv und mindestens ein Service-Mitarbeiter online ist, sollen Service-Mitarbeiter die Tresenbons sehen und `new → working → ready` ausführen können. Die Bons bleiben der Station `bar` zugeordnet; ihre Bearbeitung und die Abholung müssen im Verlauf mit der handelnden Person nachvollziehbar sein. Sobald wieder ein Tresen aktiv ist, endet die automatische Vertretung für neue Aktionen. Mehrere gleichzeitig angemeldete Geräte, Verbindungsabbrüche und veraltete Anwesenheitsdaten bei der Freigabe prüfen und testen. **Noch nicht implementiert:** Der heutige Verbindungsstatus zeigt nur die Verbindung des eigenen Browsers; es gibt keine stationsweite Online-/Aktiv-Erkennung und Service darf Tresenbons derzeit nicht starten oder abholbereit melden.
 - Pro Benutzer existiert nur ein lokaler Entwurf. Tischwechsel nimmt den aktuellen Warenkorb mit zum anderen Tisch. Entwürfe pro Tisch oder eindeutige Wechselbestätigung entwickeln.
 - Entwurfzustand beim Benutzerwechsel vollständig zurücksetzen; lokale Entwürfe über Logout hinaus sind auf gemeinsam verwendeten Geräten bewusst zu behandeln.
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.
@@ -274,4 +276,4 @@ Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht a
 
 ## 11. Kopierbarer Startauftrag für die nächste KI
 
-> Lies zuerst UEBERGABE.md, README.md, tests/RESULTS.md und den tatsächlichen Code. Arbeite am vorhandenen React/TypeScript-, PHP- und MariaDB-Projekt weiter. Ziel ist der vorhandene Hetzner Managed Server; Supabase, Next.js und ein produktiver Node-Dienst sind nicht vorausgesetzt. Prüfe den Git- und Docker-Zustand, ohne vorhandene Daten zu löschen. Starte die App lokal nach Anleitung und führe Build sowie Integrationstests nur gegen eine lokale Testdatenbank aus. Übernimm die beschriebenen Rollen und den unabhängigen Workflow für Küche und Tresen. Priorisiere zunächst die unter „Priorität 1“ beschriebenen Zuverlässigkeitslücken und ergänze passende Regressionstests. Halte funktionierende Abläufe und die Gestaltung bei. Unterscheide geprüfte Ergebnisse, offene Annahmen und fehlende Funktionen. Dokumentiere Änderungen und den neuen Teststand. Führe kein produktives Deployment ohne konkreten Auftrag und geklärtes Ziel durch.
+> Lies zuerst UEBERGABE.md, README.md, tests/RESULTS.md und den tatsächlichen Code. Arbeite am vorhandenen React/TypeScript-, PHP- und MariaDB-Projekt weiter. Ziel ist der vorhandene Hetzner Managed Server; Supabase, Next.js und ein produktiver Node-Dienst sind nicht vorausgesetzt. Prüfe den Git- und Docker-Zustand, ohne vorhandene Daten zu löschen. Starte die App lokal nach Anleitung und führe Build sowie Integrationstests nur gegen eine lokale Testdatenbank aus. Übernimm die beschriebenen Rollen und den unabhängigen Workflow für Küche und Tresen. Plane auch die Service-Vertretung für einen unbesetzten Tresen gemäß Priorität 2 ein. Priorisiere zunächst die unter „Priorität 1“ beschriebenen Zuverlässigkeitslücken und ergänze passende Regressionstests. Halte funktionierende Abläufe und die Gestaltung bei. Unterscheide geprüfte Ergebnisse, offene Annahmen und fehlende Funktionen. Dokumentiere Änderungen und den neuen Teststand. Führe kein produktives Deployment ohne konkreten Auftrag und geklärtes Ziel durch.
