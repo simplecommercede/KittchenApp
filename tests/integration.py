@@ -417,6 +417,12 @@ class Workflow(unittest.TestCase):
         drink=next(m for m in menu if m['name']==name+' 250 ml');food=next(m for m in menu if m['name']=='Testspeise '+suffix)
         self.assertEqual((drink['station'],int(drink['straw'])),('bar',1))
         self.assertEqual(int(food['straw']),0)
+        edit={'id':int(drink['id']),'name':name,'category':'Tests','station':'bar','price':420,'volume_ml':400,'straw':False}
+        self.assertEqual(self.admin.call('admin_menu',{**edit,'volume_ml':None})[0],400)
+        self.assertEqual(self.admin.call('admin_menu',edit)[0],200)
+        _,menu=self.admin.call('menu');changed=next(m for m in menu if int(m['id'])==int(drink['id']))
+        self.assertEqual((changed['name'],int(changed['price']),int(changed['straw'])),(name+' 400 ml',420,0))
+        self.assertEqual(self.admin.call('admin_menu',{**edit,'id':999999})[0],404)
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
