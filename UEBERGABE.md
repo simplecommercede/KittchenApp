@@ -145,16 +145,22 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | GET `session` | Session und CSRF; ohne Anmeldung möglich |
 | POST `login` | `username`, `password` |
 | POST `logout` | Leeres JSON-Objekt; angemeldet |
-| GET `menu` | Aktive Speisekarte; angemeldet |
+| GET `menu` | Speisekarte einschließlich temporär deaktivierter Produkte; angemeldet |
 | GET `tables` | Tische; angemeldet |
+| GET `table_status` | Offene Tischbesuche, Warte- und Zahlungsstatus; Service/Admin |
+| GET `table_bill&table_id=…` | Bestellungen, Positionen, Preis-Snapshots und Zahlbetrag eines Tischbesuchs; Service/Admin |
 | GET `tickets` | Aktive Bons plus `server_time`; nach Rollen gefiltert |
-| GET `tickets&archive=1` | Abgeholte Bons mit `events` |
+| GET `tickets&archive=1` | Abgeholte und stornierte Bons mit `events` |
 | POST `order` | `request_key`, `table_id`, `note`, `items`; Service/Admin |
+| POST `order_cancel` | `order_id`, `reason`; vollständiges Storno vor Zahlung; Service/Admin |
+| POST `table_paid` | `visit_id`, `expected_total`; manuelle Bestätigung nach Abholung aller Bons; Service/Admin |
 | POST `status` | `id`, `status`; rollen- und transitionsabhängig |
 | GET `admin_users` | Benutzer ohne Passwort-Hashes; Admin |
 | POST `admin_user` | Neuen Benutzer anlegen; `name`, `username`, `password`, `roles` |
 | POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price` |
+| POST `admin_menu_status` | Produkt temporär aktivieren/deaktivieren; Admin |
 | POST `admin_table` | Tisch anlegen/umbenennen; `id`, `name` |
+| POST `admin_table_status` | Tisch aktivieren/deaktivieren; Admin |
 
 Beispielbestellung (Kennung für jede neue Bestellung neu erzeugen; für unveränderten Retry beibehalten):
 
@@ -219,14 +225,14 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 ### Priorität 2: Alltagstauglichkeit
 
 - **Service übernimmt den Tresen bei unbesetzter Station:** Anwesenheit/Verfügbarkeit der Tresen-Mitarbeiter und des Service verlässlich erfassen. Sobald kein Tresen aktiv und mindestens ein Service-Mitarbeiter online ist, sollen Service-Mitarbeiter die Tresenbons sehen und `new → working → ready` ausführen können. Die Bons bleiben der Station `bar` zugeordnet; ihre Bearbeitung und die Abholung müssen im Verlauf mit der handelnden Person nachvollziehbar sein. Sobald wieder ein Tresen aktiv ist, endet die automatische Vertretung für neue Aktionen. Mehrere gleichzeitig angemeldete Geräte, Verbindungsabbrüche und veraltete Anwesenheitsdaten bei der Freigabe prüfen und testen. **Noch nicht implementiert:** Der heutige Verbindungsstatus zeigt nur die Verbindung des eigenen Browsers; es gibt keine stationsweite Online-/Aktiv-Erkennung und Service darf Tresenbons derzeit nicht starten oder abholbereit melden.
-- Pro Benutzer existiert nur ein lokaler Entwurf. Tischwechsel nimmt den aktuellen Warenkorb mit zum anderen Tisch. Entwürfe pro Tisch oder eindeutige Wechselbestätigung entwickeln.
+- Pro Benutzer existiert nur ein lokaler Entwurf. Ein Tischwechsel mit ungesendetem Warenkorb verlangt inzwischen eine Bestätigung und verwirft den Entwurf; getrennte Entwürfe pro Tisch fehlen weiterhin.
 - Entwurfzustand beim Benutzerwechsel vollständig zurücksetzen; lokale Entwürfe über Logout hinaus sind auf gemeinsam verwendeten Geräten bewusst zu behandeln.
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.
 - Mitarbeiter bearbeiten/sperren, Rollen ändern und Passwortverfahren ergänzen; Schutz vor Aussperren des letzten Admins.
-- Menü bearbeiten/deaktivieren: Backend kann bereits per `id` aktualisieren, Oberfläche kann bisher nur hinzufügen. Kein Deaktivierungs-Endpunkt vorhanden.
+- Menü bearbeiten: Backend kann bereits per `id` aktualisieren, die Oberfläche kann hinzufügen und Produkte temporär deaktivieren oder aktivieren; weitere Bearbeitung fehlt.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
-- Storno, Korrekturen, Nachbestellungen und Fehlerfälle mit nachvollziehbaren Events definieren. Keine stillen Löschungen historischer Bons.
+- Vollständiges Storno einer unbezahlten Bestellung mit Grund und Event ist umgesetzt. Teilstorno, Positionskorrekturen und nachträgliche Fehlerfälle fehlen; historische Bons dürfen nicht still gelöscht werden.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
 ### Priorität 3: Wartbarkeit, Tests und Betrieb
