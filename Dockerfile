@@ -4,6 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY tsconfig.json index.html ./
 COPY frontend ./frontend
+COPY public ./public
 RUN npm run build
 FROM php:8.4-apache
 RUN docker-php-ext-install pdo_mysql
