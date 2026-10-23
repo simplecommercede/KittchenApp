@@ -4,7 +4,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 ## 0. Aktueller Stand auf einen Blick (23.10.2026)
 
-**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen. `sh tests/run.sh`: 23 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
+**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen. `sh tests/run.sh`: 24 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
@@ -14,7 +14,6 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 | Punkt | Art |
 | --- | --- |
-| Service-Vertretung für unbesetzten Tresen (Service sieht und bearbeitet Getränkebons, wenn kein Tresen online ist) | Ablauf |
 | Unklarer Sendestatus: nach einem Sendefehler Entwurf und Kennung festhalten und klar anzeigen | Ablauf |
 | Getrennte Entwürfe pro Tisch statt eines Entwurfs pro Person | Ablauf |
 | Archiv: feste Dauer bis Abholung statt weiterlaufendem Timer; Suche und Filter nach Datum/Tisch | Ablauf |
@@ -149,7 +148,7 @@ Die zwei großen Implementierungsdateien wurden aus Zeitgründen kompakt geschri
 
 | Tabelle | Inhalt |
 | --- | --- |
-| `users` | Name, eindeutiger Benutzername, Passwort-Hash, JSON-Rollen, Aktiv-Flag |
+| `users` | Name, eindeutiger Benutzername, Passwort-Hash, JSON-Rollen, Aktiv-Flag, zuletzt gesehen und offene Ansicht (für die Tresen-Vertretung) |
 | `menu` | Gerichte/Getränke, Kategorie, Station, Preis in Cent, Aktiv-Flag, Strohhalm-Option |
 | `dining_tables` | Tischnummer, Anzeigename und Aktiv-Flag |
 | `orders` | Eindeutige Anfragekennung, Tisch, Serviceperson, Gesamtnotiz, Eingangszeit |
@@ -186,7 +185,7 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | GET `tables` | Tische; angemeldet |
 | GET `table_status` | Offene Tischbesuche, Warte- und Zahlungsstatus; Service/Admin |
 | GET `table_bill&table_id=…` | Bestellungen, Positionen, Preis-Snapshots und Zahlbetrag eines Tischbesuchs; Service/Admin |
-| GET `tickets` | Aktive Bons plus `server_time`; nach Rollen gefiltert |
+| GET `tickets` | Aktive Bons, Stornohinweise, `bar_cover` und `server_time`; nach Rollen gefiltert. Optional `view` (`service`, `kitchen`, `bar`, `admin`) meldet die offene Ansicht für die Tresen-Anwesenheit |
 | GET `tickets&archive=1` | Abgeholte und stornierte Bons mit `events` |
 | POST `station_alert_ack` | `id`; gestarteten oder abholbereiten Stornohinweis an der zuständigen Station quittieren |
 | GET `payments` | Rücknehmbare jüngste Zahlungsbestätigungen und protokollierter Zahlungsverlauf; Service/Admin |
@@ -248,7 +247,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 23 Integrationstests erfolgreich (zuletzt ergänzt: Getränke mit Portionsgrößen, Anfragegröße, Bon-Rückstau, Login-Limit pro Adresse). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 24 Integrationstests erfolgreich (zuletzt ergänzt: Service-Vertretung für den unbesetzten Tresen). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -273,7 +272,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 
 ### Priorität 2: Alltagstauglichkeit
 
-- **Service übernimmt den Tresen bei unbesetzter Station:** Anwesenheit/Verfügbarkeit der Tresen-Mitarbeiter und des Service verlässlich erfassen. Sobald kein Tresen aktiv und mindestens ein Service-Mitarbeiter online ist, sollen Service-Mitarbeiter die Tresenbons sehen und `new → working → ready` ausführen können. Die Bons bleiben der Station `bar` zugeordnet; ihre Bearbeitung und die Abholung müssen im Verlauf mit der handelnden Person nachvollziehbar sein. Sobald wieder ein Tresen aktiv ist, endet die automatische Vertretung für neue Aktionen. Mehrere gleichzeitig angemeldete Geräte, Verbindungsabbrüche und veraltete Anwesenheitsdaten bei der Freigabe prüfen und testen. **Noch nicht implementiert:** Der heutige Verbindungsstatus zeigt nur die Verbindung des eigenen Browsers; es gibt keine stationsweite Online-/Aktiv-Erkennung und Service darf Tresenbons derzeit nicht starten oder abholbereit melden.
+- **Service übernimmt den Tresen bei unbesetzter Station:** Umgesetzt am 23.10.2026. Jede Ansicht meldet beim Abruf der Bons (`tickets&view=…`) ihre offene Ansicht; der Server speichert `users.last_seen` und `users.last_view`. Der Tresen gilt als besetzt, solange ein aktiver Zugang mit Tresen- oder Admin-Rolle in den letzten 30 Sekunden die Tresen-Ansicht offen hatte; Abmelden beendet das sofort. Ist er nicht besetzt, liefert `tickets` für Service `bar_cover: true`: Service sieht einen Hinweis, darf Getränkebons `new → working → ready` setzen und Stornohinweise des Tresens quittieren. Die Bons bleiben der Station `bar` zugeordnet, der Verlauf zeigt die handelnde Person. Sobald der Tresen wieder besetzt ist, lehnt der Server neue Vertretungsaktionen mit 403 ab. Offen: Ein Admin in der Tresen-Ansicht zählt als besetzt; ein Tresen-Mitarbeiter, der nur angemeldet ist, aber eine andere Ansicht offen hat, nicht. Mehrere Geräte und Verbindungsabbrüche sind nur über die 30-Sekunden-Grenze abgedeckt, nicht auf echten Geräten geprüft.
 - Pro Benutzer existiert nur ein lokaler Entwurf. Ein Tischwechsel mit ungesendetem Warenkorb verlangt inzwischen eine Bestätigung und verwirft den Entwurf; getrennte Entwürfe pro Tisch fehlen weiterhin.
 - Entwurfzustand beim Benutzerwechsel vollständig zurücksetzen; lokale Entwürfe über Logout hinaus sind auf gemeinsam verwendeten Geräten bewusst zu behandeln.
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.

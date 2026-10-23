@@ -94,3 +94,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `sh tests/run.sh`: 23 Tests erfolgreich. Neu: `test_20` (über 64 KB → 413, zu tief verschachteltes JSON → 400, gültige Bestellung weiter 201), `test_21` (101 Bestellungen mit je zwei Bons; über 200 aktive Bons, die neueste Bestellung ist bei Service und Küche sichtbar), `test_22` (Fehlversuche mit wechselnden Namen führen zur Sperre der Adresse, auch ein gültiger Login bekommt dann 429; Einträge älter als ein Tag werden gelöscht; danach Aufräumen).
 - Gegenprobe: Mit dem vorherigen API-Code schlagen `test_20`, `test_21` und `test_22` fehl.
 - Migration auf der lokalen Datenbank ergänzte `login_attempts.updated_at`.
+
+## Service-Vertretung für den unbesetzten Tresen, 23.10.2026
+
+- `sh tests/run.sh`: 24 Tests erfolgreich. Neu `test_23`: Hat der Tresen seine Ansicht offen, bekommt Service 403 beim Starten eines Getränkebons und `bar_cover: false`. Nach 1 Minute ohne Tresen-Abruf: `bar_cover: true`, Service setzt den Bon auf In Arbeit, Abholbereit und Abgeholt; der Bon bleibt `bar`, der Verlauf zeigt „Mia“. Küchenbons bleiben gesperrt (403). Ein später Storno eines vertretenen Getränks erzeugt einen Hinweis, den Service quittieren kann. Ist der Tresen zurück, gibt es wieder 403 für Service, der Tresen selbst darf weiterarbeiten.
+- Migration auf der lokalen Datenbank ergänzte `users.last_seen` und `users.last_view`.
+- Browserprüfung als `mia` ohne Probebestellung: Hinweis „Tresen ist gerade nicht besetzt …“ erscheint. Nach simulierter Tresen-Anwesenheit (per SQL) verschwand er innerhalb von 3 Sekunden; die Simulation wurde danach zurückgesetzt.

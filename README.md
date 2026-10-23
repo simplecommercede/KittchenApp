@@ -48,7 +48,7 @@ Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und sc
 
 1. Als `mia` Tisch wählen und „Bestellung aufnehmen“ öffnen. Nur dann erscheinen Speisekarte und Entwurf. Die Karte ist in „Getränke“ und „Speisen“ getrennt und alphabetisch sortiert. Bei Getränken mit mehreren Größen wird nach dem Antippen die Menge in ml gewählt.
 2. Positionen und Sonderwünsche eintragen; bei alkoholfreien Getränken für Kinder (Softgetränke, Säfte, Schorlen) lässt sich optional „Mit Strohhalm“ antippen. Fehler im noch nicht gesendeten Entwurf direkt an der Position korrigieren: Produkt austauschen, Menge ändern oder Position entfernen. Danach Bestellung senden. Jede gesendete Bestellung erhält eine eigene Nummer; ein atomarer Datenbankvorgang erzeugt separate Küchen- und Tresenbons.
-3. Als `robin` bzw. `tresen` Bon starten und abholbereit melden.
+3. Als `robin` bzw. `tresen` Bon starten und abholbereit melden. Ist niemand mit Tresen-Rolle in der Tresen-Ansicht (30 Sekunden ohne Abruf oder abgemeldet), zeigt die Service-Ansicht „Tresen ist gerade nicht besetzt“; Service kann dann Getränkebons starten, abholbereit melden und Stornohinweise des Tresens quittieren. Sobald der Tresen wieder da ist, endet die Vertretung.
 4. Service bestätigt die Abholung. Unter „Kassieren“ stehen alle noch zu bezahlenden Speisen und Getränke des Tischbesuchs nach Bestellnummer mit Preisen. Nach Abholung aller Bons kann Service den angezeigten Gesamtbetrag als bezahlt markieren.
 5. Unter „Kassieren“ können Positionen mit Grund ergänzt, korrigiert oder einzeln entfernt werden. Auch die Bestellnotiz ist änderbar. Nachträge und Ersatzpositionen erscheinen als neue Bons bei Küche oder Tresen unter derselben Bestellnummer. Entfernte Positionen bleiben im Änderungsverlauf sichtbar und zählen nicht mehr zum Zahlbetrag. Eine ganze unbezahlte Bestellung kann weiterhin mit Grund storniert werden. Nach der Zahlungsbestätigung sind Änderungen gesperrt.
    Wird ein bereits gestarteter oder abholbereiter Bon ganz oder positionsweise storniert, erscheint ein Hinweis in der betroffenen Küche oder am Tresen. Die Station quittiert ihn mit „Storno gesehen“; bis dahin kann ein betroffener aktiver Bon nicht weiter auf „Abholbereit“ oder „Abgeholt“ gesetzt werden.
@@ -75,11 +75,9 @@ Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Ve
 
 ## Umfang dieser ersten Version
 
-Enthalten sind Login mit Sperre pro Benutzer und Adresse, Rollen, Mehrfachrollen, Speisekarte aus der gedruckten Karte mit Pflege im Admin (Getränke mit Portionsgrößen und Preis je Größe), Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund und Stationsquittierung bei späten Stornos, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung samt protokollierter Rücknahme, Archiv und grundlegende Adminanlage.
+Enthalten sind Login mit Sperre pro Benutzer und Adresse, Rollen, Mehrfachrollen, Speisekarte aus der gedruckten Karte mit Pflege im Admin (Getränke mit Portionsgrößen und Preis je Größe), Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund und Stationsquittierung bei späten Stornos, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung samt protokollierter Rücknahme, Service-Vertretung für den unbesetzten Tresen, Archiv und grundlegende Adminanlage.
 
 Noch nicht enthalten: Passwort zurücksetzen in der Oberfläche, Löschen von Produkten (nur Deaktivieren), Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Zahlungsbestätigung und Rücknahme ändern nur den manuell erfassten Status; sie verarbeiten weder Zahlung noch echte Erstattung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
-
-Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übernimmt Service die Tresenarbeiten und kann Getränkebons bis „Abholbereit“ bearbeiten. Dafür fehlen derzeit die stationsweite Anwesenheitserkennung und die entsprechende Freigabe; Details stehen in [UEBERGABE.md](UEBERGABE.md).
 
 ## Stoppen
 
