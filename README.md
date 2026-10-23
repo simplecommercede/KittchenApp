@@ -1,6 +1,6 @@
 # Zum Stimbeck · Kitchen Manager
 
-Für die Weiterentwicklung mit einer anderen Person oder KI zuerst [UEBERGABE.md](UEBERGABE.md) lesen.
+Für die Weiterentwicklung mit einer anderen Person oder KI zuerst [UEBERGABE.md](UEBERGABE.md) lesen; Abschnitt 0 dort zeigt den aktuellen Stand und die offenen Punkte.
 
 Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, MariaDB 11.4. Keine externen Backenddienste. Die Speisekarte stammt aus `speisekarte/Zum Stimbeck - Speisekarte.pdf` (Stand 07.09.2026) und wird bei leerer Datenbank aus [api/speisekarte.php](api/speisekarte.php) eingespielt.
 
@@ -42,7 +42,7 @@ npm ci
 npm run build
 ```
 
-Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben nur in die Testdatenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Positionskorrekturen, Zahlbetrag, Validierung, Adminfunktionen, Logout und Login-Drosselung. Ohne `TEST_URL` zielen sie auf Port 8088, nie auf die lokale App. Nicht gegen Produktion ausführen.
+Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben nur in die Testdatenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Positionskorrekturen, Zahlbetrag, Validierung, Adminfunktionen inkl. Kartenpflege, Logout, Login-Drosselung pro Benutzer und Adresse, Anfragegröße, Bon-Rückstau, UTC-Zeitbasis und Datenbankausfall. Ohne `TEST_URL` zielen sie auf Port 8088, nie auf die lokale App. Nicht gegen Produktion ausführen.
 
 ## Bedienung
 
@@ -75,9 +75,9 @@ Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Ve
 
 ## Umfang dieser ersten Version
 
-Enthalten sind Login, Rollen, Mehrfachrollen, Speisekarte, Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund und Stationsquittierung bei späten Stornos, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung samt protokollierter Rücknahme, Archiv und grundlegende Adminanlage.
+Enthalten sind Login mit Sperre pro Benutzer und Adresse, Rollen, Mehrfachrollen, Speisekarte aus der gedruckten Karte mit Pflege im Admin (Getränke mit Portionsgrößen und Preis je Größe), Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund und Stationsquittierung bei späten Stornos, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung samt protokollierter Rücknahme, Archiv und grundlegende Adminanlage.
 
-Noch nicht enthalten: Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Zahlungsbestätigung und Rücknahme ändern nur den manuell erfassten Status; sie verarbeiten weder Zahlung noch echte Erstattung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
+Noch nicht enthalten: Passwort zurücksetzen in der Oberfläche, Löschen von Produkten (nur Deaktivieren), Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Zahlungsbestätigung und Rücknahme ändern nur den manuell erfassten Status; sie verarbeiten weder Zahlung noch echte Erstattung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
 
 Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übernimmt Service die Tresenarbeiten und kann Getränkebons bis „Abholbereit“ bearbeiten. Dafür fehlen derzeit die stationsweite Anwesenheitserkennung und die entsprechende Freigabe; Details stehen in [UEBERGABE.md](UEBERGABE.md).
 

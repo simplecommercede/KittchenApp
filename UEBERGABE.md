@@ -2,6 +2,31 @@
 
 Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde Person und ihre KI. Sie beschreibt den tatsächlich vorhandenen Stand, die ursprüngliche Absicht und offene Arbeiten. Bei Abweichungen zuerst den aktuellen Code prüfen; Aussagen zu Testergebnissen sind historische Ergebnisse, keine Garantie für spätere Änderungen.
 
+## 0. Aktueller Stand auf einen Blick (23.10.2026)
+
+**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen. `sh tests/run.sh`: 23 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
+
+**Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
+
+**Offen, nach Dringlichkeit:**
+
+| Priorität | Punkt | Art |
+| --- | --- | --- |
+| 1 | Gleiche Bestellkennung mit anderem Inhalt wird still als Duplikat beantwortet (Payload-Fingerabdruck fehlt) | Code |
+| 1 | Unklarer Sendestatus im Frontend (Kennung festhalten, Status abfragen) | Code |
+| 1 | Passwörter nur bis 72 Byte wirksam (bcrypt), Formular erlaubt 200 | Code |
+| 1 | `admin_menu` akzeptiert weiter Getränke und Stationswechsel und umgeht so `admin_drink` | Code |
+| 1 | Unsichtbare Unicode-Steuerzeichen in Notizen/Namen können Bons optisch verfälschen | Code |
+| 2 | Login-Sperre pro Adresse trifft im Restaurant-WLAN alle Geräte gemeinsam (30 Fehlversuche/15 Min.) | Entscheidung: Grenze beibehalten, erhöhen oder WLAN-Adresse ausnehmen |
+| 2 | Abgelaufene Sitzung bei POST führt zu 403 statt zur Anmeldung | Code |
+| 2 | Service-Vertretung für unbesetzten Tresen | Funktion |
+| 2 | 6 Longdrinks ohne ml-Angabe; beim ersten Bearbeiten Pflicht | Daten, von Robin zu klären |
+| 2 | Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu bestätigen |
+| Deployment | Auf Hetzner `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen; die App prüft erst nach dem Einlesen | Serverkonfiguration (siehe Abschnitt 9) |
+| 3 | Browser-Testsuite, Polling mit Backoff, Code aufteilen, versionierte Migrationen | Wartbarkeit |
+
+Details stehen in Abschnitt 8 und 9, die Testhistorie in `tests/RESULTS.md`.
+
 ## 1. Auftrag und Produktziel
 
 Für Robin als Koch und das Serviceteam des Restaurants **Zum Stimbeck in Steinbeck an der Luhe** soll eine gemeinsame deutschsprachige SPA entstehen:
@@ -39,7 +64,7 @@ Frühere Vorschläge mit Next.js, Supabase, PostgreSQL oder SSE wurden durch die
 
 Das gesamte Projektverzeichnis übergeben, einschließlich `package-lock.json`, `api/`, `frontend/`, `tests/` und der Dokumentation. `node_modules/` und `dist/` müssen nicht übertragen werden. Die Designbilder unter `output/` helfen beim visuellen Weiterarbeiten.
 
-Das Projekt wird mit einem Initial-Commit auf dem Branch `main` im Repository https://github.com/simplecommercede/KittchenApp verwaltet. Zum Übernehmen das Repository klonen; lokale Abhängigkeiten, Buildausgaben und Docker-Datenbankvolumes sind nicht Bestandteil des Repositories.
+Das Projekt wird auf dem Branch `main` im Repository https://github.com/simplecommercede/KittchenApp verwaltet. Zum Übernehmen das Repository klonen; lokale Abhängigkeiten, Buildausgaben und Docker-Datenbankvolumes sind nicht Bestandteil des Repositories.
 
 Voraussetzungen: Docker Engine mit Compose; für Tests auf dem Host Python 3, für lokalen Frontend-Build Node.js/npm. Im Docker-Build wird Node 22 verwendet.
 
@@ -96,13 +121,13 @@ Port 8087 ist an `127.0.0.1` gebunden. Ein physisches iPad im WLAN kann diese In
 | `api/index.php` | API-Router, Authentifizierung, Autorisierung, Validierung und Bestellworkflow |
 | `api/db.php` | PDO-Verbindung, vorbereitete SQL-Abfragen |
 | `api/migrate.php` | CLI-Schemaanlage; Speisekarte bei leerer Tabelle; nur bei `APP_ENV=local` Demo-Konten und Tische 1–12 |
-| `api/speisekarte.php` | 99 Produkte der gedruckten Speisekarte mit Kategorie, Station und Preis |
+| `api/speisekarte.php` | 99 Produkte der gedruckten Speisekarte mit Kategorie, Station, Preis und Strohhalm-Kennzeichen; nur für die Erstbefüllung einer leeren Karte |
 | `api/create-admin.php` | CLI-Anlage eines initialen Administrators |
 | `Dockerfile` | Mehrstufiger Node-Build, danach PHP-Apache mit PDO MySQL |
 | `compose.yaml` | Lokale App, MariaDB, persistentes DB-Volume und Healthcheck |
 | `tests/integration.py` | HTTP-Integrationstests mit Python-Standardbibliothek |
 | `tests/run.sh` | Startet den getrennten Teststack `kittchenapp-test` auf Port 8088 mit `MENU_SEED=test` und räumt ihn danach ab |
-| `tests/RESULTS.md` | Dokumentierter erster Teststand |
+| `tests/RESULTS.md` | Chronologisches Protokoll aller Testläufe und Browserprüfungen |
 | `README.md` | Kurzanleitung, Betrieb und Funktionsumfang |
 | `output/designs/stimbeck-kueche.png` | Früher Bildentwurf Küche |
 | `output/designs/stimbeck-service.png` | Früher Bildentwurf Service |
@@ -166,7 +191,7 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | POST `admin_user` | Neuen Benutzer anlegen; `name`, `username`, `password`, `roles` |
 | POST `admin_user_update` | Namen, Benutzernamen und mehrere Rollen ändern; `id`, `name`, `username`, `roles`; Admin |
 | POST `admin_user_status` | Zugang entfernen oder wieder aktivieren; `id`, `active`; Admin. Historische Zuordnungen bleiben erhalten |
-| POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price`; bei `station=bar` zusätzlich Pflicht `volume_ml` (1–5000) und optional `straw`. Der Server hängt „ ml“ an den Namen an und lehnt Mengenangaben im Namen ab |
+| POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price`; bei `station=bar` zusätzlich Pflicht `volume_ml` (1–5000) und optional `straw`. Die Oberfläche nutzt es nur noch für Speisen; Getränke laufen über `admin_drink` (offener Punkt: `bar` hier sperren) |
 | POST `admin_drink` | Getränk mit allen Portionsgrößen gemeinsam anlegen oder ändern; `name` (ohne Menge), `category`, `straw`, `sizes` (1–6 × `volume_ml`, `price`, `active`, bei vorhandenen Größen `id`). Beim Ändern müssen alle vorhandenen Größen des Getränks mitgesendet werden; ein gleichnamiges anderes Getränk ergibt 409. Jede Größe bleibt eine eigene `menu`-Zeile „Name 300 ml“; Admin |
 | POST `admin_menu_status` | Produkt temporär aktivieren/deaktivieren; Admin |
 | POST `admin_table` | Tisch anlegen/umbenennen; `id`, `name` |
@@ -214,7 +239,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 18 Integrationstests erfolgreich (zuletzt ergänzt: Passwort-Leerzeichen, UTC-Zeitbasis, DB-Ausfall). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 23 Integrationstests erfolgreich (zuletzt ergänzt: Getränke mit Portionsgrößen, Anfragegröße, Bon-Rückstau, Login-Limit pro Adresse). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -228,6 +253,9 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 
 - **Unklarer Sendestatus:** Nach verlorener Antwort darf dieselbe Bestellung nur mit unveränderter Kennung erneut gesendet werden. Momentan erzeugt jede Entwurfsänderung eine neue Kennung. Bearbeitung nach einem möglicherweise bereits erfolgreichen Senden kann deshalb eine zweite Bestellung erzeugen. Einen expliziten Zustand „Sendestatus unklar“ mit serverseitiger Abfrage und festgehaltener Kennung einführen und testen.
 - **Kennung mit verändertem Inhalt:** Das Backend vergleicht bei vorhandener Kennung Benutzer, aber keinen Payload-Hash. Abweichende Wiederholungen sollten klar als Konflikt abgewiesen werden.
+- **Passwortlänge:** bcrypt wertet nur die ersten 72 Byte aus (im Container nachgeprüft); Login und Adminformular erlauben 200. Auf höchstens 72 Byte begrenzen.
+- **`admin_menu` und Getränke:** Der Endpunkt nimmt weiter `station=bar` an und kann so eine einzelne Getränkegröße umbenennen (Getränk zerfällt) oder die Station eines Produkts wechseln. Auf Speisen beschränken und Station beim Ändern sperren.
+- **Steuerzeichen in Freitexten:** Notizen, Gründe und Namen dürfen unsichtbare Unicode-Steuerzeichen (z. B. Richtungsumkehr) enthalten. In `shortText()` ablehnen.
 - **Gleichzeitige identische Anfragen:** Unique Constraint verhindert doppelte Speicherung; bei einem Rennen kann die zweite Anfrage 409 statt derselben Erfolgsantwort bekommen. Mit echter Parallelität testen und gewünschte Retry-Semantik festlegen.
 - **Session-Ablauf:** Erledigt am 23.10.2026: HTTP 401 außerhalb des Logins setzt die Oberfläche zurück, zeigt „Sitzung beendet …“ und holt einen neuen CSRF-Token; der lokale Entwurf bleibt erhalten. Offen: POST-Anfragen mit abgelaufener Session scheitern zuerst an der CSRF-Prüfung (403) und führen noch nicht automatisch zum Login.
 - **Zeitbasis:** Erledigt am 23.10.2026: `db.php` setzt PHP auf UTC und jede DB-Session auf `time_zone='+00:00'`, sodass `NOW()`, `CURRENT_TIMESTAMP` und `UTC_TIMESTAMP()` übereinstimmen. Vorhandene Daten wurden nicht umgerechnet; auf Hetzner vor dem ersten Einsatz ist das unkritisch.
@@ -254,8 +282,9 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Automatisierte Browser-/Mobile-Tests ergänzen. Getrennte Testdatenbank und Aufräumen erledigt `tests/run.sh`.
 - Polling ohne überlappende Requests, mit Timeout, Backoff und Schutz gegen veraltete Antworten implementieren.
 - Katalogänderungen werden alle zehn Sekunden abgefragt; verzögerte Updates und Konflikte beim Bestellen prüfen.
-- CSP/Sicherheitsheader, Session-Lebensdauer, persistente Sessions und Monitoring vor Produktion prüfen. Login-Limit pro Adresse ist umgesetzt; im Restaurant-WLAN teilen sich alle Geräte eine Adresse, 30 Fehlversuche in 15 Minuten sperren dort also alle Anmeldungen für 15 Minuten.
-- Die API lehnt Anfragen über 64 KB (413) und JSON tiefer als 8 Ebenen (400) ab. PHP liest den Inhalt trotzdem zuerst bis `post_max_size` ein; auf Hetzner zusätzlich `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen.
+- CSP/Sicherheitsheader, Session-Lebensdauer, persistente Sessions und Monitoring vor Produktion prüfen.
+- **Offene Entscheidung Login-Limit:** Umgesetzt ist eine Sperre nach 30 Fehlversuchen pro Adresse in 15 Minuten. Im Restaurant-WLAN teilen sich alle Geräte eine Adresse; dort sperrt das alle neuen Anmeldungen für 15 Minuten (bestehende Sitzungen laufen weiter). Mit dem Betrieb klären: beibehalten, Grenze erhöhen oder die Restaurant-Adresse gesondert behandeln.
+- Die API lehnt Anfragen über 64 KB (413) und JSON tiefer als 8 Ebenen (400) ab. PHP liest den Inhalt aber zuerst bis `post_max_size` ein (lokal 8 MB). Das ist erst beim Deployment lösbar, siehe Abschnitt 9.
 - API lädt Positionen/Events pro Bon einzeln. Bei Bedarf gebündelte Abfragen und geeignete Indizes vorsehen.
 - Tablet-Layout, Touch-Ziele, Tastaturbedienung und Kontraste auf echten Geräten prüfen.
 - Installierbare PWA, Audio-/Pushhinweise und Drag-and-drop sind Erweiterungen, noch nicht vorhanden.
@@ -270,6 +299,7 @@ Vor Deployment klären:
 - SSH/SFTP-Zugang und CLI-PHP; sicherer Weg zur Konfiguration von Umgebungsvariablen für Web-PHP und CLI.
 - Datenbankhost/-name/-benutzer, Berechtigungen und Zeichensatz.
 - HTTPS, Zeitzone, Session-Speicherung, Fehlerlogs, Backups und Wiederherstellung.
+- Anfragegröße serverseitig begrenzen: `post_max_size` (z. B. 1M) bzw. Apache `LimitRequestBody` (z. B. 131072) für die Subdomain setzen, falls konsoleH das erlaubt. Die App weist größere Anfragen zwar mit 413 ab, kann das Einlesen aber nicht verhindern.
 
 Geplanter Weg:
 
@@ -291,7 +321,7 @@ Restaurantzuordnung und Inspiration:
 - https://www.bispingen.de/gastro/zum-stimbeck
 - https://www.tripadvisor.de/Restaurant_Review-g651860-d16948713-Reviews-Gaststatte_Zum_Stimbeck-Bispingen_Lower_Saxony.html
 
-Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht auslesen. Logo und Bildentwürfe sind keine verifizierten Originaldaten des Restaurants. Die Speisekarte in `api/speisekarte.php` wurde am 23.10.2026 aus der PDF unter `speisekarte/` übernommen. Annahmen dabei: jede Größe ist ein eigenes Produkt mit Mengenangabe in ml (z. B. „Coca-Cola 300 ml“, Spirituosen „20 ml“); Säfte gibt es laut Karte auch als Schorle (eigene Kategorie „Saftschorlen“); der Seniorenteller (−3,00 €) wurde für beide Schnitzel angelegt; vegane Patties/Würste, die Beilagenwahl beim Schnitzel und der inklusive Dip werden als Sonderwunsch erfasst, weitere Dips und Extras als eigene Produkte. Schreibweisen „Rhababer“ und „Ramazotti“ wurden zu „Rhabarber“ und „Ramazzotti“ korrigiert. In der Bestellaufnahme ist die Karte nur in „Getränke“ (Station `bar`) und „Speisen“ (Station `kitchen`) getrennt, ohne Kategoriefilter; sortiert wird alphabetisch nach Produktname. Ein Getränk mit mehreren Größen erscheint als eine Karte; nach dem Antippen wird die Menge in ml gewählt. In der Datenbank bleibt jede Größe ein eigenes Produkt (Name endet auf „… 300 ml“), daher bleiben Bons, Preise und Backend unverändert. Die Spalte `menu.straw` kennzeichnet Getränke mit der optionalen Schnellauswahl „Mit Strohhalm“: Softgetränke, Säfte und Saftschorlen, nicht Bier (auch nicht Malzbier), Wein, Longdrinks oder Spirituosen. Es gibt keine Pflichtabfrage; im Adminformular ist das Kennzeichen noch nicht einstellbar. Die Kategorien bleiben in der Datenbank erhalten. Vor realem Einsatz von Robin bestätigen lassen.
+Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht auslesen. Logo und Bildentwürfe sind keine verifizierten Originaldaten des Restaurants. Die Speisekarte in `api/speisekarte.php` wurde am 23.10.2026 aus der PDF unter `speisekarte/` übernommen. Annahmen dabei: Mengenangaben in ml (Spirituosen „20 ml“); intern ist jede Größe ein eigener Datensatz („Coca-Cola 300 ml“), im Admin und in der Bestellaufnahme erscheint ein Getränk aber als ein Eintrag mit seinen Größen; Säfte gibt es laut Karte auch als Schorle (eigene Kategorie „Saftschorlen“); der Seniorenteller (−3,00 €) wurde für beide Schnitzel angelegt; vegane Patties/Würste, die Beilagenwahl beim Schnitzel und der inklusive Dip werden als Sonderwunsch erfasst, weitere Dips und Extras als eigene Produkte. Schreibweisen „Rhababer“ und „Ramazotti“ wurden zu „Rhabarber“ und „Ramazzotti“ korrigiert. In der Bestellaufnahme ist die Karte nur in „Getränke“ (Station `bar`) und „Speisen“ (Station `kitchen`) getrennt, ohne Kategoriefilter; sortiert wird alphabetisch nach Produktname. Ein Getränk mit mehreren Größen erscheint als eine Karte; nach dem Antippen wird die Menge in ml gewählt. In der Datenbank bleibt jede Größe ein eigenes Produkt (Name endet auf „… 300 ml“), daher bleiben Bons, Preise und Backend unverändert. Die Spalte `menu.straw` kennzeichnet Getränke mit der optionalen Schnellauswahl „Mit Strohhalm“: Softgetränke, Säfte und Saftschorlen, nicht Bier (auch nicht Malzbier), Wein, Longdrinks oder Spirituosen. Es gibt keine Pflichtabfrage; im Admin wird das Kennzeichen pro Getränk gesetzt. Die Kategorien bleiben in der Datenbank erhalten. Vor realem Einsatz von Robin bestätigen lassen.
 
 ## 11. Kopierbarer Startauftrag für die nächste KI
 
