@@ -35,3 +35,10 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Docker-Produktionsbuild mit TypeScript-Prüfung und PHP-Syntaxprüfung erfolgreich.
 - `python3 tests/integration.py`: 13 Tests erfolgreich. Geprüft wurden Mehrfachrollen, Umbenennung, sofort wirksame Rollenänderung, Entfernen und Wiederaktivierung, gesperrte Anmeldung/Sitzung, erhaltene Zuordnung auf Bons sowie Schutz des eigenen und letzten Admin-Zugangs.
 - Mobile Browserprüfung: Bearbeiten, getrennte Rollenauswahl, Entfernen und Bereich für entfernte Mitarbeiter sichtbar; mehrere Rollen konnten im Formular gleichzeitig markiert werden. Die Probeänderung wurde verworfen.
+
+## Späte Stornos und Zahlungsrücknahme, 23.10.2026
+
+- Docker-Produktionsbuild mit TypeScript-Prüfung, PHP-Syntaxprüfung und Migration auf der lokalen Datenbank erfolgreich.
+- `python3 tests/integration.py`: 15 Tests erfolgreich. Neue Fälle prüfen Stornohinweise für bereits gestartete Positionen und Bons, Stationsrechte, Sperre bis zur Quittierung, einmalige Zahlungsrücknahme mit Pflichtgrund und Verlauf, erneute Zahlungsbestätigung sowie die Sperre bei einem neueren Tischbesuch.
+- Im In-App-Browser erschien die offene Stornoliste in der mobilen Küchenansicht. Nach „Storno gesehen“ sank der Zähler von drei auf zwei, und der quittierte Hinweis verschwand. Im Service konnte ein bezahlter, bereits deaktivierter Testtisch gewählt und das Rücknahmeformular geöffnet werden; ohne Grund blieb „Rücknahme bestätigen“ gesperrt. Das Formular wurde ohne Rücknahme geschlossen. Die Browserkonsole zeigte keine Fehler oder Warnungen. Keine echte Zahlung oder Erstattung wurde ausgelöst.
+- Die Browserprüfung erfolgte im vorhandenen In-App-Browser; eine automatisierte Browser-Suite und Tests auf einem physischen Tablet fehlen weiterhin.

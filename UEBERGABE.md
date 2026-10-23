@@ -152,6 +152,9 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | GET `table_bill&table_id=…` | Bestellungen, Positionen, Preis-Snapshots und Zahlbetrag eines Tischbesuchs; Service/Admin |
 | GET `tickets` | Aktive Bons plus `server_time`; nach Rollen gefiltert |
 | GET `tickets&archive=1` | Abgeholte und stornierte Bons mit `events` |
+| POST `station_alert_ack` | `id`; gestarteten oder abholbereiten Stornohinweis an der zuständigen Station quittieren |
+| GET `payments` | Rücknehmbare jüngste Zahlungsbestätigungen und protokollierter Zahlungsverlauf; Service/Admin |
+| POST `payment_reverse` | `visit_id`, `reason`; manuelle Zahlungsbestätigung des jüngsten Tischbesuchs zurücknehmen; Service/Admin |
 | POST `order` | `request_key`, `table_id`, `note`, `items`; Service/Admin |
 | POST `order_change` | `order_id`, `mode` (`add`, `replace`, `remove`, `note`), `request_key`, `reason` und je nach Modus `item_id`, `menu_id`, `quantity`, `note`; Service/Admin |
 | POST `order_cancel` | `order_id`, `reason`; vollständiges Storno vor Zahlung; Service/Admin |
@@ -208,7 +211,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 13 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen und Mitarbeiterverwaltung. Die mobile Kassen- und Adminansicht wurde im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 15 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -238,7 +241,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Menü bearbeiten: Backend kann bereits per `id` aktualisieren, die Oberfläche kann hinzufügen und Produkte temporär deaktivieren oder aktivieren; weitere Bearbeitung fehlt.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
-- Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Nachträgliche Fehlerfälle nach Zahlung und echte Erstattung fehlen.
+- Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
 ### Priorität 3: Wartbarkeit, Tests und Betrieb
