@@ -13,6 +13,8 @@ function user(): array { if(!isset($_SESSION['uid'])) fail('Bitte anmelden.',401
 function allows(array $u,string $role): bool {return in_array('admin',$u['roles'],true)||in_array($role,$u['roles'],true);}
 function need(array $u,string $role): void {if(!allows($u,$role)) fail('Keine Berechtigung.',403);}
 function shortText(mixed $v,int $max): string {if(!is_string($v)||strlen($v)>$max) fail('Ungültiger Text.');return trim($v);}
+function passwordText(mixed $v): string {if(!is_string($v)||strlen($v)>200) fail('Ungültiger Text.');return $v;}
+function rollbackQuietly(): void {try{$db=dbConnection(false);if($db?->inTransaction())$db->rollBack();}catch(Throwable){}}
 function positive(mixed $v,int $max=999999): int {if(!is_int($v)||$v<1||$v>$max) fail('Ungültige Zahl.');return $v;}
 function staffRoles(mixed $roles): array {if(!is_array($roles)||!$roles||count($roles)>4)fail('Mindestens eine gültige Rolle wählen.');foreach($roles as $role)if(!is_string($role)||!in_array($role,['admin','service','kitchen','bar'],true))fail('Ungültige Rolle.');return array_values(array_unique($roles));}
 function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
@@ -23,7 +25,7 @@ try {
  $_SESSION['csrf']??=bin2hex(random_bytes(32));
  if($action==='session' && $method==='GET') out(['csrf'=>$_SESSION['csrf'],'user'=>isset($_SESSION['uid'])?user():null]);
  if($action==='login' && $method==='POST') {
-  $username=shortText($body['username']??'',80); $password=shortText($body['password']??'',200);
+  $username=shortText($body['username']??'',80); $password=passwordText($body['password']??'');
   $key=hash('sha256',strtolower($username).'|'.($_SERVER['REMOTE_ADDR']??''));
   $attempt=query('SELECT * FROM login_attempts WHERE identity_hash=?',[$key])->fetch();
   if($attempt && $attempt['blocked_until'] && strtotime($attempt['blocked_until'])>time()) fail('Zu viele Versuche. Bitte später erneut versuchen.',429);
@@ -208,7 +210,7 @@ try {
  if(str_starts_with($action,'admin_')) {
   need($u,'admin');
   if($action==='admin_users' && $method==='GET'){ $rows=query('SELECT id,name,username,roles,active FROM users ORDER BY id')->fetchAll();foreach($rows as &$row)$row['roles']=json_decode($row['roles'],true);out($rows); }
-  if($action==='admin_user' && $method==='POST') {$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$password=shortText($body['password']??'',200);$roles=staffRoles($body['roles']??null);if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username)||strlen($password)<12)fail('Name, Benutzername und Passwort (min. 12 Zeichen) prüfen.');if(query('SELECT id FROM users WHERE username=?',[$username])->fetch())fail('Benutzername ist bereits vergeben.',409);query('INSERT INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash($password,PASSWORD_DEFAULT),json_encode($roles)]);out(['ok'=>true],201);}
+  if($action==='admin_user' && $method==='POST') {$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$password=passwordText($body['password']??'');$roles=staffRoles($body['roles']??null);if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username)||strlen($password)<12)fail('Name, Benutzername und Passwort (min. 12 Zeichen) prüfen.');if(query('SELECT id FROM users WHERE username=?',[$username])->fetch())fail('Benutzername ist bereits vergeben.',409);query('INSERT INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash($password,PASSWORD_DEFAULT),json_encode($roles)]);out(['ok'=>true],201);}
   if($action==='admin_user_update' && $method==='POST') {
    $id=positive($body['id']??null);$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$roles=staffRoles($body['roles']??null);
    if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username))fail('Name und Benutzername prüfen.');
@@ -234,4 +236,4 @@ try {
   if($action==='admin_table_status' && $method==='POST'){$id=positive($body['id']??null,999);$active=$body['active']??null;if(!is_bool($active))fail('Status prüfen.');if(!query('SELECT id FROM dining_tables WHERE id=?',[$id])->fetch())fail('Tisch nicht gefunden.',404);query('UPDATE dining_tables SET active=? WHERE id=?',[$active?1:0,$id]);out(['ok'=>true]);}
  }
  fail('Route nicht gefunden.',404);
-} catch(PDOException $e){if(db()->inTransaction())db()->rollBack();error_log($e->getMessage());if($e->getCode()==='23000')fail('Datensatz bereits vorhanden. Bei einer Bestellung bitte mit derselben Bestellkennung wiederholen.',409);fail('Datenbank vorübergehend nicht erreichbar.',503);}catch(Throwable $e){if(db()->inTransaction())db()->rollBack();error_log($e->getMessage());fail('Interner Fehler.',500);}
+} catch(PDOException $e){rollbackQuietly();error_log($e->getMessage());if($e->getCode()==='23000')fail('Datensatz bereits vorhanden. Bei einer Bestellung bitte mit derselben Bestellkennung wiederholen.',409);fail('Datenbank vorübergehend nicht erreichbar.',503);}catch(Throwable $e){rollbackQuietly();error_log($e->getMessage());fail('Interner Fehler.',500);}
