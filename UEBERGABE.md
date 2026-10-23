@@ -166,7 +166,7 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | POST `admin_user` | Neuen Benutzer anlegen; `name`, `username`, `password`, `roles` |
 | POST `admin_user_update` | Namen, Benutzernamen und mehrere Rollen ändern; `id`, `name`, `username`, `roles`; Admin |
 | POST `admin_user_status` | Zugang entfernen oder wieder aktivieren; `id`, `active`; Admin. Historische Zuordnungen bleiben erhalten |
-| POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price` |
+| POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price`; bei `station=bar` zusätzlich Pflicht `volume_ml` (1–5000) und optional `straw`. Der Server hängt „ ml“ an den Namen an und lehnt Mengenangaben im Namen ab |
 | POST `admin_menu_status` | Produkt temporär aktivieren/deaktivieren; Admin |
 | POST `admin_table` | Tisch anlegen/umbenennen; `id`, `name` |
 | POST `admin_table_status` | Tisch aktivieren/deaktivieren; Admin |
@@ -240,7 +240,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Entwurfzustand beim Benutzerwechsel vollständig zurücksetzen; lokale Entwürfe über Logout hinaus sind auf gemeinsam verwendeten Geräten bewusst zu behandeln.
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.
 - Mitarbeiter können bearbeitet, mit mehreren Rollen ausgestattet, entfernt und wieder aktiviert werden; der eigene und letzte Admin-Zugang sind gegen Entfernen geschützt. Passwortverfahren und Sitzungswiderruf nach Rollenänderung weiterentwickeln.
-- Menü bearbeiten: Backend kann bereits per `id` aktualisieren, die Oberfläche kann hinzufügen und Produkte temporär deaktivieren oder aktivieren; weitere Bearbeitung fehlt.
+- Menü bearbeiten: Die Oberfläche trennt Getränke und Speisen, legt Produkte an (Getränke mit Pflicht-ml und Strohhalm-Option) und deaktiviert oder aktiviert sie. Bestehende Produkte lassen sich in der Oberfläche noch nicht ändern (Name, Preis, Kategorie, Strohhalm), obwohl das Backend per `id` aktualisieren kann. Die Longdrinks haben laut Karte keine ml-Angabe; beim späteren Bearbeiten wäre dann eine Menge nötig.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
 - Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.

@@ -73,3 +73,8 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 
 - Strohhalm-Regel in Seed und Migration ohne Malzbier; lokale Datenbank einmalig per SQL korrigiert. Danach 38 Getränke mit Strohhalm-Option, Malzbier ohne.
 - PHP-Syntaxprüfung erfolgreich; `sh tests/run.sh`: 18 Tests erfolgreich.
+
+## Admin: Getränke und Speisen getrennt, 23.10.2026
+
+- `sh tests/run.sh`: 19 Tests erfolgreich. Neu `test_18`: Getränk ohne ml und mit Menge im Namen wird abgelehnt (400); mit `volume_ml` 250 entsteht „… 250 ml“ an der Station `bar` mit Strohhalm-Option; bei Speisen wird `straw` ignoriert.
+- Browserprüfung als `admin`: Speisekarte mit „Getränke“ und „Speisen“, Liste alphabetisch mit Kategorie und Strohhalm-Hinweis. Das Getränkeformular hat das Pflichtfeld „Menge in ml“ und „Strohhalm-Option (Kindergetränk)“, das Speisenformular beides nicht. In der lokalen Datenbank wurde nichts angelegt.
