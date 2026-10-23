@@ -14,6 +14,7 @@ function allows(array $u,string $role): bool {return in_array('admin',$u['roles'
 function need(array $u,string $role): void {if(!allows($u,$role)) fail('Keine Berechtigung.',403);}
 function shortText(mixed $v,int $max): string {if(!is_string($v)||strlen($v)>$max) fail('Ungültiger Text.');return trim($v);}
 function positive(mixed $v,int $max=999999): int {if(!is_int($v)||$v<1||$v>$max) fail('Ungültige Zahl.');return $v;}
+function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
 try {
  $action=$_GET['action']??'me'; $method=$_SERVER['REQUEST_METHOD'];
  $body=[];
@@ -57,8 +58,12 @@ try {
   if(!$visit)out(['table'=>$diningTable,'visit_id'=>null,'orders'=>[],'total'=>0,'pending_count'=>0,'can_pay'=>false]);
   $orders=query('SELECT o.id,o.created_at,o.note,o.cancelled_at,o.cancellation_reason,u.name AS server,c.name AS cancelled_by FROM orders o JOIN users u ON u.id=o.user_id LEFT JOIN users c ON c.id=o.cancelled_by WHERE o.visit_id=? ORDER BY o.id',[$visit['id']])->fetchAll();
   $index=[];foreach($orders as $position=>&$order){$order['id']=(int)$order['id'];$order['items']=[];$order['total']=0;$index[$order['id']]=$position;}unset($order);
-  foreach(query('SELECT o.id AS order_id,i.name,i.quantity,i.price,i.note,t.station,t.status FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? ORDER BY o.id,i.id',[$visit['id']])->fetchAll() as $item){
-   $orderId=(int)$item['order_id'];unset($item['order_id']);$item['quantity']=(int)$item['quantity'];$item['price']=(int)$item['price'];$position=$index[$orderId];$orders[$position]['items'][]=$item;$orders[$position]['total']+=$item['quantity']*$item['price'];
+  foreach(query('SELECT o.id AS order_id,i.id,i.menu_id,i.name,i.quantity,i.price,i.note,i.cancelled_at,i.cancellation_reason,t.station,t.status FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? ORDER BY o.id,i.id',[$visit['id']])->fetchAll() as $item){
+   $orderId=(int)$item['order_id'];unset($item['order_id']);foreach(['id','menu_id','quantity','price'] as $field)$item[$field]=(int)$item[$field];$position=$index[$orderId];$orders[$position]['items'][]=$item;if($item['cancelled_at']===null)$orders[$position]['total']+=$item['quantity']*$item['price'];
+  }
+  foreach($orders as &$order)$order['changes']=[];unset($order);
+  foreach(query('SELECT c.order_id,c.action,c.reason,c.before_state,c.after_state,c.created_at,u.name AS actor FROM order_changes c JOIN orders o ON o.id=c.order_id JOIN users u ON u.id=c.user_id WHERE o.visit_id=? ORDER BY c.id',[$visit['id']])->fetchAll() as $change){
+   $position=$index[(int)$change['order_id']];unset($change['order_id']);$change['before_state']=$change['before_state']?json_decode($change['before_state'],true):null;$change['after_state']=$change['after_state']?json_decode($change['after_state'],true):null;$orders[$position]['changes'][]=$change;
   }
   $total=0;$activeCount=0;foreach($orders as $order)if($order['cancelled_at']===null){$total+=$order['total'];$activeCount++;}
   $open=query('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND t.status NOT IN ("collected","cancelled")',[$visit['id']])->fetch();$pending=(int)$open['amount'];
@@ -83,6 +88,50 @@ try {
   foreach($available as [$m,$qty,$n]){if(!isset($stations[$m['station']])){query('INSERT INTO tickets(order_id,station) VALUES(?,?)',[$order,$m['station']]);$stations[$m['station']]=(int)db()->lastInsertId();query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,?)',[$stations[$m['station']],$u['id'],'new']);}query('INSERT INTO items(ticket_id,menu_id,name,quantity,price,note) VALUES(?,?,?,?,?,?)',[$stations[$m['station']],$m['id'],$m['name'],$qty,$m['price'],$n]);}
   db()->commit();out(['id'=>$order],201);
  }
+ if($action==='order_change' && $method==='POST') {
+  need($u,'service');$orderId=positive($body['order_id']??null);$mode=$body['mode']??'';if(!in_array($mode,['add','replace','remove','note'],true))fail('Ungültige Korrektur.');
+  $key=shortText($body['request_key']??'',80);if(strlen($key)<16)fail('Korrekturkennung fehlt.');$reason=shortText($body['reason']??'',300);if($reason==='')fail('Grund für die Korrektur fehlt.');
+  $itemId=in_array($mode,['replace','remove'],true)?positive($body['item_id']??null):null;
+  $menuId=in_array($mode,['add','replace'],true)?positive($body['menu_id']??null):null;
+  $quantity=in_array($mode,['add','replace'],true)?positive($body['quantity']??null,50):null;
+  $note=shortText($body['note']??'',500);
+  $reference=query('SELECT table_id,visit_id FROM orders WHERE id=?',[$orderId])->fetch();if(!$reference)fail('Bestellung nicht gefunden.',404);
+  db()->beginTransaction();$diningTable=query('SELECT active FROM dining_tables WHERE id=? FOR UPDATE',[$reference['table_id']])->fetch();
+  $visit=$reference['visit_id']?query('SELECT paid_at FROM table_visits WHERE id=? FOR UPDATE',[$reference['visit_id']])->fetch():null;
+  $order=query('SELECT note,cancelled_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
+  $existing=query('SELECT order_id,user_id FROM order_changes WHERE request_key=?',[$key])->fetch();
+  if($existing){db()->rollBack();if((int)$existing['order_id']!==$orderId||(int)$existing['user_id']!==(int)$u['id'])fail('Korrekturkennung bereits vergeben.',409);out(['ok'=>true,'duplicate'=>true]);}
+  if(!$visit||$visit['paid_at']!==null||!$order||$order['cancelled_at']!==null){db()->rollBack();fail('Bestellung ist bereits abgeschlossen oder storniert.',409);}
+  if(in_array($mode,['add','replace'],true)&&(!$diningTable||(int)$diningTable['active']!==1)){db()->rollBack();fail('Tisch ist für neue Positionen deaktiviert.',409);}
+  $before=null;$after=null;$newItemId=null;$orderCancelled=false;
+  if($mode==='note'){
+   if($order['note']===$note){db()->rollBack();fail('Bestellnotiz ist unverändert.',409);}
+   $before=['note'=>$order['note']];$after=['note'=>$note];query('UPDATE orders SET note=? WHERE id=?',[$note,$orderId]);
+   foreach(query('SELECT id FROM tickets WHERE order_id=? AND status NOT IN ("collected","cancelled")',[$orderId])->fetchAll() as $ticket)query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"note_changed")',[$ticket['id'],$u['id']]);
+  }else{
+   if($itemId!==null){
+    $old=query('SELECT i.*,t.id AS old_ticket_id FROM items i JOIN tickets t ON t.id=i.ticket_id WHERE i.id=? AND t.order_id=? FOR UPDATE',[$itemId,$orderId])->fetch();
+    if(!$old||$old['cancelled_at']!==null){db()->rollBack();fail('Position wurde bereits geändert. Bitte Rechnung aktualisieren.',409);}
+    $before=itemState($old);query('UPDATE items SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?',[$u['id'],$reason,$itemId]);
+    $remaining=query('SELECT COUNT(*) AS amount FROM items WHERE ticket_id=? AND cancelled_at IS NULL',[$old['old_ticket_id']])->fetch();
+    if((int)$remaining['amount']===0){query('UPDATE tickets SET status="cancelled" WHERE id=?',[$old['old_ticket_id']]);query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"cancelled")',[$old['old_ticket_id'],$u['id']]);}
+    else query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"item_removed")',[$old['old_ticket_id'],$u['id']]);
+   }
+   if($menuId!==null){
+    $product=query('SELECT * FROM menu WHERE id=? AND active=1 FOR UPDATE',[$menuId])->fetch();if(!$product){db()->rollBack();fail('Produkt nicht verfügbar.',409);}
+    query('INSERT INTO tickets(order_id,station,origin) VALUES(?,?,?)',[$orderId,$product['station'],$mode==='add'?'addition':'correction']);$ticketId=(int)db()->lastInsertId();
+    query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"new")',[$ticketId,$u['id']]);
+    query('INSERT INTO items(ticket_id,menu_id,name,quantity,price,note) VALUES(?,?,?,?,?,?)',[$ticketId,$menuId,$product['name'],$quantity,$product['price'],$note]);$newItemId=(int)db()->lastInsertId();
+    $after=['id'=>$newItemId,'menu_id'=>$menuId,'name'=>$product['name'],'quantity'=>$quantity,'price'=>(int)$product['price'],'note'=>$note];
+   }
+   if($mode==='remove'){
+    $remaining=query('SELECT COUNT(*) AS amount FROM items i JOIN tickets t ON t.id=i.ticket_id WHERE t.order_id=? AND i.cancelled_at IS NULL',[$orderId])->fetch();
+    if((int)$remaining['amount']===0){query('UPDATE orders SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?',[$u['id'],$reason,$orderId]);$orderCancelled=true;}
+   }
+  }
+  query('INSERT INTO order_changes(request_key,order_id,user_id,action,reason,before_state,after_state) VALUES(?,?,?,?,?,?,?)',[$key,$orderId,$u['id'],$mode,$reason,$before?json_encode($before,JSON_UNESCAPED_UNICODE):null,$after?json_encode($after,JSON_UNESCAPED_UNICODE):null]);
+  db()->commit();out(['ok'=>true,'new_item_id'=>$newItemId,'order_cancelled'=>$orderCancelled]);
+ }
  if($action==='order_cancel' && $method==='POST') {
   need($u,'service');$orderId=positive($body['order_id']??null);$reason=shortText($body['reason']??'',300);if($reason==='')fail('Stornogrund fehlt.');
   $reference=query('SELECT table_id,visit_id FROM orders WHERE id=?',[$orderId])->fetch();if(!$reference)fail('Bestellung nicht gefunden.',404);
@@ -93,7 +142,8 @@ try {
   if(!$order||$order['cancelled_at']!==null){db()->rollBack();fail('Bestellung wurde bereits storniert.',409);}
   $tickets=query('SELECT id FROM tickets WHERE order_id=? FOR UPDATE',[$orderId])->fetchAll();
   query('UPDATE orders SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?',[$u['id'],$reason,$orderId]);
-  foreach($tickets as $ticket){query('UPDATE tickets SET status="cancelled" WHERE id=?',[$ticket['id']]);query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"cancelled")',[$ticket['id'],$u['id']]);}
+  foreach($tickets as $ticket){query('UPDATE items SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE ticket_id=? AND cancelled_at IS NULL',[$u['id'],$reason,$ticket['id']]);query('UPDATE tickets SET status="cancelled" WHERE id=?',[$ticket['id']]);query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"cancelled")',[$ticket['id'],$u['id']]);}
+  query('INSERT INTO order_changes(request_key,order_id,user_id,action,reason,after_state) VALUES(?,?,?,?,?,?)',[bin2hex(random_bytes(20)),$orderId,$u['id'],'order_cancel',$reason,json_encode(['cancelled'=>true])]);
   db()->commit();out(['ok'=>true,'order_id'=>$orderId]);
  }
  if($action==='table_paid' && $method==='POST') {
@@ -104,7 +154,7 @@ try {
   if(!$visit||$visit['paid_at']!==null){db()->rollBack();fail('Zahlung wurde bereits bestätigt.',409);}
   $pending=query('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND t.status NOT IN ("collected","cancelled")',[$visitId])->fetch();
   if((int)$pending['amount']>0){db()->rollBack();fail('Es sind noch Bons für diesen Tisch offen.',409);}
-  $amount=query('SELECT COUNT(DISTINCT o.id) AS orders_count,COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL',[$visitId])->fetch();
+  $amount=query('SELECT COUNT(DISTINCT o.id) AS orders_count,COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND i.cancelled_at IS NULL',[$visitId])->fetch();
   if((int)$amount['orders_count']===0){db()->rollBack();fail('Keine abzurechnenden Bestellungen vorhanden.',409);}
   if((int)$amount['total']!==$expectedTotal){db()->rollBack();fail('Zahlbetrag hat sich geändert. Bitte Rechnung aktualisieren.',409);}
   query('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?',[$u['id'],$visitId]);db()->commit();out(['ok'=>true,'total'=>(int)$amount['total']]);
