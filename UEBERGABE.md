@@ -159,6 +159,8 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | POST `status` | `id`, `status`; rollen- und transitionsabhängig |
 | GET `admin_users` | Benutzer ohne Passwort-Hashes; Admin |
 | POST `admin_user` | Neuen Benutzer anlegen; `name`, `username`, `password`, `roles` |
+| POST `admin_user_update` | Namen, Benutzernamen und mehrere Rollen ändern; `id`, `name`, `username`, `roles`; Admin |
+| POST `admin_user_status` | Zugang entfernen oder wieder aktivieren; `id`, `active`; Admin. Historische Zuordnungen bleiben erhalten |
 | POST `admin_menu` | Anlegen; mit `id` auch Aktualisieren; `name`, `category`, `station`, `price` |
 | POST `admin_menu_status` | Produkt temporär aktivieren/deaktivieren; Admin |
 | POST `admin_table` | Tisch anlegen/umbenennen; `id`, `name` |
@@ -206,7 +208,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 12 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge und idempotente Wiederholungen. Die mobile Kassenansicht wurde im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 13 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen und Mitarbeiterverwaltung. Die mobile Kassen- und Adminansicht wurde im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -232,7 +234,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Pro Benutzer existiert nur ein lokaler Entwurf. Ein Tischwechsel mit ungesendetem Warenkorb verlangt inzwischen eine Bestätigung und verwirft den Entwurf; getrennte Entwürfe pro Tisch fehlen weiterhin.
 - Entwurfzustand beim Benutzerwechsel vollständig zurücksetzen; lokale Entwürfe über Logout hinaus sind auf gemeinsam verwendeten Geräten bewusst zu behandeln.
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.
-- Mitarbeiter bearbeiten/sperren, Rollen ändern und Passwortverfahren ergänzen; Schutz vor Aussperren des letzten Admins.
+- Mitarbeiter können bearbeitet, mit mehreren Rollen ausgestattet, entfernt und wieder aktiviert werden; der eigene und letzte Admin-Zugang sind gegen Entfernen geschützt. Passwortverfahren und Sitzungswiderruf nach Rollenänderung weiterentwickeln.
 - Menü bearbeiten: Backend kann bereits per `id` aktualisieren, die Oberfläche kann hinzufügen und Produkte temporär deaktivieren oder aktivieren; weitere Bearbeitung fehlt.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.

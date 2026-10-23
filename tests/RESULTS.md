@@ -29,3 +29,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 
 - Docker-Produktionsbuild mit TypeScript-Prüfung erfolgreich.
 - Mobile Browserprüfung: Produkt und Menge einer Entwurfsposition geändert, Sonderwunsch angepasst und Erhalt nach Neuladen geprüft. Die Position wurde anschließend entfernt; ohne Position bleibt „Bestellung senden“ gesperrt. Keine Bestellung wurde für diesen Test gesendet. Die Browserkonsole zeigte keine Fehler oder Warnungen.
+
+## Mitarbeiterverwaltung, 23.10.2026
+
+- Docker-Produktionsbuild mit TypeScript-Prüfung und PHP-Syntaxprüfung erfolgreich.
+- `python3 tests/integration.py`: 13 Tests erfolgreich. Geprüft wurden Mehrfachrollen, Umbenennung, sofort wirksame Rollenänderung, Entfernen und Wiederaktivierung, gesperrte Anmeldung/Sitzung, erhaltene Zuordnung auf Bons sowie Schutz des eigenen und letzten Admin-Zugangs.
+- Mobile Browserprüfung: Bearbeiten, getrennte Rollenauswahl, Entfernen und Bereich für entfernte Mitarbeiter sichtbar; mehrere Rollen konnten im Formular gleichzeitig markiert werden. Die Probeänderung wurde verworfen.

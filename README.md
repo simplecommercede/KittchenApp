@@ -51,7 +51,7 @@ Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und sc
 3. Als `robin` bzw. `tresen` Bon starten und abholbereit melden.
 4. Service bestätigt die Abholung. Unter „Kassieren“ stehen alle noch zu bezahlenden Speisen und Getränke des Tischbesuchs nach Bestellnummer mit Preisen. Nach Abholung aller Bons kann Service den angezeigten Gesamtbetrag als bezahlt markieren.
 5. Unter „Kassieren“ können Positionen mit Grund ergänzt, korrigiert oder einzeln entfernt werden. Auch die Bestellnotiz ist änderbar. Nachträge und Ersatzpositionen erscheinen als neue Bons bei Küche oder Tresen unter derselben Bestellnummer. Entfernte Positionen bleiben im Änderungsverlauf sichtbar und zählen nicht mehr zum Zahlbetrag. Eine ganze unbezahlte Bestellung kann weiterhin mit Grund storniert werden. Nach der Zahlungsbestätigung sind Änderungen gesperrt.
-6. Admin kann Mitarbeiter mit mehreren Rollen, Gerichte und Tische anlegen. Existierende Tischnummern werden umbenannt.
+6. Admin kann Mitarbeitende anlegen, Namen, Benutzernamen und mehrere Rollen (Service, Küche, Tresen, Admin) bearbeiten sowie Zugänge entfernen und wieder aktivieren. Entfernen sperrt die Anmeldung, erhält aber die Zuordnung früherer Bestellungen. Der eigene und der letzte Admin-Zugang sind geschützt. Gerichte und Tische können angelegt werden; existierende Tischnummern werden umbenannt.
 
 Die Oberfläche fragt alle zwei Sekunden Änderungen ab. Timer verwenden die Serverzeit und laufen lokal weiter. Der Verbindungsstatus zeigt fehlgeschlagene Abfragen. Bestellentwürfe werden pro Nutzer im lokalen Browser gespeichert; ungesendete Entwürfe sind keine Küchenbestellungen. Bei einem unklaren Sendefehler unverändert erneut senden, damit dieselbe Bestellkennung verwendet wird.
 
@@ -73,7 +73,7 @@ Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Ve
 
 Enthalten sind Login, Rollen, Mehrfachrollen, Speisekarte, Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung, Archiv und grundlegende Adminanlage.
 
-Noch nicht enthalten: Mitarbeiter sperren/Rollen bearbeiten/Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Die Zahlungsbestätigung erfasst nur den manuell bestätigten Status; sie verarbeitet keine Zahlung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
+Noch nicht enthalten: Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Die Zahlungsbestätigung erfasst nur den manuell bestätigten Status; sie verarbeitet keine Zahlung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
 
 Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übernimmt Service die Tresenarbeiten und kann Getränkebons bis „Abholbereit“ bearbeiten. Dafür fehlen derzeit die stationsweite Anwesenheitserkennung und die entsprechende Freigabe; Details stehen in [UEBERGABE.md](UEBERGABE.md).
 
