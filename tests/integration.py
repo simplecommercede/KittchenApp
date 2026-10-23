@@ -443,6 +443,43 @@ class Workflow(unittest.TestCase):
         menu={m['name']:m for m in self.admin.call('menu')[1] if suffix in m['name']}
         self.assertEqual(sorted(menu),[renamed+' 1000 ml',renamed+' 300 ml',renamed+' 500 ml'])
         self.assertEqual((int(menu[renamed+' 300 ml']['id']),int(menu[renamed+' 300 ml']['active']),int(menu[renamed+' 500 ml']['price']),int(menu[renamed+' 1000 ml']['straw'])),(small,0,550,0))
+    def test_20_request_size_and_depth_limits(self):
+        code,data=self.service.call('order',{'request_key':str(uuid.uuid4()),'table_id':7,'note':'x'*70000,'items':[{'menu_id':1,'quantity':1,'note':''}]})
+        self.assertEqual(code,413,data)
+        nested={'a':1}
+        for _ in range(10): nested={'a':nested}
+        valid={'request_key':str(uuid.uuid4()),'table_id':7,'items':[{'menu_id':1,'quantity':1,'note':''}]}
+        self.assertEqual(self.service.call('order',{**valid,'extra':nested})[0],400)
+        self.assertEqual(self.service.call('order',valid)[0],201)
+    def test_21_active_tickets_are_not_cut_off(self):
+        table_id=900+int(uuid.uuid4().hex[:4],16)%99
+        self.assertEqual(self.admin.call('admin_table',{'id':table_id,'name':'Rückstau '+str(table_id)})[0],200)
+        self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':True})[0],200)
+        last=None
+        for _ in range(101):
+            code,last=self.service.call('order',{'request_key':str(uuid.uuid4()),'table_id':table_id,'items':[{'menu_id':1,'quantity':1,'note':''},{'menu_id':6,'quantity':1,'note':''}]})
+            self.assertEqual(code,201,last)
+        _,data=self.service.call('tickets')
+        self.assertGreater(len(data['tickets']),200)
+        self.assertEqual(sum(1 for t in data['tickets'] if int(t['order_id'])==last['id']),2)
+        _,kitchen=self.kitchen.call('tickets')
+        self.assertTrue(any(int(t['order_id'])==last['id'] for t in kitchen['tickets']))
+    def test_22_login_ip_throttling_and_cleanup(self):
+        # Runs last: it blocks the test client's address and clears the throttling table afterwards.
+        old='0'*64
+        in_app("query('INSERT INTO login_attempts(identity_hash,attempts,updated_at) VALUES(?,1,NOW()-INTERVAL 2 DAY) ON DUPLICATE KEY UPDATE updated_at=VALUES(updated_at)',['"+old+"']);")
+        try:
+            c=Client();codes=[]
+            for _ in range(35):
+                codes.append(c.call('login',{'username':'spray_'+uuid.uuid4().hex[:10],'password':'bad'})[0])
+                if codes[-1]==429: break
+            self.assertEqual(codes[-1],429,codes)
+            self.assertTrue(all(code==401 for code in codes[:-1]))
+            self.assertEqual(Client().call('login',{'username':'mia','password':'Stimbeck-Demo-2026!'})[0],429)
+            self.assertEqual(in_app("echo query('SELECT COUNT(*) FROM login_attempts WHERE identity_hash=?',['"+old+"'])->fetchColumn();"),'0')
+        finally:
+            in_app("query('DELETE FROM login_attempts');")
+        Client('mia')  # Anmeldung funktioniert nach dem Aufräumen wieder.
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
