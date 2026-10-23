@@ -1,6 +1,8 @@
 """Black-box integration tests against the real PHP/MariaDB Docker stack."""
-import datetime, json, os, shutil, subprocess, unittest, urllib.request, urllib.error, http.cookiejar, uuid
-BASE = os.environ.get('TEST_URL', 'http://127.0.0.1:8087') + '/api/index.php?action='
+import datetime, json, os, shutil, subprocess, unittest, urllib.parse, urllib.request, urllib.error, http.cookiejar, uuid
+# Default is the separate test stack from tests/run.sh, never the local app on 8087.
+TEST_URL = os.environ.get('TEST_URL', 'http://127.0.0.1:8088')
+BASE = TEST_URL + '/api/index.php?action='
 class Client:
     def __init__(self, name=None):
         self.http = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
@@ -407,9 +409,9 @@ class Workflow(unittest.TestCase):
         self.assertEqual(json.loads(out),{'error':'Datenbank vorübergehend nicht erreichbar.'})
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
-    if os.environ.get('TEST_URL') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Stack.')
+    if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
     prefix="require '/var/www/html/api/db.php';" if require_db else ''
-    args=['docker','compose','exec','-T']+[f'-e{k}={v}' for k,v in (env or {}).items()]+['app','php','-r',prefix+code]
+    args=['docker','compose','-p',os.environ.get('COMPOSE_PROJECT_NAME','kittchenapp-test'),'exec','-T']+[f'-e{k}={v}' for k,v in (env or {}).items()]+['app','php','-r',prefix+code]
     result=subprocess.run(args,cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),capture_output=True,text=True,timeout=30)
     return result.stdout
 if __name__=='__main__': unittest.main(verbosity=2)

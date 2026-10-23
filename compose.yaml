@@ -16,7 +16,7 @@ services:
   app:
     build: .
     ports:
-      - "127.0.0.1:8087:80"
+      - "127.0.0.1:${APP_PORT:-8087}:80"
     environment:
       DB_HOST: db
       DB_NAME: kitchen
@@ -24,6 +24,7 @@ services:
       DB_PASSWORD: local-kitchen-only
       DEMO_PASSWORD: Stimbeck-Demo-2026!
       APP_ENV: local
+      MENU_SEED: ${MENU_SEED:-speisekarte}
     depends_on:
       db:
         condition: service_healthy
