@@ -52,7 +52,7 @@ docker compose exec -T app php /var/www/html/api/migrate.php
 
 App: **http://localhost:8087/**
 
-Die Migration ist ein separater Schritt. Der Container führt sie nicht automatisch aus. Wiederholtes Starten der Migration legt bestehende Tabellen/Seeds nicht doppelt an, ersetzt aber auch keine geänderten Tabellenstrukturen.
+Die Migration ist ein separater Schritt. Der Container führt sie nicht automatisch aus. Wiederholtes Starten ergänzt die bisher benötigten Spalten und Tabellen und legt Seeds nicht doppelt an. Für spätere Änderungen sind versionierte Migrationen sinnvoll.
 
 ### Lokale Demo-Konten
 
@@ -115,11 +115,12 @@ Die zwei großen Implementierungsdateien wurden aus Zeitgründen kompakt geschri
 | --- | --- |
 | `users` | Name, eindeutiger Benutzername, Passwort-Hash, JSON-Rollen, Aktiv-Flag |
 | `menu` | Gerichte/Getränke, Kategorie, Station, Preis in Cent, Aktiv-Flag |
-| `dining_tables` | Tischnummer und Anzeigename |
+| `dining_tables` | Tischnummer, Anzeigename und Aktiv-Flag |
 | `orders` | Eindeutige Anfragekennung, Tisch, Serviceperson, Gesamtnotiz, Eingangszeit |
-| `tickets` | Stationsbon einer Bestellung, Status und Zeitstempel |
-| `items` | Bonposition mit Mengen-, Namens-, Preis- und Sonderwunsch-Snapshot |
+| `tickets` | Stationsbon einer Bestellung, Status, Ursprung (ursprünglich/Nachtrag/Korrektur) und Zeitstempel |
+| `items` | Bonposition mit Mengen-, Namens-, Preis- und Sonderwunsch-Snapshot sowie optionaler Stornierung |
 | `events` | Wer hat einen Bon wann in welchen Status gesetzt? |
+| `order_changes` | Korrekturen mit Grund, Person, Zeitpunkt und Vorher-/Nachher-Daten |
 | `login_attempts` | Fehlversuche und zeitweise Login-Sperre |
 
 Wichtige Invarianten:
@@ -152,6 +153,7 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | GET `tickets` | Aktive Bons plus `server_time`; nach Rollen gefiltert |
 | GET `tickets&archive=1` | Abgeholte und stornierte Bons mit `events` |
 | POST `order` | `request_key`, `table_id`, `note`, `items`; Service/Admin |
+| POST `order_change` | `order_id`, `mode` (`add`, `replace`, `remove`, `note`), `request_key`, `reason` und je nach Modus `item_id`, `menu_id`, `quantity`, `note`; Service/Admin |
 | POST `order_cancel` | `order_id`, `reason`; vollständiges Storno vor Zahlung; Service/Admin |
 | POST `table_paid` | `visit_id`, `expected_total`; manuelle Bestätigung nach Abholung aller Bons; Service/Admin |
 | POST `status` | `id`, `status`; rollen- und transitionsabhängig |
@@ -191,7 +193,7 @@ python3 tests/integration.py
 
 Docker-Image wurde gebaut, MariaDB meldete healthy und die App wurde auf Port 8087 gestartet.
 
-Acht HTTP-Integrationstests gegen die echte Docker-API/Datenbank bestanden:
+Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte Docker-API/Datenbank:
 
 - Anmeldung und CSRF.
 - Fehlende Berechtigungen.
@@ -204,7 +206,9 @@ Acht HTTP-Integrationstests gegen die echte Docker-API/Datenbank bestanden:
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-**Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe. Der vorher erfolgreiche Build ersetzt keinen Test nach neuen Änderungen.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 12 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge und idempotente Wiederholungen. Die mobile Kassenansicht wurde im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+
+**Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
 Die Integrationstests schreiben Daten, legen zusätzliche Benutzer/Gerichte/Tische an und hinterlassen Bons. Nur gegen eine dedizierte lokale Testdatenbank ausführen. `TEST_URL` überschreibt die Basisadresse; nicht auf Produktion setzen. Tests setzen die Demo-Benutzer und Artikel-IDs voraus.
 
@@ -232,7 +236,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Menü bearbeiten: Backend kann bereits per `id` aktualisieren, die Oberfläche kann hinzufügen und Produkte temporär deaktivieren oder aktivieren; weitere Bearbeitung fehlt.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
-- Vollständiges Storno einer unbezahlten Bestellung mit Grund und Event ist umgesetzt. Teilstorno, Positionskorrekturen und nachträgliche Fehlerfälle fehlen; historische Bons dürfen nicht still gelöscht werden.
+- Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Nachträgliche Fehlerfälle nach Zahlung und echte Erstattung fehlen.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
 ### Priorität 3: Wartbarkeit, Tests und Betrieb
@@ -241,7 +245,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Versionierte Datenbankmigrationen einführen. `CREATE TABLE IF NOT EXISTS` aktualisiert keine vorhandenen Spalten.
 - Separate Testdatenbank, Aufräumstrategie und automatisierte Browser-/Mobile-Tests ergänzen.
 - Polling ohne überlappende Requests, mit Timeout, Backoff und Schutz gegen veraltete Antworten implementieren.
-- Katalogänderungen werden nicht laufend abgefragt; automatische Aktualisierung oder Reload-Mechanismus definieren.
+- Katalogänderungen werden alle zehn Sekunden abgefragt; verzögerte Updates und Konflikte beim Bestellen prüfen.
 - CSP/Sicherheitsheader, Session-Lebensdauer, erweitertes Login-Limiting, persistente Sessions und Monitoring vor Produktion prüfen.
 - API lädt Positionen/Events pro Bon einzeln. Bei Bedarf gebündelte Abfragen und geeignete Indizes vorsehen.
 - Tablet-Layout, Touch-Ziele, Tastaturbedienung und Kontraste auf echten Geräten prüfen.

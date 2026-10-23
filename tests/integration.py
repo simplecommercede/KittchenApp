@@ -214,4 +214,60 @@ class Workflow(unittest.TestCase):
         self.assertEqual(self.service.call('table_paid',{'visit_id':bill['visit_id'],'expected_total':350})[0],200)
         self.assertEqual(self.service.call('order_cancel',{'order_id':created['id'],'reason':'Zu spät'})[0],409)
         self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':False})[0],200)
+    def test_11_order_corrections(self):
+        _,existing_tables=self.admin.call('tables')
+        used={int(t['id']) for t in existing_tables}
+        table_id=next(i for i in range(900,1000) if i not in used)
+        self.assertEqual(self.admin.call('admin_table',{'id':table_id,'name':'Korrektur '+str(table_id)})[0],200)
+        payload={'request_key':str(uuid.uuid4()),'table_id':table_id,'note':'Zusammen','items':[{'menu_id':1,'quantity':1,'note':'Ohne Zwiebel'},{'menu_id':6,'quantity':1,'note':''}]}
+        code,created=self.service.call('order',payload)
+        self.assertEqual(code,201,created)
+        oid=created['id']
+        _,bill=self.service.call('table_bill&table_id='+str(table_id))
+        self.assertEqual(bill['total'],1940)
+        food=next(i for i in bill['orders'][0]['items'] if i['station']=='kitchen')
+        drink=next(i for i in bill['orders'][0]['items'] if i['station']=='bar')
+        invalid={'order_id':oid,'mode':'remove','item_id':food['id'],'request_key':str(uuid.uuid4()),'reason':''}
+        self.assertEqual(self.service.call('order_change',invalid)[0],400)
+        self.assertEqual(self.kitchen.call('order_change',{**invalid,'reason':'Falsch'})[0],403)
+        note={'order_id':oid,'mode':'note','note':'Getrennt servieren','reason':'Gastwunsch','request_key':str(uuid.uuid4())}
+        self.assertEqual(self.service.call('order_change',note)[0],200)
+        _,tickets=self.service.call('tickets')
+        original_food=next(t for t in tickets['tickets'] if int(t['order_id'])==oid and t['station']=='kitchen')
+        self.assertEqual(self.kitchen.call('status',{'id':int(original_food['id']),'status':'working'})[0],200)
+        replace={'order_id':oid,'mode':'replace','item_id':food['id'],'menu_id':2,'quantity':2,'note':'Extra Zitrone','reason':'Gericht geändert','request_key':str(uuid.uuid4())}
+        code,changed=self.service.call('order_change',replace)
+        self.assertEqual(code,200,changed)
+        self.assertTrue(changed['new_item_id'])
+        code,repeated=self.service.call('order_change',replace)
+        self.assertEqual(code,200,repeated)
+        self.assertTrue(repeated['duplicate'])
+        self.assertEqual(self.service.call('order_change',{**replace,'request_key':str(uuid.uuid4())})[0],409)
+        add={'order_id':oid,'mode':'add','menu_id':7,'quantity':1,'note':'Kalt','reason':'Nachbestellung','request_key':str(uuid.uuid4())}
+        self.assertEqual(self.service.call('order_change',add)[0],200)
+        _,bill=self.service.call('table_bill&table_id='+str(table_id))
+        order=bill['orders'][0]
+        self.assertEqual(order['id'],oid)
+        self.assertEqual(bill['total'],4110)
+        self.assertEqual(order['note'],'Getrennt servieren')
+        self.assertEqual(len(order['changes']),3)
+        self.assertEqual([c['action'] for c in order['changes']],['note','replace','add'])
+        self.assertEqual(next(i for i in order['items'] if i['id']==food['id'])['cancellation_reason'],'Gericht geändert')
+        self.assertEqual(self.service.call('order_change',{'order_id':oid,'mode':'remove','item_id':drink['id'],'reason':'Nicht gewünscht','request_key':str(uuid.uuid4())})[0],200)
+        _,bill=self.service.call('table_bill&table_id='+str(table_id))
+        self.assertEqual(bill['total'],3760)
+        _,active=self.service.call('tickets')
+        new_tickets=[t for t in active['tickets'] if int(t['order_id'])==oid]
+        self.assertEqual({t['origin'] for t in new_tickets},{'correction','addition'})
+        self.assertEqual({t['status'] for t in new_tickets},{'new'})
+        for ticket in new_tickets:
+            station=self.kitchen if ticket['station']=='kitchen' else self.bar
+            for state in ['working','ready']: self.assertEqual(station.call('status',{'id':int(ticket['id']),'status':state})[0],200)
+            self.assertEqual(self.service.call('status',{'id':int(ticket['id']),'status':'collected'})[0],200)
+        self.assertTrue(self.service.call('table_bill&table_id='+str(table_id))[1]['can_pay'])
+        self.assertEqual(self.service.call('table_paid',{'visit_id':bill['visit_id'],'expected_total':4110})[0],409)
+        self.assertEqual(self.service.call('table_paid',{'visit_id':bill['visit_id'],'expected_total':3760})[0],200)
+        self.assertTrue(self.service.call('order_change',add)[1]['duplicate'])
+        self.assertEqual(self.service.call('order_change',{'order_id':oid,'mode':'add','menu_id':6,'quantity':1,'reason':'Zu spät','request_key':str(uuid.uuid4())})[0],409)
+        self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':False})[0],200)
 if __name__=='__main__': unittest.main(verbosity=2)

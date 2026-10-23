@@ -14,7 +14,7 @@ docker compose exec -T app php /var/www/html/api/migrate.php
 docker compose ps
 ```
 
-Die Migration ist beim ersten Start ein eigener, notwendiger Schritt. Danach die App unter http://127.0.0.1:8087/ öffnen. `db` sollte in `docker compose ps` als `healthy` erscheinen; `app` sollte laufen. Die Migration kann erneut ausgeführt werden und ergänzt bei bestehenden Datenbanken die Spalten für Tischaktivierung, Tischbesuche und Stornierungen.
+Die Migration ist beim ersten Start ein eigener, notwendiger Schritt. Danach die App unter http://127.0.0.1:8087/ öffnen. `db` sollte in `docker compose ps` als `healthy` erscheinen; `app` sollte laufen. Die Migration kann erneut ausgeführt werden und ergänzt bei bestehenden Datenbanken die Spalten und Tabellen für Tischbesuche, Stornierungen und Positionskorrekturen.
 
 Alle Demo-Zugänge verwenden **Stimbeck-Demo-2026!**:
 
@@ -42,7 +42,7 @@ npm ci
 npm run build
 ```
 
-Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben in die lokale Datenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Zahlbetrag, Validierung, Adminfunktionen, Logout und Login-Drosselung. Testbenutzer und Testdaten bleiben lokal erhalten. Nicht gegen Produktion ausführen.
+Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben in die lokale Datenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Positionskorrekturen, Zahlbetrag, Validierung, Adminfunktionen, Logout und Login-Drosselung. Testbenutzer und Testdaten bleiben lokal erhalten. Nicht gegen Produktion ausführen.
 
 ## Bedienung
 
@@ -50,7 +50,7 @@ Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und sc
 2. Positionen und Sonderwünsche eintragen und Bestellung senden. Jede gesendete Bestellung erhält eine eigene Nummer; ein atomarer Datenbankvorgang erzeugt separate Küchen- und Tresenbons.
 3. Als `robin` bzw. `tresen` Bon starten und abholbereit melden.
 4. Service bestätigt die Abholung. Unter „Kassieren“ stehen alle noch zu bezahlenden Speisen und Getränke des Tischbesuchs nach Bestellnummer mit Preisen. Nach Abholung aller Bons kann Service den angezeigten Gesamtbetrag als bezahlt markieren.
-5. Eine unbezahlte Bestellung kann dort mit Stornogrund komplett storniert werden. Sie wird aus dem Zahlbetrag entfernt und bleibt mit ihrem Verlauf im Archiv sichtbar. Bereits bezahlte Bestellungen sind hier nicht stornierbar.
+5. Unter „Kassieren“ können Positionen mit Grund ergänzt, korrigiert oder einzeln entfernt werden. Auch die Bestellnotiz ist änderbar. Nachträge und Ersatzpositionen erscheinen als neue Bons bei Küche oder Tresen unter derselben Bestellnummer. Entfernte Positionen bleiben im Änderungsverlauf sichtbar und zählen nicht mehr zum Zahlbetrag. Eine ganze unbezahlte Bestellung kann weiterhin mit Grund storniert werden. Nach der Zahlungsbestätigung sind Änderungen gesperrt.
 6. Admin kann Mitarbeiter mit mehreren Rollen, Gerichte und Tische anlegen. Existierende Tischnummern werden umbenannt.
 
 Die Oberfläche fragt alle zwei Sekunden Änderungen ab. Timer verwenden die Serverzeit und laufen lokal weiter. Der Verbindungsstatus zeigt fehlgeschlagene Abfragen. Bestellentwürfe werden pro Nutzer im lokalen Browser gespeichert; ungesendete Entwürfe sind keine Küchenbestellungen. Bei einem unklaren Sendefehler unverändert erneut senden, damit dieselbe Bestellkennung verwendet wird.
@@ -63,7 +63,7 @@ Die Oberfläche fragt alle zwei Sekunden Änderungen ab. Timer verwenden die Ser
 - `api/migrate.php`: wiederholbar ausführbare Schemaanlage und lokale Beispieldaten.
 - `tests/integration.py`: unabhängige HTTP-Integrationstests, nur Python-Standardbibliothek.
 
-API-Routing über `/api/index.php?action=...` benötigt keine Rewrite-Regeln. Schreibzugriffe sind POST und benötigen einen CSRF-Token. Benutzerrollen werden bei jedem Zugriff aus der Datenbank gelesen. Bons haben die Zustände `new → working → ready → collected`; beim Storno erhalten alle Bons der Bestellung den Zustand `cancelled`. Statusänderungen sperren den Bon innerhalb einer Transaktion. Die eindeutige technische Bestellkennung verhindert doppelte Speicherung; die sichtbare Bestellnummer leitet sich aus der Datenbank-ID ab. Gesendete Positionen speichern Name und Preis als Snapshot. Die Zahlungsbestätigung prüft den zuletzt angezeigten Betrag erneut auf dem Server. Alle Zeitstempel sind UTC; die Oberfläche zeigt lokale Uhrzeit.
+API-Routing über `/api/index.php?action=...` benötigt keine Rewrite-Regeln. Schreibzugriffe sind POST und benötigen einen CSRF-Token. Benutzerrollen werden bei jedem Zugriff aus der Datenbank gelesen. Bons haben die Zustände `new → working → ready → collected`; beim Storno erhalten betroffene Bons den Zustand `cancelled`. Statusänderungen sperren den Bon innerhalb einer Transaktion. Die eindeutige technische Bestellkennung verhindert doppelte Speicherung; die sichtbare Bestellnummer leitet sich aus der Datenbank-ID ab. Gesendete Positionen speichern Name und Preis als Snapshot. Korrekturen haben eigene Kennungen und einen Verlauf mit Grund, Person und Vorher-/Nachher-Daten. Die Zahlungsbestätigung prüft den zuletzt angezeigten Betrag erneut auf dem Server. Alle Zeitstempel sind UTC; die Oberfläche zeigt lokale Uhrzeit.
 
 ## Hetzner Managed Server
 
@@ -71,9 +71,9 @@ Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Ve
 
 ## Umfang dieser ersten Version
 
-Enthalten sind Login, Rollen, Mehrfachrollen, Speisekarte, Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges Bestellstorno mit Grund, manuelle Zahlungsbestätigung, Archiv und grundlegende Adminanlage.
+Enthalten sind Login, Rollen, Mehrfachrollen, Speisekarte, Bestellungen mit Nummer, Sonderwünsche, Stationsbons, Statuswechsel, Abholhinweise, Tischrechnung, vollständiges und positionsweises Bestellstorno mit Grund, Positionskorrekturen und Nachträge, manuelle Zahlungsbestätigung, Archiv und grundlegende Adminanlage.
 
-Noch nicht enthalten: Mitarbeiter sperren/Rollen bearbeiten/Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Teilstorno und Positionskorrektur nach Versand, Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Die Zahlungsbestätigung erfasst nur den manuell bestätigten Status; sie verarbeitet keine Zahlung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
+Noch nicht enthalten: Mitarbeiter sperren/Rollen bearbeiten/Passwort zurücksetzen in der Oberfläche, vollständige Speisekartenbearbeitung, Teilzahlungen und Zahlarten, Offline-Synchronisierung zwischen Geräten, Push/Audio, Drag-and-drop, PWA-Service-Worker, fiskalische Belege und Kassensystemanbindung, automatisierte Deployment-/Backupjobs. Die Zahlungsbestätigung erfasst nur den manuell bestätigten Status; sie verarbeitet keine Zahlung. Archiv zeigt zunächst die letzten 200 Bons. Nicht als fertiges Kassensystem verwenden.
 
 Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übernimmt Service die Tresenarbeiten und kann Getränkebons bis „Abholbereit“ bearbeiten. Dafür fehlen derzeit die stationsweite Anwesenheitserkennung und die entsprechende Freigabe; Details stehen in [UEBERGABE.md](UEBERGABE.md).
 
