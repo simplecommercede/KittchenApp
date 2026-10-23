@@ -62,3 +62,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Lokale Datenbank erneut gelöscht und migriert (vorher geprüft: 0 Bestellungen, nur Seed-Daten). 99 Produkte, keine Mengenangabe mehr in l oder cl.
 - `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Teststack.
 - Browserprüfung als `mia`: „Getränke“ und „Speisen“ ohne Kategoriefilter, alphabetisch mit Größen untereinander (z. B. Coca-Cola 300/500 ml vor Coca-Cola Zero 300/500 ml). „Mit Strohhalm“ erscheint nur bei Getränken, wird beim Antippen in den Sonderwunsch übernommen und als aktiv markiert. Probeposition danach entfernt; es wurde nichts gesendet.
+
+## Größenauswahl und Strohhalm nur bei Kindergetränken, 23.10.2026
+
+- Migration auf der bestehenden lokalen Datenbank ergänzte `menu.straw` und markierte 39 Getränke (Softgetränke, Säfte, Saftschorlen, Malzbier). Die Seed-Datei liefert für frische Installationen dieselben 39.
+- `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Teststack.
+- Browserprüfung als `mia`: Coca-Cola erscheint als eine Karte mit „300 · 500 ml“ und „ab 3,40 €“; nach dem Antippen „300 ml“ gewählt. König Pilsener vom Fass ebenso mit 500 ml. Im Entwurf hat nur die Cola „Mit Strohhalm“, das Pils nicht. Beide Probepositionen entfernt; es wurde nichts gesendet.
