@@ -32,9 +32,15 @@ foreach (query('SELECT DISTINCT o.table_id FROM orders o JOIN tickets t ON t.ord
  query('UPDATE orders SET visit_id=? WHERE table_id=? AND visit_id IS NULL AND id IN (SELECT order_id FROM tickets WHERE status<>"collected")',[$visitId,$tableId]);
  db()->commit();
 }
+// An empty menu is filled from the printed Speisekarte; MENU_SEED=test loads the fixed fixtures the integration tests expect (IDs 1-8).
+if (!query('SELECT id FROM menu LIMIT 1')->fetch()) {
+ $menu = getenv('MENU_SEED')==='test'
+  ? [['Hamburger mit Bacon','Speisen','kitchen',1590],['Schnitzel Wiener Art','Speisen','kitchen',1690],['Heimat Brotbrett','Vorspeisen','kitchen',750],['Karotten-Ingwersuppe','Vorspeisen','kitchen',550],['Heidjer Bauernknusper','Vorspeisen','kitchen',650],['Apfelschorle 0,3 l','Getränke','bar',350],['Pils 0,3 l','Getränke','bar',380],['Schnitzel mit Pommes','Kids','kitchen',850]]
+  : require __DIR__.'/speisekarte.php';
+ foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price) VALUES(?,?,?,?)',$m);
+}
 if (getenv('APP_ENV')==='local') {
  foreach ([['Admin','admin',['admin','service','kitchen','bar']],['Robin','robin',['kitchen']],['Mia','mia',['service']],['Tresen','tresen',['bar']]] as [$name,$username,$roles]) query('INSERT IGNORE INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash(getenv('DEMO_PASSWORD') ?: 'Stimbeck-Demo-2026!',PASSWORD_DEFAULT),json_encode($roles)]);
- foreach ([[1,'Hamburger mit Bacon','Speisen','kitchen',1590],[2,'Schnitzel Wiener Art','Speisen','kitchen',1690],[3,'Heimat Brotbrett','Vorspeisen','kitchen',750],[4,'Karotten-Ingwersuppe','Vorspeisen','kitchen',550],[5,'Heidjer Bauernknusper','Vorspeisen','kitchen',650],[6,'Apfelschorle 0,3 l','Getränke','bar',350],[7,'Pils 0,3 l','Getränke','bar',380],[8,'Schnitzel mit Pommes','Kids','kitchen',850]] as $m) query('INSERT IGNORE INTO menu(id,name,category,station,price) VALUES(?,?,?,?,?)',$m);
  for($i=1;$i<=12;$i++) query('INSERT IGNORE INTO dining_tables(id,name) VALUES(?,?)',[$i,'Tisch '.str_pad((string)$i,2,'0',STR_PAD_LEFT)]);
 }
-echo "Schema ready. Demo seed only in APP_ENV=local.\n";
+echo "Schema ready. Demo users and tables only in APP_ENV=local.\n";
