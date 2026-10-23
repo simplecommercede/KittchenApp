@@ -3,7 +3,7 @@
 # Die lokale App auf Port 8087 und ihre Daten bleiben unberührt.
 set -eu
 cd "$(dirname "$0")/.."
-export COMPOSE_PROJECT_NAME=kittchenapp-test APP_PORT=8088 MENU_SEED=test
+export COMPOSE_PROJECT_NAME=kittchenapp-test APP_BIND=127.0.0.1 APP_PORT=8088 MENU_SEED=test
 docker compose down -v --remove-orphans >/dev/null 2>&1 || true
 trap 'docker compose down -v --remove-orphans >/dev/null 2>&1' EXIT
 docker compose up -d --build --wait
