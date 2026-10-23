@@ -42,3 +42,11 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `python3 tests/integration.py`: 15 Tests erfolgreich. Neue Fälle prüfen Stornohinweise für bereits gestartete Positionen und Bons, Stationsrechte, Sperre bis zur Quittierung, einmalige Zahlungsrücknahme mit Pflichtgrund und Verlauf, erneute Zahlungsbestätigung sowie die Sperre bei einem neueren Tischbesuch.
 - Im In-App-Browser erschien die offene Stornoliste in der mobilen Küchenansicht. Nach „Storno gesehen“ sank der Zähler von drei auf zwei, und der quittierte Hinweis verschwand. Im Service konnte ein bezahlter, bereits deaktivierter Testtisch gewählt und das Rücknahmeformular geöffnet werden; ohne Grund blieb „Rücknahme bestätigen“ gesperrt. Das Formular wurde ohne Rücknahme geschlossen. Die Browserkonsole zeigte keine Fehler oder Warnungen. Keine echte Zahlung oder Erstattung wurde ausgelöst.
 - Die Browserprüfung erfolgte im vorhandenen In-App-Browser; eine automatisierte Browser-Suite und Tests auf einem physischen Tablet fehlen weiterhin.
+
+## Kleine Zuverlässigkeitsfixes, 23.10.2026
+
+- Docker-Produktionsbuild mit TypeScript-Prüfung erfolgreich.
+- `python3 tests/integration.py`: 18 Tests erfolgreich. Vor den Fixes schlugen die drei neuen Tests fehl: gekürztes Passwort wurde akzeptiert, DB-Session-Zeitzone war `SYSTEM`, und bei nicht erreichbarer Datenbank endete die API mit einem PHP-Fatal-Error statt JSON.
+- Neu: `test_15` (Leerzeichen im Passwort bleiben erhalten), `test_16` (Bonzeit passt zu `server_time`, DB-Session und PHP laufen in UTC), `test_17` (DB-Ausfall liefert JSON-Fehler 503). `test_16` und `test_17` laufen per `docker compose exec` im App-Container und werden ohne lokalen Docker-Stack übersprungen.
+- `test_01` nutzt jetzt einen zufälligen unbekannten Benutzer; der feste Name `missing` wurde bei wiederholten Läufen von der Login-Drosselung gesperrt (429).
+- Browserprüfung im In-App-Browser: als `robin` angemeldet, PHP-Sessions im Container gelöscht. Innerhalb von drei Sekunden erschien die Anmeldung mit „Sitzung beendet. Bitte anmelden.“; die erneute Anmeldung funktionierte ohne Neuladen. Die einzige Konsolenmeldung war der erwartete 401-Request.

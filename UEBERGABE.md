@@ -211,7 +211,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 15 HTTP-Integrationstests erfolgreich. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 18 Integrationstests erfolgreich (zuletzt ergänzt: Passwort-Leerzeichen, UTC-Zeitbasis, DB-Ausfall). Zwei dieser Tests führen PHP per `docker compose exec` im lokalen App-Container aus und werden ohne Docker oder bei gesetztem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -226,10 +226,10 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - **Unklarer Sendestatus:** Nach verlorener Antwort darf dieselbe Bestellung nur mit unveränderter Kennung erneut gesendet werden. Momentan erzeugt jede Entwurfsänderung eine neue Kennung. Bearbeitung nach einem möglicherweise bereits erfolgreichen Senden kann deshalb eine zweite Bestellung erzeugen. Einen expliziten Zustand „Sendestatus unklar“ mit serverseitiger Abfrage und festgehaltener Kennung einführen und testen.
 - **Kennung mit verändertem Inhalt:** Das Backend vergleicht bei vorhandener Kennung Benutzer, aber keinen Payload-Hash. Abweichende Wiederholungen sollten klar als Konflikt abgewiesen werden.
 - **Gleichzeitige identische Anfragen:** Unique Constraint verhindert doppelte Speicherung; bei einem Rennen kann die zweite Anfrage 409 statt derselben Erfolgsantwort bekommen. Mit echter Parallelität testen und gewünschte Retry-Semantik festlegen.
-- **Session-Ablauf:** Fehler beim Polling werden generell als „Verbindung unterbrochen“ behandelt. HTTP 401 sollte eine erneute Anmeldung auslösen; CSRF-/Container-Neustarts sauber behandeln. Nach Container-Neuanlage gingen im lokalen Test Sessions verloren; Neuladen holte einen neuen Token.
-- **Zeitbasis:** Frontend interpretiert DB-Zeitstempel als UTC; `server_time` kommt aus `gmdate`. Die Datenbankverbindung setzt derzeit keine explizite UTC-Zeitzone. Für Hetzner DB-Session und PHP-Zeitzone explizit vereinheitlichen und testen.
-- **Passwörter:** `shortText()` trimmt derzeit auch Passwörter im Login und Adminformular; das CLI-Adminskript tut dies nicht. Passwortbehandlung vereinheitlichen und Whitespace unverändert behandeln.
-- **Fehlerbehandlung:** Bei fehlgeschlagener DB-Verbindung kann auch der Aufruf von `db()` im Catch-Block fehlschlagen. Fehlerpfad ohne erneuten Verbindungsversuch absichern.
+- **Session-Ablauf:** Erledigt am 23.10.2026: HTTP 401 außerhalb des Logins setzt die Oberfläche zurück, zeigt „Sitzung beendet …“ und holt einen neuen CSRF-Token; der lokale Entwurf bleibt erhalten. Offen: POST-Anfragen mit abgelaufener Session scheitern zuerst an der CSRF-Prüfung (403) und führen noch nicht automatisch zum Login.
+- **Zeitbasis:** Erledigt am 23.10.2026: `db.php` setzt PHP auf UTC und jede DB-Session auf `time_zone='+00:00'`, sodass `NOW()`, `CURRENT_TIMESTAMP` und `UTC_TIMESTAMP()` übereinstimmen. Vorhandene Daten wurden nicht umgerechnet; auf Hetzner vor dem ersten Einsatz ist das unkritisch.
+- **Passwörter:** Erledigt am 23.10.2026: Login und Adminformular verwenden `passwordText()` und behandeln Leerzeichen am Rand unverändert, wie das CLI-Skript. Bereits früher über das Adminformular angelegte Passwörter mit Randleerzeichen wurden gekürzt gespeichert und gelten nur ohne diese Leerzeichen.
+- **Fehlerbehandlung:** Erledigt am 23.10.2026: Der Catch-Block nutzt `rollbackQuietly()` ohne neuen Verbindungsversuch; eine nicht erreichbare Datenbank liefert JSON mit HTTP 503.
 
 ### Priorität 2: Alltagstauglichkeit
 
