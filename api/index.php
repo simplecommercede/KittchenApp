@@ -25,6 +25,8 @@ function staffRoles(mixed $roles): array {if(!is_array($roles)||!$roles||count($
 // Counts a failed login; $limit failures within $minutes block the key for $minutes.
 function loginFailure(string $key,int $limit,int $minutes): void {query('INSERT INTO login_attempts(identity_hash,attempts,blocked_until,updated_at) VALUES(?,1,NULL,NOW()) ON DUPLICATE KEY UPDATE attempts=IF(updated_at<NOW()-INTERVAL ? MINUTE OR (blocked_until IS NOT NULL AND blocked_until<NOW()),1,attempts+1), blocked_until=IF(attempts>=?,NOW()+INTERVAL ? MINUTE,NULL), updated_at=NOW()',[$key,$minutes,$limit,$minutes]);}
 function drinkBase(string $name): string {return preg_match('/^(.*?)\s+\d+\s*ml$/u',$name,$m)?$m[1]:$name;}
+// Sum of the active (not removed) items of a visit, optionally only of unpaid orders.
+function visitTotal(int $visitId,bool $unpaidOnly=false): int {return (int)query('SELECT COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND i.cancelled_at IS NULL'.($unpaidOnly?' AND o.paid_at IS NULL':''),[$visitId])->fetch()['total'];}
 function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
 try {
  $action=$_GET['action']??'me'; $method=$_SERVER['REQUEST_METHOD'];
@@ -67,16 +69,17 @@ try {
   $diningTable=query('SELECT id,name,active FROM dining_tables WHERE id=?',[$table])->fetch();if(!$diningTable)fail('Tisch nicht gefunden.',404);
   $visit=query('SELECT id FROM table_visits WHERE table_id=? AND paid_at IS NULL ORDER BY id DESC LIMIT 1',[$table])->fetch();
   if(!$visit)out(['table'=>$diningTable,'visit_id'=>null,'orders'=>[],'total'=>0,'pending_count'=>0,'can_pay'=>false]);
-  $orders=query('SELECT o.id,o.created_at,o.note,o.cancelled_at,o.cancellation_reason,u.name AS server,c.name AS cancelled_by FROM orders o JOIN users u ON u.id=o.user_id LEFT JOIN users c ON c.id=o.cancelled_by WHERE o.visit_id=? ORDER BY o.id',[$visit['id']])->fetchAll();
-  $index=[];foreach($orders as $position=>&$order){$order['id']=(int)$order['id'];$order['items']=[];$order['total']=0;$index[$order['id']]=$position;}unset($order);
+  $orders=query('SELECT o.id,o.created_at,o.note,o.cancelled_at,o.cancellation_reason,o.paid_at,u.name AS server,c.name AS cancelled_by FROM orders o JOIN users u ON u.id=o.user_id LEFT JOIN users c ON c.id=o.cancelled_by WHERE o.visit_id=? ORDER BY o.id',[$visit['id']])->fetchAll();
+  $index=[];foreach($orders as $position=>&$order){$order['id']=(int)$order['id'];$order['items']=[];$order['total']=0;$order['pending_count']=0;$index[$order['id']]=$position;}unset($order);
   foreach(query('SELECT o.id AS order_id,i.id,i.menu_id,i.name,i.quantity,i.price,i.note,i.cancelled_at,i.cancellation_reason,t.station,t.status FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? ORDER BY o.id,i.id',[$visit['id']])->fetchAll() as $item){
-   $orderId=(int)$item['order_id'];unset($item['order_id']);foreach(['id','menu_id','quantity','price'] as $field)$item[$field]=(int)$item[$field];$position=$index[$orderId];$orders[$position]['items'][]=$item;if($item['cancelled_at']===null)$orders[$position]['total']+=$item['quantity']*$item['price'];
+   $orderId=(int)$item['order_id'];unset($item['order_id']);foreach(['id','menu_id','quantity','price'] as $field)$item[$field]=(int)$item[$field];$position=$index[$orderId];$orders[$position]['items'][]=$item;if($item['cancelled_at']===null){$orders[$position]['total']+=$item['quantity']*$item['price'];if(!in_array($item['status'],['collected','cancelled'],true))$orders[$position]['pending_count']++;}
   }
   foreach($orders as &$order)$order['changes']=[];unset($order);
   foreach(query('SELECT c.order_id,c.action,c.reason,c.before_state,c.after_state,c.created_at,u.name AS actor FROM order_changes c JOIN orders o ON o.id=c.order_id JOIN users u ON u.id=c.user_id WHERE o.visit_id=? ORDER BY c.id',[$visit['id']])->fetchAll() as $change){
    $position=$index[(int)$change['order_id']];unset($change['order_id']);$change['before_state']=$change['before_state']?json_decode($change['before_state'],true):null;$change['after_state']=$change['after_state']?json_decode($change['after_state'],true):null;$orders[$position]['changes'][]=$change;
   }
-  $total=0;$activeCount=0;foreach($orders as $order)if($order['cancelled_at']===null){$total+=$order['total'];$activeCount++;}
+  // Paid orders stay visible but no longer count towards the open amount.
+  $total=0;$activeCount=0;foreach($orders as &$order){$order['can_pay']=$order['cancelled_at']===null&&$order['paid_at']===null&&$order['pending_count']===0;if($order['cancelled_at']===null&&$order['paid_at']===null){$total+=$order['total'];$activeCount++;}}unset($order);
   $open=query('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND t.status NOT IN ("collected","cancelled")',[$visit['id']])->fetch();$pending=(int)$open['amount'];
   out(['table'=>$diningTable,'visit_id'=>(int)$visit['id'],'orders'=>$orders,'total'=>$total,'pending_count'=>$pending,'can_pay'=>$pending===0&&$activeCount>0]);
  }
@@ -107,9 +110,9 @@ try {
  if($action==='payments' && $method==='GET') {
   need($u,'service');
   $paid=query('SELECT v.id AS visit_id,v.table_id,v.paid_at,d.name AS table_name,COALESCE(u.name,"Unbekannt") AS paid_by FROM table_visits v JOIN dining_tables d ON d.id=v.table_id LEFT JOIN users u ON u.id=v.paid_by WHERE v.paid_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM table_visits newer WHERE newer.table_id=v.table_id AND newer.id>v.id) ORDER BY v.paid_at DESC,v.id DESC')->fetchAll();
-  foreach($paid as &$payment){$event=query('SELECT amount FROM payment_events WHERE visit_id=? AND action="confirmed" ORDER BY id DESC LIMIT 1',[$payment['visit_id']])->fetch();$payment['amount']=$event?(int)$event['amount']:(int)query('SELECT COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND i.cancelled_at IS NULL',[$payment['visit_id']])->fetch()['total'];$payment['visit_id']=(int)$payment['visit_id'];$payment['table_id']=(int)$payment['table_id'];}unset($payment);
-  $events=query('SELECT e.id,e.visit_id,e.action,e.amount,e.reason,e.created_at,d.name AS table_name,u.name AS actor FROM payment_events e JOIN table_visits v ON v.id=e.visit_id JOIN dining_tables d ON d.id=v.table_id JOIN users u ON u.id=e.user_id ORDER BY e.id DESC LIMIT 30')->fetchAll();
-  foreach($events as &$event){$event['id']=(int)$event['id'];$event['visit_id']=(int)$event['visit_id'];$event['amount']=(int)$event['amount'];}unset($event);
+  foreach($paid as &$payment){$payment['amount']=visitTotal((int)$payment['visit_id']);$payment['visit_id']=(int)$payment['visit_id'];$payment['table_id']=(int)$payment['table_id'];}unset($payment);
+  $events=query('SELECT e.id,e.visit_id,e.order_id,e.action,e.amount,e.reason,e.created_at,d.name AS table_name,u.name AS actor FROM payment_events e JOIN table_visits v ON v.id=e.visit_id JOIN dining_tables d ON d.id=v.table_id JOIN users u ON u.id=e.user_id ORDER BY e.id DESC LIMIT 30')->fetchAll();
+  foreach($events as &$event){$event['order_id']=$event['order_id']===null?null:(int)$event['order_id'];$event['id']=(int)$event['id'];$event['visit_id']=(int)$event['visit_id'];$event['amount']=(int)$event['amount'];}unset($event);
   out(['paid'=>$paid,'events'=>$events]);
  }
  if($action==='order' && $method==='POST') {
@@ -135,10 +138,10 @@ try {
   $reference=query('SELECT table_id,visit_id FROM orders WHERE id=?',[$orderId])->fetch();if(!$reference)fail('Bestellung nicht gefunden.',404);
   db()->beginTransaction();$diningTable=query('SELECT active FROM dining_tables WHERE id=? FOR UPDATE',[$reference['table_id']])->fetch();
   $visit=$reference['visit_id']?query('SELECT paid_at FROM table_visits WHERE id=? FOR UPDATE',[$reference['visit_id']])->fetch():null;
-  $order=query('SELECT note,cancelled_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
+  $order=query('SELECT note,cancelled_at,paid_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
   $existing=query('SELECT order_id,user_id FROM order_changes WHERE request_key=?',[$key])->fetch();
   if($existing){db()->rollBack();if((int)$existing['order_id']!==$orderId||(int)$existing['user_id']!==(int)$u['id'])fail('Korrekturkennung bereits vergeben.',409);out(['ok'=>true,'duplicate'=>true]);}
-  if(!$visit||$visit['paid_at']!==null||!$order||$order['cancelled_at']!==null){db()->rollBack();fail('Bestellung ist bereits abgeschlossen oder storniert.',409);}
+  if(!$visit||$visit['paid_at']!==null||!$order||$order['cancelled_at']!==null||$order['paid_at']!==null){db()->rollBack();fail('Bestellung ist bereits bezahlt, abgeschlossen oder storniert.',409);}
   if(in_array($mode,['add','replace'],true)&&(!$diningTable||(int)$diningTable['active']!==1)){db()->rollBack();fail('Tisch ist für neue Positionen deaktiviert.',409);}
   $before=null;$after=null;$newItemId=null;$orderCancelled=false;
   if($mode==='note'){
@@ -175,8 +178,8 @@ try {
   $reference=query('SELECT table_id,visit_id FROM orders WHERE id=?',[$orderId])->fetch();if(!$reference)fail('Bestellung nicht gefunden.',404);
   db()->beginTransaction();query('SELECT id FROM dining_tables WHERE id=? FOR UPDATE',[$reference['table_id']])->fetch();
   $visit=$reference['visit_id']?query('SELECT paid_at FROM table_visits WHERE id=? FOR UPDATE',[$reference['visit_id']])->fetch():null;
-  $order=query('SELECT cancelled_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
-  if(!$visit||$visit['paid_at']!==null){db()->rollBack();fail('Bezahlte oder ältere Bestellungen können hier nicht storniert werden.',409);}
+  $order=query('SELECT cancelled_at,paid_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
+  if(!$visit||$visit['paid_at']!==null||($order&&$order['paid_at']!==null)){db()->rollBack();fail('Bezahlte oder ältere Bestellungen können hier nicht storniert werden.',409);}
   if(!$order||$order['cancelled_at']!==null){db()->rollBack();fail('Bestellung wurde bereits storniert.',409);}
   $tickets=query('SELECT id,status FROM tickets WHERE order_id=? FOR UPDATE',[$orderId])->fetchAll();
   query('UPDATE orders SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?',[$u['id'],$reason,$orderId]);
@@ -192,10 +195,26 @@ try {
   if(!$visit||$visit['paid_at']!==null){db()->rollBack();fail('Zahlung wurde bereits bestätigt.',409);}
   $pending=query('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND t.status NOT IN ("collected","cancelled")',[$visitId])->fetch();
   if((int)$pending['amount']>0){db()->rollBack();fail('Es sind noch Bons für diesen Tisch offen.',409);}
-  $amount=query('SELECT COUNT(DISTINCT o.id) AS orders_count,COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND i.cancelled_at IS NULL',[$visitId])->fetch();
+  $amount=query('SELECT COUNT(DISTINCT o.id) AS orders_count,COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND o.paid_at IS NULL AND i.cancelled_at IS NULL',[$visitId])->fetch();
   if((int)$amount['orders_count']===0){db()->rollBack();fail('Keine abzurechnenden Bestellungen vorhanden.',409);}
   if((int)$amount['total']!==$expectedTotal){db()->rollBack();fail('Zahlbetrag hat sich geändert. Bitte Rechnung aktualisieren.',409);}
-  query('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?',[$u['id'],$visitId]);query('INSERT INTO payment_events(visit_id,action,amount,user_id) VALUES(?,"confirmed",?,?)',[$visitId,(int)$amount['total'],$u['id']]);db()->commit();out(['ok'=>true,'total'=>(int)$amount['total']]);
+  query('UPDATE orders SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE visit_id=? AND cancelled_at IS NULL AND paid_at IS NULL',[$u['id'],$visitId]);query('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?',[$u['id'],$visitId]);query('INSERT INTO payment_events(visit_id,action,amount,user_id) VALUES(?,"confirmed",?,?)',[$visitId,(int)$amount['total'],$u['id']]);db()->commit();out(['ok'=>true,'total'=>(int)$amount['total']]);
+ }
+ if($action==='order_paid' && $method==='POST') {
+  // Separate payment at one table: one order is paid on its own; the visit closes with the last unpaid order.
+  need($u,'service');$orderId=positive($body['order_id']??null);$expectedTotal=$body['expected_total']??null;if(!is_int($expectedTotal)||$expectedTotal<0)fail('Zahlbetrag fehlt.');
+  $reference=query('SELECT table_id,visit_id FROM orders WHERE id=?',[$orderId])->fetch();if(!$reference||!$reference['visit_id'])fail('Bestellung nicht gefunden.',404);$visitId=(int)$reference['visit_id'];
+  db()->beginTransaction();query('SELECT id FROM dining_tables WHERE id=? FOR UPDATE',[$reference['table_id']])->fetch();
+  $visit=query('SELECT paid_at FROM table_visits WHERE id=? FOR UPDATE',[$visitId])->fetch();$order=query('SELECT cancelled_at,paid_at FROM orders WHERE id=? FOR UPDATE',[$orderId])->fetch();
+  if(!$visit||$visit['paid_at']!==null||$order['paid_at']!==null){db()->rollBack();fail('Bestellung wurde bereits bezahlt.',409);}
+  if($order['cancelled_at']!==null){db()->rollBack();fail('Bestellung ist storniert.',409);}
+  if((int)query('SELECT COUNT(*) AS amount FROM tickets WHERE order_id=? AND status NOT IN ("collected","cancelled")',[$orderId])->fetch()['amount']>0){db()->rollBack();fail('Bons dieser Bestellung sind noch nicht abgeholt.',409);}
+  $total=(int)query('SELECT COALESCE(SUM(i.quantity*i.price),0) AS total FROM tickets t JOIN items i ON i.ticket_id=t.id WHERE t.order_id=? AND i.cancelled_at IS NULL',[$orderId])->fetch()['total'];
+  if($total!==$expectedTotal){db()->rollBack();fail('Zahlbetrag hat sich geändert. Bitte Rechnung aktualisieren.',409);}
+  query('UPDATE orders SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?',[$u['id'],$orderId]);query('INSERT INTO payment_events(visit_id,order_id,action,amount,user_id) VALUES(?,?,"order_paid",?,?)',[$visitId,$orderId,$total,$u['id']]);
+  $open=(int)query('SELECT COUNT(*) AS amount FROM orders WHERE visit_id=? AND cancelled_at IS NULL AND paid_at IS NULL',[$visitId])->fetch()['amount'];
+  if($open===0)query('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?',[$u['id'],$visitId]);
+  db()->commit();out(['ok'=>true,'total'=>$total,'visit_closed'=>$open===0]);
  }
  if($action==='payment_reverse' && $method==='POST') {
   need($u,'service');$visitId=positive($body['visit_id']??null);$reason=shortText($body['reason']??'',300);if($reason==='')fail('Grund für die Rücknahme fehlt.');
@@ -204,9 +223,8 @@ try {
   $visit=query('SELECT id,paid_at FROM table_visits WHERE id=? FOR UPDATE',[$visitId])->fetch();
   if(!$visit||$visit['paid_at']===null){db()->rollBack();fail('Zahlungsbestätigung wurde bereits zurückgenommen.',409);}
   if(query('SELECT id FROM table_visits WHERE table_id=? AND id>? LIMIT 1',[$reference['table_id'],$visitId])->fetch()){db()->rollBack();fail('Für diesen Tisch gibt es bereits einen neueren Besuch. Bitte manuell abgleichen.',409);}
-  $last=query('SELECT amount FROM payment_events WHERE visit_id=? AND action="confirmed" ORDER BY id DESC LIMIT 1',[$visitId])->fetch();
-  $amount=$last?(int)$last['amount']:(int)query('SELECT COALESCE(SUM(i.quantity*i.price),0) AS total FROM orders o JOIN tickets t ON t.order_id=o.id JOIN items i ON i.ticket_id=t.id WHERE o.visit_id=? AND o.cancelled_at IS NULL AND i.cancelled_at IS NULL',[$visitId])->fetch()['total'];
-  query('UPDATE table_visits SET paid_at=NULL,paid_by=NULL WHERE id=?',[$visitId]);
+  $amount=visitTotal($visitId);
+  query('UPDATE table_visits SET paid_at=NULL,paid_by=NULL WHERE id=?',[$visitId]);query('UPDATE orders SET paid_at=NULL,paid_by=NULL WHERE visit_id=?',[$visitId]);
   query('INSERT INTO payment_events(visit_id,action,amount,reason,user_id) VALUES(?,"reversed",?,?,?)',[$visitId,$amount,$reason,$u['id']]);
   db()->commit();out(['ok'=>true,'amount'=>$amount]);
  }

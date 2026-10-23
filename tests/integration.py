@@ -512,6 +512,42 @@ class Workflow(unittest.TestCase):
         self.assertFalse(self.service.call('tickets&view=service')[1]['bar_cover'])
         self.assertEqual(self.service.call('status',{'id':next_drink,'status':'working'})[0],403)
         self.assertEqual(self.bar.call('status',{'id':next_drink,'status':'working'})[0],200)
+    def test_24_separate_payment_per_order(self):
+        table_id=800+int(uuid.uuid4().hex[:4],16)%99
+        self.assertEqual(self.admin.call('admin_table',{'id':table_id,'name':'Getrennt '+str(table_id)})[0],200)
+        self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':True})[0],200)
+        def drink_order(quantity):
+            code,order=self.service.call('order',{'request_key':str(uuid.uuid4()),'table_id':table_id,'items':[{'menu_id':6,'quantity':quantity,'note':''}]})
+            self.assertEqual(code,201,order)
+            ticket=int(next(t for t in self.bar.call('tickets')[1]['tickets'] if int(t['order_id'])==order['id'])['id'])
+            return order['id'],ticket
+        first,first_ticket=drink_order(1);second,second_ticket=drink_order(2)
+        self.assertEqual(self.service.call('order_paid',{'order_id':first,'expected_total':350})[0],409)
+        for state in ['working','ready']: self.assertEqual(self.bar.call('status',{'id':first_ticket,'status':state})[0],200)
+        self.assertEqual(self.service.call('status',{'id':first_ticket,'status':'collected'})[0],200)
+        self.assertEqual(self.service.call('order_paid',{'order_id':first,'expected_total':999})[0],409)
+        code,paid=self.service.call('order_paid',{'order_id':first,'expected_total':350});self.assertEqual(code,200,paid)
+        self.assertFalse(paid['visit_closed'])
+        _,bill=self.service.call('table_bill&table_id='+str(table_id))
+        orders={o['id']:o for o in bill['orders']}
+        self.assertEqual((bill['total'],bool(orders[first]['paid_at']),orders[first]['can_pay'],orders[second]['can_pay']),(700,True,False,False))
+        self.assertEqual(self.service.call('order_paid',{'order_id':first,'expected_total':350})[0],409)
+        self.assertEqual(self.service.call('order_change',{'order_id':first,'mode':'note','note':'Neu','reason':'Test','request_key':str(uuid.uuid4())})[0],409)
+        self.assertEqual(self.service.call('order_cancel',{'order_id':first,'reason':'Test'})[0],409)
+        for state in ['working','ready']: self.assertEqual(self.bar.call('status',{'id':second_ticket,'status':state})[0],200)
+        self.assertEqual(self.service.call('status',{'id':second_ticket,'status':'collected'})[0],200)
+        code,paid=self.service.call('order_paid',{'order_id':second,'expected_total':700});self.assertEqual(code,200,paid)
+        self.assertTrue(paid['visit_closed'])
+        _,payments=self.service.call('payments')
+        record=next(p for p in payments['paid'] if p['visit_id']==bill['visit_id'])
+        self.assertEqual(record['amount'],1050)
+        self.assertEqual([e['action'] for e in payments['events'] if e['visit_id']==bill['visit_id']][:2],['order_paid','order_paid'])
+        # Reversal reopens the whole visit; the rest can then be paid in one go.
+        self.assertEqual(self.service.call('payment_reverse',{'visit_id':bill['visit_id'],'reason':'Falsch kassiert'})[0],200)
+        _,bill=self.service.call('table_bill&table_id='+str(table_id))
+        self.assertEqual((bill['total'],bill['can_pay']),(1050,True))
+        self.assertEqual(self.service.call('table_paid',{'visit_id':bill['visit_id'],'expected_total':1050})[0],200)
+        self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':False})[0],200)
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
