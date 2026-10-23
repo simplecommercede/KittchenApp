@@ -127,3 +127,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `Dockerfile` kopiert jetzt `public/`; nach dem Neubau lieferten alle sechs Dateien HTTP 200 mit passendem Typ. Im Browser bindet die Seite Favicon, Apple-Touch-Icon und Manifest ein, beide Manifest-Icons laden (192 und 512 px).
 - `sh tests/run.sh`: 25 Tests erfolgreich.
 - Nicht geprüft: Homescreen-Symbol auf echtem iPad/iPhone und Android.
+
+## Fokus-Modus, 23.10.2026
+
+- Reine Frontend-Änderung; Docker-Build mit TypeScript-Prüfung erfolgreich.
+- Browserprüfung als `mia`: Nach „⤢ Fokus“ sind Kopfzeile, Begrüßung, Fußzeile und Zahlungsbestätigungen ausgeblendet (`display: none`), Tresen-Hinweis, Tischleiste und Bon-Board bleiben, unten rechts erscheint „● Service · Fokus beenden“. Nach Neuladen bleibt der Modus aktiv; auf 375 px Breite kein horizontaler Überlauf. „Fokus beenden“ stellt die Kopfzeile wieder her. Echtes Vollbild wurde im eingebetteten Browser nicht gewährt (erwartet).
+- Nicht geprüft: Vollbild auf echten Tablets.
