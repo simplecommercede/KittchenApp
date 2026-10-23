@@ -83,3 +83,8 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 
 - `sh tests/run.sh`: 19 Tests erfolgreich. `test_18` prüft zusätzlich: Bearbeiten eines Getränks ohne ml wird abgelehnt (400); mit neuer Menge, neuem Preis und ohne Strohhalm entsteht „… 400 ml“ mit 4,20 € und `straw=0`; unbekannte ID ergibt 404.
 - Browserprüfung als `admin`: „Bearbeiten“ bei „Apfelsaft 300 ml“ öffnet das Formular mit „Apfelsaft“, 300 ml, 3,60 €, Kategorie „Säfte“ und gesetztem Strohhalm. Unverändert gespeichert, Hinweis „Produkt gespeichert …“ erschien, Datenbankwerte danach unverändert.
+
+## Admin: ein Eintrag pro Getränk mit Portionsgrößen, 23.10.2026
+
+- `sh tests/run.sh`: 20 Tests erfolgreich. Neu `test_19`: `admin_drink` legt ein Getränk mit 300 und 500 ml samt eigenen Preisen an; leere oder doppelte Größen und Menge im Namen ergeben 400, ein zweites gleichnamiges Getränk 409, fehlende vorhandene Größe beim Ändern 400, Tresen-Rolle 403. Umbenennen, Preisänderung, Deaktivieren einer Größe und neue 1000-ml-Größe werden gemeinsam gespeichert; IDs der vorhandenen Größen bleiben erhalten.
+- Browserprüfung als `admin`: Apfelschorle erscheint einmal mit „300 ml · 3,50 € | 500 ml · 5,20 €“; das Bearbeitungsformular zeigt beide Größen mit eigenem Preis und „Verfügbar“. Auf 375 px Breite kein horizontaler Überlauf. Nichts gespeichert, die Karte blieb unverändert.
