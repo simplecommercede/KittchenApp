@@ -14,6 +14,7 @@ function allows(array $u,string $role): bool {return in_array('admin',$u['roles'
 function need(array $u,string $role): void {if(!allows($u,$role)) fail('Keine Berechtigung.',403);}
 function shortText(mixed $v,int $max): string {if(!is_string($v)||strlen($v)>$max) fail('Ungültiger Text.');return trim($v);}
 function positive(mixed $v,int $max=999999): int {if(!is_int($v)||$v<1||$v>$max) fail('Ungültige Zahl.');return $v;}
+function staffRoles(mixed $roles): array {if(!is_array($roles)||!$roles||count($roles)>4)fail('Mindestens eine gültige Rolle wählen.');foreach($roles as $role)if(!is_string($role)||!in_array($role,['admin','service','kitchen','bar'],true))fail('Ungültige Rolle.');return array_values(array_unique($roles));}
 function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
 try {
  $action=$_GET['action']??'me'; $method=$_SERVER['REQUEST_METHOD'];
@@ -168,7 +169,26 @@ try {
  if(str_starts_with($action,'admin_')) {
   need($u,'admin');
   if($action==='admin_users' && $method==='GET'){ $rows=query('SELECT id,name,username,roles,active FROM users ORDER BY id')->fetchAll();foreach($rows as &$row)$row['roles']=json_decode($row['roles'],true);out($rows); }
-  if($action==='admin_user' && $method==='POST') {$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$password=shortText($body['password']??'',200);$roles=$body['roles']??[];if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username)||strlen($password)<12||!is_array($roles)||!$roles||array_diff($roles,['admin','service','kitchen','bar']))fail('Name, Benutzername, Passwort (min. 12 Zeichen) und Rollen prüfen.');query('INSERT INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash($password,PASSWORD_DEFAULT),json_encode(array_values(array_unique($roles)))]);out(['ok'=>true],201);}
+  if($action==='admin_user' && $method==='POST') {$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$password=shortText($body['password']??'',200);$roles=staffRoles($body['roles']??null);if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username)||strlen($password)<12)fail('Name, Benutzername und Passwort (min. 12 Zeichen) prüfen.');if(query('SELECT id FROM users WHERE username=?',[$username])->fetch())fail('Benutzername ist bereits vergeben.',409);query('INSERT INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash($password,PASSWORD_DEFAULT),json_encode($roles)]);out(['ok'=>true],201);}
+  if($action==='admin_user_update' && $method==='POST') {
+   $id=positive($body['id']??null);$name=shortText($body['name']??'',80);$username=shortText($body['username']??'',80);$roles=staffRoles($body['roles']??null);
+   if(!$name||!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username))fail('Name und Benutzername prüfen.');
+   db()->beginTransaction();$staff=query('SELECT id,username,roles,active FROM users FOR UPDATE')->fetchAll();$target=null;$activeAdmins=0;
+   foreach($staff as $person){if((int)$person['id']===$id)$target=$person;if((int)$person['active']===1&&in_array('admin',json_decode($person['roles'],true),true))$activeAdmins++;if((int)$person['id']!==$id&&$person['username']===$username){db()->rollBack();fail('Benutzername ist bereits vergeben.',409);}}
+   if(!$target){db()->rollBack();fail('Mitarbeiter nicht gefunden.',404);}
+   $wasAdmin=(int)$target['active']===1&&in_array('admin',json_decode($target['roles'],true),true);$willBeAdmin=in_array('admin',$roles,true);
+   if($wasAdmin&&!$willBeAdmin&&($activeAdmins<=1||$id===(int)$u['id'])){db()->rollBack();fail('Der eigene oder letzte Admin-Zugang muss Admin bleiben.',409);}
+   query('UPDATE users SET name=?,username=?,roles=? WHERE id=?',[$name,$username,json_encode($roles),$id]);db()->commit();out(['ok'=>true]);
+  }
+  if($action==='admin_user_status' && $method==='POST') {
+   $id=positive($body['id']??null);$active=$body['active']??null;if(!is_bool($active))fail('Status prüfen.');
+   db()->beginTransaction();$staff=query('SELECT id,roles,active FROM users FOR UPDATE')->fetchAll();$target=null;$activeAdmins=0;
+   foreach($staff as $person){if((int)$person['id']===$id)$target=$person;if((int)$person['active']===1&&in_array('admin',json_decode($person['roles'],true),true))$activeAdmins++;}
+   if(!$target){db()->rollBack();fail('Mitarbeiter nicht gefunden.',404);}
+   if(!$active&&$id===(int)$u['id']){db()->rollBack();fail('Eigenen Zugang nicht entfernen.',409);}
+   if(!$active&&(int)$target['active']===1&&in_array('admin',json_decode($target['roles'],true),true)&&$activeAdmins<=1){db()->rollBack();fail('Letzten Admin-Zugang nicht entfernen.',409);}
+   query('UPDATE users SET active=? WHERE id=?',[$active?1:0,$id]);db()->commit();out(['ok'=>true]);
+  }
   if($action==='admin_menu' && $method==='POST'){$name=shortText($body['name']??'',120);$cat=shortText($body['category']??'',40);$station=$body['station']??'';$price=$body['price']??null;if(!$name||!$cat||!in_array($station,['kitchen','bar'],true)||!is_int($price)||$price<0||$price>100000)fail('Speisendaten prüfen.');$id=$body['id']??null;if($id){positive($id);query('UPDATE menu SET name=?,category=?,station=?,price=? WHERE id=?',[$name,$cat,$station,$price,$id]);}else query('INSERT INTO menu(name,category,station,price) VALUES(?,?,?,?)',[$name,$cat,$station,$price]);out(['ok'=>true]);}
   if($action==='admin_menu_status' && $method==='POST'){$id=positive($body['id']??null);$active=$body['active']??null;if(!is_bool($active))fail('Status prüfen.');if(!query('SELECT id FROM menu WHERE id=?',[$id])->fetch())fail('Produkt nicht gefunden.',404);query('UPDATE menu SET active=? WHERE id=?',[$active?1:0,$id]);out(['ok'=>true]);}
   if($action==='admin_table' && $method==='POST'){$id=positive($body['id']??null,999);$name=shortText($body['name']??'',40);if(!$name)fail('Tischname fehlt.');query('INSERT INTO dining_tables(id,name) VALUES(?,?) ON DUPLICATE KEY UPDATE name=VALUES(name)',[$id,$name]);out(['ok'=>true]);}
