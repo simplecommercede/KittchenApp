@@ -18,7 +18,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 | Getrennte Entwürfe pro Tisch statt eines Entwurfs pro Person | Ablauf |
 | Archiv: feste Dauer bis Abholung statt weiterlaufendem Timer; Suche und Filter nach Datum/Tisch | Ablauf |
 | Abgelaufene Sitzung beim Speichern (POST) führt zu „Sicherheitsprüfung fehlgeschlagen“ statt zur Anmeldung | Ablauf |
-| Bedienung auf echten iPads/Smartphones prüfen (Touch-Ziele, Tablet-Layout, Kontraste) | Prüfung |
+| Bedienung auf echten iPads/Smartphones prüfen (Touch-Ziele, Tablet-Layout, Kontraste); über das WLAN jetzt möglich | Prüfung |
 | 6 Longdrinks ohne ml-Angabe; Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu klären |
 
 **Später (Backend-Härtung und Betrieb, derzeit nicht im Fokus):**
@@ -116,7 +116,7 @@ docker compose down
 
 Das Volume `kitchen-db` hält die Daten. `docker compose down -v` löscht die lokale Datenbank und darf nicht versehentlich als normaler Neustart verwendet werden.
 
-Port 8087 ist an `127.0.0.1` gebunden. Ein physisches iPad im WLAN kann diese Instanz deshalb nicht direkt erreichen. Für echte Gerätetests braucht es eine bewusst eingerichtete erreichbare Testadresse. Außerdem verwendet das Frontend `crypto.randomUUID()`, wofür außerhalb von localhost ein sicherer Browserkontext/HTTPS erforderlich ist.
+Port 8087 ist standardmäßig an `127.0.0.1` gebunden. Mit `APP_BIND=0.0.0.0` in einer lokalen `.env` (von Git ausgeschlossen) ist die App im WLAN unter `http://<Mac-Adresse>:8087/` erreichbar; Anleitung und Hinweise stehen in der README. Der Teststack setzt `APP_BIND=127.0.0.1` fest und bleibt immer lokal. Bestell- und Korrekturkennungen erzeugt das Frontend mit `crypto.randomUUID()` und ohne HTTPS mit einem Ersatz über `crypto.getRandomValues()`; über die WLAN-Adresse geprüft am 23.10.2026. Docker Desktop meldet alle Zugriffe mit derselben internen Adresse (192.168.65.1), daher gelten Login-Limits pro Adresse für alle Geräte gemeinsam.
 
 `npm run dev` startet nur Vite. Es gibt derzeit keinen Vite-Proxy zur PHP-API; der vollständige verifizierte Entwicklungsweg ist Docker. Hot Reload muss bei Bedarf noch sauber eingerichtet werden.
 
@@ -132,7 +132,7 @@ Port 8087 ist an `127.0.0.1` gebunden. Ein physisches iPad im WLAN kann diese In
 | `api/speisekarte.php` | 99 Produkte der gedruckten Speisekarte mit Kategorie, Station, Preis und Strohhalm-Kennzeichen; nur für die Erstbefüllung einer leeren Karte |
 | `api/create-admin.php` | CLI-Anlage eines initialen Administrators |
 | `Dockerfile` | Mehrstufiger Node-Build, danach PHP-Apache mit PDO MySQL |
-| `compose.yaml` | Lokale App, MariaDB, persistentes DB-Volume und Healthcheck |
+| `compose.yaml` | Lokale App, MariaDB, persistentes DB-Volume und Healthcheck; `APP_BIND`, `APP_PORT`, `MENU_SEED` per Umgebung |
 | `tests/integration.py` | HTTP-Integrationstests mit Python-Standardbibliothek |
 | `tests/run.sh` | Startet den getrennten Teststack `kittchenapp-test` auf Port 8088 mit `MENU_SEED=test` und räumt ihn danach ab |
 | `tests/RESULTS.md` | Chronologisches Protokoll aller Testläufe und Browserprüfungen |

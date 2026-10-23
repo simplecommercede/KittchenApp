@@ -27,6 +27,24 @@ Alle Demo-Zugänge verwenden **Stimbeck-Demo-2026!**:
 
 Für parallele Rollen unterschiedliche Browserprofile oder private Fenster verwenden. Browser-Tabs teilen ihre Anmeldung.
 
+## Im lokalen WLAN erreichbar machen
+
+Standardmäßig ist die App nur auf dem Rechner selbst erreichbar. Für iPads und Smartphones im selben WLAN im Projektverzeichnis eine Datei `.env` anlegen (sie ist von Git ausgeschlossen) und die Container neu starten:
+
+```sh
+echo "APP_BIND=0.0.0.0" > .env
+docker compose up -d
+ipconfig getifaddr en0
+```
+
+Die letzte Zeile zeigt die WLAN-Adresse des Macs, z. B. `192.168.178.30`. Auf den Geräten dann `http://<Adresse>:8087/` öffnen. Zurück auf nur lokal: `.env` löschen und `docker compose up -d`.
+
+Zu beachten:
+- Die Demo-Zugänge mit dem öffentlichen Passwort gelten dann für jedes Gerät im WLAN. Nur in einem vertrauenswürdigen WLAN freigeben, nicht im Gäste-WLAN.
+- Die Verbindung ist unverschlüsselt (HTTP).
+- Der Mac muss eingeschaltet und wach bleiben. Seine Adresse kann sich ändern; im Router (z. B. FRITZ!Box) lässt sich ihm eine feste Adresse zuweisen.
+- Docker Desktop meldet alle Zugriffe mit derselben internen Adresse. Die Login-Sperre pro Adresse (30 Fehlversuche in 15 Minuten) gilt deshalb für alle Geräte gemeinsam.
+
 ## Tests
 
 Die Integrationstests benötigen Docker und Python 3 auf dem Host. Sie starten einen eigenen, frischen Stack (`kittchenapp-test`, Port 8088, eigenes Datenbank-Volume mit festen Testartikeln) und räumen ihn danach wieder ab. Die lokale App auf Port 8087 und ihre Daten bleiben unberührt:

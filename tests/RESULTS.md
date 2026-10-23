@@ -100,3 +100,11 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `sh tests/run.sh`: 24 Tests erfolgreich. Neu `test_23`: Hat der Tresen seine Ansicht offen, bekommt Service 403 beim Starten eines Getränkebons und `bar_cover: false`. Nach 1 Minute ohne Tresen-Abruf: `bar_cover: true`, Service setzt den Bon auf In Arbeit, Abholbereit und Abgeholt; der Bon bleibt `bar`, der Verlauf zeigt „Mia“. Küchenbons bleiben gesperrt (403). Ein später Storno eines vertretenen Getränks erzeugt einen Hinweis, den Service quittieren kann. Ist der Tresen zurück, gibt es wieder 403 für Service, der Tresen selbst darf weiterarbeiten.
 - Migration auf der lokalen Datenbank ergänzte `users.last_seen` und `users.last_view`.
 - Browserprüfung als `mia` ohne Probebestellung: Hinweis „Tresen ist gerade nicht besetzt …“ erscheint. Nach simulierter Tresen-Anwesenheit (per SQL) verschwand er innerhalb von 3 Sekunden; die Simulation wurde danach zurückgesetzt.
+
+## Erreichbarkeit im lokalen WLAN, 23.10.2026
+
+- `compose.yaml` bindet über `APP_BIND` (Standard `127.0.0.1`); lokal mit `.env` `APP_BIND=0.0.0.0` gestartet, Port danach `0.0.0.0:8087`. `curl http://192.168.178.30:8087/` lieferte 200.
+- Browserprüfung über `http://192.168.178.30:8087/`: Seite ist kein sicherer Kontext (`isSecureContext` false, `crypto.randomUUID` nicht vorhanden). Als `mia` angemeldet, Tisch 02 gewählt, Astra in den Entwurf gelegt: Die Entwurfskennung ist eine gültige UUID v4, keine Konsolenfehler. Probeposition danach entfernt, nichts gesendet.
+- `sh tests/run.sh`: 24 Tests erfolgreich; der Teststack lief nur auf 127.0.0.1 und wurde danach entfernt.
+- Apache-Log: Alle Zugriffe, auch über die WLAN-Adresse, erscheinen als 192.168.65.1 (Docker Desktop).
+- Nicht geprüft: Zugriff von einem echten iPad oder Smartphone.
