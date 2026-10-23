@@ -68,3 +68,8 @@
 .notify-panel{display:grid;gap:10px;margin-bottom:16px}
 .notify-panel .check small{display:inline;margin-left:6px}
 .notify-panel>button{width:auto;justify-self:start}
+.focus-toggle{width:auto;min-height:38px;padding:6px 10px;margin:0}
+.focus-mode header,.focus-mode footer,.focus-mode .page-title,.focus-mode .payment-history{display:none}
+.focus-mode main{padding-top:12px;padding-bottom:72px}
+.focus-exit{position:fixed;right:12px;bottom:12px;z-index:50;display:flex;align-items:center;gap:8px;background:#fffefb;border:1px solid #dedfd4;border-radius:999px;padding:4px 4px 4px 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:13px;font-weight:700}
+.focus-exit button{width:auto;min-height:36px;margin:0;padding:6px 12px;border-radius:999px}
