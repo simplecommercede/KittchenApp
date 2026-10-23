@@ -1,5 +1,5 @@
 """Black-box integration tests against the real PHP/MariaDB Docker stack."""
-import json, os, unittest, urllib.request, urllib.error, http.cookiejar, uuid
+import datetime, json, os, shutil, subprocess, unittest, urllib.request, urllib.error, http.cookiejar, uuid
 BASE = os.environ.get('TEST_URL', 'http://127.0.0.1:8087') + '/api/index.php?action='
 class Client:
     def __init__(self, name=None):
@@ -32,7 +32,7 @@ class Workflow(unittest.TestCase):
         anonymous=Client()
         self.assertEqual(anonymous.call('tickets')[0],401)
         self.assertEqual(self.service.call('order',{},csrf=False)[0],403)
-        self.assertEqual(anonymous.call('login',{'username':'missing','password':'wrong'})[0],401)
+        self.assertEqual(anonymous.call('login',{'username':'missing_'+uuid.uuid4().hex[:8],'password':'wrong'})[0],401)
     def test_02_permissions(self):
         self.assertEqual(self.kitchen.call('order',{})[0],403)
         self.assertEqual(self.service.call('admin_users')[0],403)
@@ -385,4 +385,31 @@ class Workflow(unittest.TestCase):
         self.assertFalse(any(p['visit_id']==visit_id for p in self.service.call('payments')[1]['paid']))
         self.assertEqual(self.service.call('order_cancel',{'order_id':next_order['id'],'reason':'Test abgeschlossen'})[0],200)
         self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':False})[0],200)
+    def test_15_password_whitespace_is_kept(self):
+        username='space_'+uuid.uuid4().hex[:8];password='  Leerzeichen-Pass-2026  '
+        self.assertEqual(self.admin.call('admin_user',{'name':'Leerzeichen','username':username,'password':password,'roles':['kitchen']})[0],201)
+        c=Client();code,data=c.call('login',{'username':username,'password':password.strip()})
+        self.assertEqual(code,401,data)
+        code,data=c.call('login',{'username':username,'password':password});self.assertEqual(code,200,data)
+        self.assertEqual(data['user']['username'],username)
+    def test_16_timestamps_use_utc(self):
+        _,oid=self.order()
+        _,data=self.service.call('tickets')
+        ticket=next(t for t in data['tickets'] if int(t['order_id'])==oid)
+        parse=lambda s:datetime.datetime.fromisoformat(s.replace(' ','T'))
+        self.assertLess(abs((parse(data['server_time'])-parse(ticket['created_at'])).total_seconds()),60)
+        out=in_app("$tz=query('SELECT @@session.time_zone AS tz, TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),NOW()) AS diff')->fetch();echo json_encode([$tz['tz'],(int)$tz['diff'],date_default_timezone_get()]);")
+        self.assertEqual(json.loads(out),['+00:00',0,'UTC'])
+    def test_17_unreachable_database_returns_json_503(self):
+        # A session with a user forces a DB query, which must fail cleanly without a second connection attempt.
+        out=in_app("session_id('dbfail'.bin2hex(random_bytes(4)));session_start();$_SESSION['uid']=1;session_write_close();$_GET['action']='tickets';$_SERVER['REQUEST_METHOD']='GET';register_shutdown_function(function(){fwrite(STDERR,(string)http_response_code());});include '/var/www/html/api/index.php';",
+            env={'DB_HOST':'127.0.0.1','DB_PASSWORD':'wrong'},require_db=False)
+        self.assertEqual(json.loads(out),{'error':'Datenbank vorübergehend nicht erreichbar.'})
+def in_app(code,env=None,require_db=True):
+    """Run PHP inside the local app container; skipped when the Docker stack is not available."""
+    if os.environ.get('TEST_URL') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Stack.')
+    prefix="require '/var/www/html/api/db.php';" if require_db else ''
+    args=['docker','compose','exec','-T']+[f'-e{k}={v}' for k,v in (env or {}).items()]+['app','php','-r',prefix+code]
+    result=subprocess.run(args,cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),capture_output=True,text=True,timeout=30)
+    return result.stdout
 if __name__=='__main__': unittest.main(verbosity=2)
