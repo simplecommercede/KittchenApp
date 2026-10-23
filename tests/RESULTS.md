@@ -68,3 +68,8 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Migration auf der bestehenden lokalen Datenbank ergänzte `menu.straw` und markierte 39 Getränke (Softgetränke, Säfte, Saftschorlen, Malzbier). Die Seed-Datei liefert für frische Installationen dieselben 39.
 - `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Teststack.
 - Browserprüfung als `mia`: Coca-Cola erscheint als eine Karte mit „300 · 500 ml“ und „ab 3,40 €“; nach dem Antippen „300 ml“ gewählt. König Pilsener vom Fass ebenso mit 500 ml. Im Entwurf hat nur die Cola „Mit Strohhalm“, das Pils nicht. Beide Probepositionen entfernt; es wurde nichts gesendet.
+
+## Malzbier ohne Strohhalm, 23.10.2026
+
+- Strohhalm-Regel in Seed und Migration ohne Malzbier; lokale Datenbank einmalig per SQL korrigiert. Danach 38 Getränke mit Strohhalm-Option, Malzbier ohne.
+- PHP-Syntaxprüfung erfolgreich; `sh tests/run.sh`: 18 Tests erfolgreich.

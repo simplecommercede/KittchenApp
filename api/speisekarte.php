@@ -66,6 +66,6 @@ $menu = [
  ['Extra Jalapenos', 'Dips & Extras', 'kitchen', 150],
  ['Extra Patty', 'Dips & Extras', 'kitchen', 450],
 ];
-// Fünfter Wert: optionale Auswahl „Mit Strohhalm“ für alkoholfreie Getränke, die Kinder typischerweise bestellen.
-$straw = fn(array $p): bool => in_array($p[1], ['Softgetränke', 'Säfte', 'Saftschorlen'], true) || str_starts_with($p[0], 'Malzbier');
+// Fünfter Wert: optionale Auswahl „Mit Strohhalm“ für alkoholfreie Getränke, die Kinder typischerweise bestellen (bewusst nicht Malzbier).
+$straw = fn(array $p): bool => in_array($p[1], ['Softgetränke', 'Säfte', 'Saftschorlen'], true);
 return array_map(fn($p) => [...$p, (int)$straw($p)], $menu);
