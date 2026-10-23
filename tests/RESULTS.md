@@ -24,3 +24,8 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Docker-Produktionsbuild einschließlich TypeScript-Prüfung erfolgreich; PHP-Syntaxprüfung erfolgreich; Migration auf der vorhandenen lokalen Datenbank erfolgreich.
 - `python3 tests/integration.py`: 12 Tests erfolgreich. Der neue Test deckt Notizänderung, Ersatzposition, Nachtrag, einzelne Entfernung, unveränderte Bestellnummer, neue Stationsbons, korrekten Zahlbetrag, Änderungsverlauf, Berechtigungen und wiederholte Kennungen ab.
 - Mobile Browserprüfung auf `http://127.0.0.1:8087/`: Kassenansicht zeigt je Position „Korrigieren“ und „Entfernen“ sowie pro Bestellung Nachtrag und Notizänderung. Das Korrekturformular zeigt Produkt, Menge, Hinweis und Pflichtgrund. Im Browser wurde keine bestehende Gastbestellung verändert.
+
+## Korrekturen vor dem Senden, 23.10.2026
+
+- Docker-Produktionsbuild mit TypeScript-Prüfung erfolgreich.
+- Mobile Browserprüfung: Produkt und Menge einer Entwurfsposition geändert, Sonderwunsch angepasst und Erhalt nach Neuladen geprüft. Die Position wurde anschließend entfernt; ohne Position bleibt „Bestellung senden“ gesperrt. Keine Bestellung wurde für diesen Test gesendet. Die Browserkonsole zeigte keine Fehler oder Warnungen.
