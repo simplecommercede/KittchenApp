@@ -12,6 +12,11 @@ function fail(string $message,int $code=400): never {out(['error'=>$message],$co
 function user(): array { if(!isset($_SESSION['uid'])) fail('Bitte anmelden.',401); $u=query('SELECT id,name,username,roles FROM users WHERE id=? AND active=1',[$_SESSION['uid']])->fetch(); if(!$u) fail('Zugang gesperrt.',401); $u['roles']=json_decode($u['roles'],true); return $u; }
 function allows(array $u,string $role): bool {return in_array('admin',$u['roles'],true)||in_array($role,$u['roles'],true);}
 function need(array $u,string $role): void {if(!allows($u,$role)) fail('Keine Berechtigung.',403);}
+// The bar counts as staffed while someone with the bar role had the Tresen view open in the last 30 seconds.
+function barStaffed(): bool {foreach(query('SELECT roles FROM users WHERE active=1 AND last_view="bar" AND last_seen>NOW()-INTERVAL 30 SECOND')->fetchAll() as $row){$roles=json_decode($row['roles'],true);if(in_array('bar',$roles,true)||in_array('admin',$roles,true))return true;}return false;}
+// Service covers the bar (new → working → ready, cancellation notices) while nobody staffs it.
+function coversBar(array $u): bool {return !allows($u,'bar')&&allows($u,'service')&&!barStaffed();}
+function mayWorkStation(array $u,string $station): bool {return allows($u,$station)||($station==='bar'&&coversBar($u));}
 function shortText(mixed $v,int $max): string {if(!is_string($v)||strlen($v)>$max) fail('Ungültiger Text.');return trim($v);}
 function passwordText(mixed $v): string {if(!is_string($v)||strlen($v)>200) fail('Ungültiger Text.');return $v;}
 function rollbackQuietly(): void {try{$db=dbConnection(false);if($db?->inTransaction())$db->rollBack();}catch(Throwable){}}
@@ -37,7 +42,7 @@ try {
   query('DELETE FROM login_attempts WHERE identity_hash=?',[$key]);session_regenerate_id(true);$_SESSION['uid']=$u['id'];$_SESSION['csrf']=bin2hex(random_bytes(32));out(['user'=>user(),'csrf'=>$_SESSION['csrf']]);
  }
  $u=user();
- if($action==='logout' && $method==='POST'){$_SESSION=[];session_destroy();out(['ok'=>true]);}
+ if($action==='logout' && $method==='POST'){query('UPDATE users SET last_view=NULL WHERE id=?',[$u['id']]);$_SESSION=[];session_destroy();out(['ok'=>true]);}
  if($action==='menu' && $method==='GET') out(query('SELECT * FROM menu ORDER BY id')->fetchAll());
  if($action==='tables' && $method==='GET') out(query('SELECT * FROM dining_tables ORDER BY id')->fetchAll());
  if($action==='table_status' && $method==='GET') {
@@ -76,22 +81,24 @@ try {
   out(['table'=>$diningTable,'visit_id'=>(int)$visit['id'],'orders'=>$orders,'total'=>$total,'pending_count'=>$pending,'can_pay'=>$pending===0&&$activeCount>0]);
  }
  if($action==='tickets' && $method==='GET') {
+  $view=$_GET['view']??null;if(in_array($view,['service','kitchen','bar','admin'],true))query('UPDATE users SET last_seen=NOW(),last_view=? WHERE id=?',[$view,$u['id']]);
+  $cover=coversBar($u);
   $archive=($_GET['archive']??'0')==='1'; $params=[]; $where=$archive?'t.status IN ("collected","cancelled")':'t.status NOT IN ("collected","cancelled")';
   if(!allows($u,'service')) { $stations=[]; if(allows($u,'kitchen')) $stations[]='kitchen';if(allows($u,'bar')) $stations[]='bar';if(!$stations) fail('Keine Berechtigung.',403);$where.=' AND t.station IN ('.implode(',',array_fill(0,count($stations),'?')).')';$params=$stations; }
   $tickets=query('SELECT t.*,o.table_id,o.note,o.user_id,o.cancellation_reason,d.name AS table_name,u.name AS server FROM tickets t JOIN orders o ON o.id=t.order_id JOIN dining_tables d ON d.id=o.table_id JOIN users u ON u.id=o.user_id WHERE '.$where.' ORDER BY t.created_at '.($archive?'DESC':'ASC').',t.id '.($archive?'DESC':'ASC').($archive?' LIMIT 200':''),$params)->fetchAll();
   foreach($tickets as &$ticket){$ticket['items']=query('SELECT * FROM items WHERE ticket_id=?',[$ticket['id']])->fetchAll();if($archive)$ticket['events']=query('SELECT e.action,e.created_at,u.name FROM events e JOIN users u ON u.id=e.user_id WHERE ticket_id=? ORDER BY e.id',[$ticket['id']])->fetchAll();}unset($ticket);
   $alerts=[];
   if(!$archive){
-   $alertStations=[];if(allows($u,'kitchen'))$alertStations[]='kitchen';if(allows($u,'bar'))$alertStations[]='bar';
+   $alertStations=[];if(allows($u,'kitchen'))$alertStations[]='kitchen';if(allows($u,'bar')||$cover)$alertStations[]='bar';
    if($alertStations){$placeholders=implode(',',array_fill(0,count($alertStations),'?'));$alerts=query('SELECT a.id,a.ticket_id,a.kind,a.description,a.reason,a.created_at,t.order_id,t.station,d.name AS table_name,u.name AS requested_by FROM station_alerts a JOIN tickets t ON t.id=a.ticket_id JOIN orders o ON o.id=t.order_id JOIN dining_tables d ON d.id=o.table_id JOIN users u ON u.id=a.created_by WHERE a.acknowledged_at IS NULL AND t.station IN ('.$placeholders.') ORDER BY a.id',$alertStations)->fetchAll();}
   }
-  out(['tickets'=>$tickets,'alerts'=>$alerts,'server_time'=>gmdate('Y-m-d H:i:s')]);
+  out(['tickets'=>$tickets,'alerts'=>$alerts,'bar_cover'=>$cover,'server_time'=>gmdate('Y-m-d H:i:s')]);
  }
  if($action==='station_alert_ack' && $method==='POST') {
   $id=positive($body['id']??null);db()->beginTransaction();
   $alert=query('SELECT a.id,a.ticket_id,a.acknowledged_at,t.station FROM station_alerts a JOIN tickets t ON t.id=a.ticket_id WHERE a.id=? FOR UPDATE',[$id])->fetch();
   if(!$alert){db()->rollBack();fail('Stornohinweis nicht gefunden.',404);}
-  if(!allows($u,$alert['station'])){db()->rollBack();fail('Keine Berechtigung.',403);}
+  if(!mayWorkStation($u,$alert['station'])){db()->rollBack();fail('Keine Berechtigung.',403);}
   if($alert['acknowledged_at']!==null){db()->rollBack();out(['ok'=>true,'duplicate'=>true]);}
   query('UPDATE station_alerts SET acknowledged_at=UTC_TIMESTAMP(),acknowledged_by=? WHERE id=?',[$u['id'],$id]);
   query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,? ,"cancel_acknowledged")',[$alert['ticket_id'],$u['id']]);
@@ -205,7 +212,7 @@ try {
  }
  if($action==='status' && $method==='POST') {
   $id=positive($body['id']??null);$target=$body['status']??'';if(!in_array($target,['working','ready','collected'],true))fail('Ungültiger Status.');
-  db()->beginTransaction();$t=query('SELECT * FROM tickets WHERE id=? FOR UPDATE',[$id])->fetch();if(!$t){db()->rollBack();fail('Bon nicht gefunden.',404);}need($u,$target==='collected'?'service':$t['station']);
+  db()->beginTransaction();$t=query('SELECT * FROM tickets WHERE id=? FOR UPDATE',[$id])->fetch();if(!$t){db()->rollBack();fail('Bon nicht gefunden.',404);}if($target==='collected')need($u,'service');elseif(!mayWorkStation($u,$t['station'])){db()->rollBack();fail('Keine Berechtigung.',403);}
   $expected=['working'=>'new','ready'=>'working','collected'=>'ready'][$target];if($t['status']!==$expected){db()->rollBack();fail('Bon wurde bereits geändert. Bitte aktualisieren.',409);}
   if($target!=='working'&&query('SELECT id FROM station_alerts WHERE ticket_id=? AND acknowledged_at IS NULL LIMIT 1',[$id])->fetch()){db()->rollBack();fail('Offenen Stornohinweis zuerst an der Station bestätigen.',409);}
   $column=['working'=>'started_at','ready'=>'ready_at','collected'=>'collected_at'][$target];query("UPDATE tickets SET status=?, $column=NOW() WHERE id=?",[$target,$id]);query('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,?)',[$id,$u['id'],$target]);db()->commit();out(['ok'=>true]);

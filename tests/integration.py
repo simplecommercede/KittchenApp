@@ -480,6 +480,38 @@ class Workflow(unittest.TestCase):
         finally:
             in_app("query('DELETE FROM login_attempts');")
         Client('mia')  # Anmeldung funktioniert nach dem Aufräumen wieder.
+    def test_23_service_covers_unstaffed_bar(self):
+        def bar_ticket(menu_id=6):
+            code,order=self.service.call('order',{'request_key':str(uuid.uuid4()),'table_id':7,'items':[{'menu_id':menu_id,'quantity':1,'note':''}]})
+            self.assertEqual(code,201,order)
+            return order['id'],int(next(t for t in self.service.call('tickets')[1]['tickets'] if int(t['order_id'])==order['id'])['id'])
+        _,drink=bar_ticket()
+        # Tresen has its view open: service must not work drink tickets.
+        self.assertFalse(self.bar.call('tickets&view=bar')[1]['bar_cover'])
+        self.assertFalse(self.service.call('tickets&view=service')[1]['bar_cover'])
+        self.assertEqual(self.service.call('status',{'id':drink,'status':'working'})[0],403)
+        # Tresen presence goes stale: service covers until Abholbereit, the bon stays at the bar station.
+        in_app("query('UPDATE users SET last_seen=NOW()-INTERVAL 1 MINUTE WHERE last_view=\"bar\"');")
+        self.assertTrue(self.service.call('tickets&view=service')[1]['bar_cover'])
+        self.assertFalse(self.kitchen.call('tickets&view=kitchen')[1]['bar_cover'])
+        for state in ['working','ready','collected']: self.assertEqual(self.service.call('status',{'id':drink,'status':state})[0],200)
+        saved=next(t for t in self.service.call('tickets&archive=1')[1]['tickets'] if int(t['id'])==drink)
+        self.assertEqual(saved['station'],'bar')
+        self.assertEqual([(e['action'],e['name']) for e in saved['events']][1:3],[('working','Mia'),('ready','Mia')])
+        _,food=bar_ticket(menu_id=1)
+        self.assertEqual(self.service.call('status',{'id':food,'status':'working'})[0],403)
+        # Late cancellation of a covered drink: service sees and acknowledges the bar notice.
+        order_id,late=bar_ticket()
+        self.assertEqual(self.service.call('status',{'id':late,'status':'working'})[0],200)
+        self.assertEqual(self.service.call('order_cancel',{'order_id':order_id,'reason':'Gast geht'})[0],200)
+        alert=next(a for a in self.service.call('tickets&view=service')[1]['alerts'] if int(a['ticket_id'])==late)
+        self.assertEqual(self.service.call('station_alert_ack',{'id':int(alert['id'])})[0],200)
+        # Tresen is back: cover ends for new actions.
+        _,next_drink=bar_ticket()
+        self.bar.call('tickets&view=bar')
+        self.assertFalse(self.service.call('tickets&view=service')[1]['bar_cover'])
+        self.assertEqual(self.service.call('status',{'id':next_drink,'status':'working'})[0],403)
+        self.assertEqual(self.bar.call('status',{'id':next_drink,'status':'working'})[0],200)
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')

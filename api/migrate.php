@@ -3,7 +3,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require __DIR__.'/db.php';
 $sql = [
-'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL, username VARCHAR(80) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
+'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL, username VARCHAR(80) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, last_seen DATETIME NULL, last_view VARCHAR(20) NULL)',
 'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, straw BOOLEAN NOT NULL DEFAULT 0)',
 'CREATE TABLE IF NOT EXISTS dining_tables (id INT PRIMARY KEY, name VARCHAR(40) NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
 'CREATE TABLE IF NOT EXISTS table_visits (id INT AUTO_INCREMENT PRIMARY KEY, table_id INT NOT NULL, opened_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME NULL, paid_by INT NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(paid_by) REFERENCES users(id), INDEX(table_id,paid_at))',
@@ -20,6 +20,7 @@ foreach($sql as $s) db()->exec($s);
 if (!query("SHOW COLUMNS FROM dining_tables LIKE 'active'")->fetch()) db()->exec('ALTER TABLE dining_tables ADD COLUMN active BOOLEAN NOT NULL DEFAULT 1');
 if (!query("SHOW COLUMNS FROM orders LIKE 'visit_id'")->fetch()) db()->exec('ALTER TABLE orders ADD COLUMN visit_id INT NULL, ADD CONSTRAINT fk_orders_visit FOREIGN KEY (visit_id) REFERENCES table_visits(id)');
 if (!query("SHOW COLUMNS FROM orders LIKE 'cancelled_at'")->fetch()) db()->exec('ALTER TABLE orders ADD COLUMN cancelled_at DATETIME NULL, ADD COLUMN cancelled_by INT NULL, ADD COLUMN cancellation_reason VARCHAR(300) NULL, ADD CONSTRAINT fk_orders_cancelled_by FOREIGN KEY (cancelled_by) REFERENCES users(id)');
+if (!query("SHOW COLUMNS FROM users LIKE 'last_view'")->fetch()) db()->exec('ALTER TABLE users ADD COLUMN last_seen DATETIME NULL, ADD COLUMN last_view VARCHAR(20) NULL');
 if (!query("SHOW COLUMNS FROM login_attempts LIKE 'updated_at'")->fetch()) db()->exec('ALTER TABLE login_attempts ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ADD INDEX(updated_at)');
 if (!query("SHOW COLUMNS FROM menu LIKE 'straw'")->fetch()) {db()->exec('ALTER TABLE menu ADD COLUMN straw BOOLEAN NOT NULL DEFAULT 0');query('UPDATE menu SET straw=1 WHERE category IN ("Softgetränke","Säfte","Saftschorlen")');}
 if (!query("SHOW COLUMNS FROM tickets LIKE 'origin'")->fetch()) db()->exec('ALTER TABLE tickets ADD COLUMN origin VARCHAR(20) NOT NULL DEFAULT "initial"');
