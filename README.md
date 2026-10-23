@@ -27,6 +27,8 @@ Alle Demo-Zugänge verwenden **Stimbeck-Demo-2026!**:
 
 Für parallele Rollen unterschiedliche Browserprofile oder private Fenster verwenden. Browser-Tabs teilen ihre Anmeldung.
 
+Das Restaurantlogo dient als Favicon und App-Icon. Auf iPad/iPhone über „Teilen → Zum Home-Bildschirm“, auf Android über „Zum Startbildschirm hinzufügen“ erscheint die App mit Logo und startet ohne Browserleiste.
+
 ## Im lokalen WLAN erreichbar machen
 
 Standardmäßig ist die App nur auf dem Rechner selbst erreichbar. Für iPads und Smartphones im selben WLAN im Projektverzeichnis eine Datei `.env` anlegen (sie ist von Git ausgeschlossen) und die Container neu starten:

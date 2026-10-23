@@ -120,3 +120,10 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Reine Frontend-Änderung; Docker-Build mit TypeScript-Prüfung erfolgreich, `sh tests/run.sh`: 25 Tests erfolgreich.
 - Browserprüfung im kurzzeitig gestarteten Teststack (Port 8088, lokale Datenbank unberührt): Als `robin` zeigt das 🔔-Feld Ton und Vibration aktiv, Gerätebenachrichtigung aus. Nach einer per Skript angelegten Bestellung mit Speise und Getränk erschien in der Küche „Neue Bestellung · Küche · Tisch 05 · 2× Hamburger mit Bacon“ (ohne das Getränk), die Vibrationsfunktion wurde einmal mit [200, 100, 200] aufgerufen (im Browser abgefangen). Als `mia` kam beim Anmelden kein Hinweis für schon vorhandene Bons; nachdem die Küche den Bon per Skript auf abholbereit setzte, erschien „Abholbereit · Küche · Tisch 05 · Bestellung #000001“. Teststack danach entfernt.
 - Nicht geprüft: hörbarer Ton, echte Vibration und Gerätebenachrichtigung auf echten Geräten.
+
+## Logo als Favicon und App-Icon, 23.10.2026
+
+- Icons aus `output/brand/stimbeck-logo.png` mit ImageMagick in einem Docker-Container erzeugt (16/32/48 px ICO, 32 px PNG, 180/192/512 px PNG auf Weiß).
+- `Dockerfile` kopiert jetzt `public/`; nach dem Neubau lieferten alle sechs Dateien HTTP 200 mit passendem Typ. Im Browser bindet die Seite Favicon, Apple-Touch-Icon und Manifest ein, beide Manifest-Icons laden (192 und 512 px).
+- `sh tests/run.sh`: 25 Tests erfolgreich.
+- Nicht geprüft: Homescreen-Symbol auf echtem iPad/iPhone und Android.
