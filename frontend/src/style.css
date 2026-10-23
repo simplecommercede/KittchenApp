@@ -49,7 +49,11 @@
 
 /* Staff access can be edited without losing historical order attribution. */
 .staff-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.staff-actions .staff-remove{color:#a03526;border-color:#e1bbb5}.staff-edit{margin:10px 0 16px;padding:14px;background:#f3f5f0;border:1px solid #d9ddd1;border-radius:10px}.staff-edit>label{display:grid;gap:5px;font-size:13px;font-weight:700}
-.staff-edit>label.check{display:flex;gap:10px}.staff-edit fieldset,.panel form fieldset{border:1px solid #d9ddd1;border-radius:9px;display:grid;gap:7px;padding:10px}.staff-edit legend,.panel form legend{font-size:13px;font-weight:700;padding:0 5px}.staff-edit .row{justify-content:flex-end;flex-wrap:wrap}.removed-staff{margin:14px 0;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
+.staff-edit>label.check{display:flex;gap:10px}
+.size-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.size-row>label{display:grid;gap:5px;font-size:13px;font-weight:700}
+.size-row>label.check{display:flex;gap:8px;min-height:46px}
+.size-row>button{width:auto;margin:0}.staff-edit fieldset,.panel form fieldset{border:1px solid #d9ddd1;border-radius:9px;display:grid;gap:7px;padding:10px}.staff-edit legend,.panel form legend{font-size:13px;font-weight:700;padding:0 5px}.staff-edit .row{justify-content:flex-end;flex-wrap:wrap}.removed-staff{margin:14px 0;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
 @media(max-width:760px){.staff-record .admin-entry{align-items:flex-start}.staff-actions{flex-direction:column;align-items:stretch}.staff-edit .row button{flex:1 1 130px}}
 
 /* Station acknowledgement and manual payment correction. */
