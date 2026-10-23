@@ -108,3 +108,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `sh tests/run.sh`: 24 Tests erfolgreich; der Teststack lief nur auf 127.0.0.1 und wurde danach entfernt.
 - Apache-Log: Alle Zugriffe, auch über die WLAN-Adresse, erscheinen als 192.168.65.1 (Docker Desktop).
 - Nicht geprüft: Zugriff von einem echten iPad oder Smartphone.
+
+## Timer bei Start anhalten, getrennte Zahlung pro Bestellung, 23.10.2026
+
+- `sh tests/run.sh`: 25 Tests erfolgreich. Neu `test_24`: Einzelzahlung vor Abholung 409, falscher Betrag 409; danach 3,50 € bezahlt, Besuch bleibt offen, offener Betrag 7,00 €; bezahlte Bestellung lässt sich weder erneut bezahlen noch ändern oder stornieren (409). Mit der zweiten Bestellung schließt der Besuch (Summe 10,50 €, zwei `order_paid`-Ereignisse). Rücknahme öffnet beide Bestellungen, danach `table_paid` über 10,50 €.
+- Migration auf der lokalen Datenbank ergänzte `orders.paid_at`, `orders.paid_by` und `payment_events.order_id`.
+- Browserprüfung im kurzzeitig gestarteten Teststack (Port 8088, Bestellungen per Skript, lokale Datenbank unberührt): Neuer Bon zählt (00:14 → 00:18), Bon in Arbeit bleibt auf „00:00 bis Start“. Kassieren an Tisch 03: Einzelknöpfe der abgeholten Getränkebestellungen aktiv, offene Speisen und „Alles“ gesperrt. Nach Einzelzahlung von #000001 (per API, da der Bestätigungsdialog nicht automatisierbar ist) „Bezahlt“-Markierung ohne Knöpfe, offener Betrag 39,80 €, Hauptknopf „Restbetrag“. Teststack danach entfernt.

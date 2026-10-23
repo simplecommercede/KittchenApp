@@ -4,7 +4,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 ## 0. Aktueller Stand auf einen Blick (23.10.2026)
 
-**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen. `sh tests/run.sh`: 24 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
+**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung. `sh tests/run.sh`: 25 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
@@ -16,7 +16,8 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 | --- | --- |
 | Unklarer Sendestatus: nach einem Sendefehler Entwurf und Kennung festhalten und klar anzeigen | Ablauf |
 | Getrennte Entwürfe pro Tisch statt eines Entwurfs pro Person | Ablauf |
-| Archiv: feste Dauer bis Abholung statt weiterlaufendem Timer; Suche und Filter nach Datum/Tisch | Ablauf |
+| Archiv: Suche und Filter nach Datum/Tisch | Ablauf |
+| Einzelne Bestellzahlung zurücknehmen, solange der Tisch noch offen ist (heute nur Rücknahme des ganzen Besuchs) | Ablauf |
 | Abgelaufene Sitzung beim Speichern (POST) führt zu „Sicherheitsprüfung fehlgeschlagen“ statt zur Anmeldung | Ablauf |
 | Bedienung auf echten iPads/Smartphones prüfen (Touch-Ziele, Tablet-Layout, Kontraste); über das WLAN jetzt möglich | Prüfung |
 | 6 Longdrinks ohne ml-Angabe; Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu klären |
@@ -151,7 +152,7 @@ Die zwei großen Implementierungsdateien wurden aus Zeitgründen kompakt geschri
 | `users` | Name, eindeutiger Benutzername, Passwort-Hash, JSON-Rollen, Aktiv-Flag, zuletzt gesehen und offene Ansicht (für die Tresen-Vertretung) |
 | `menu` | Gerichte/Getränke, Kategorie, Station, Preis in Cent, Aktiv-Flag, Strohhalm-Option |
 | `dining_tables` | Tischnummer, Anzeigename und Aktiv-Flag |
-| `orders` | Eindeutige Anfragekennung, Tisch, Serviceperson, Gesamtnotiz, Eingangszeit |
+| `orders` | Eindeutige Anfragekennung, Tisch, Serviceperson, Gesamtnotiz, Eingangszeit, Storno und Einzelzahlung (`paid_at`, `paid_by`) |
 | `tickets` | Stationsbon einer Bestellung, Status, Ursprung (ursprünglich/Nachtrag/Korrektur) und Zeitstempel |
 | `items` | Bonposition mit Mengen-, Namens-, Preis- und Sonderwunsch-Snapshot sowie optionaler Stornierung |
 | `events` | Wer hat einen Bon wann in welchen Status gesetzt? |
@@ -193,7 +194,8 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | POST `order` | `request_key`, `table_id`, `note`, `items`; Service/Admin |
 | POST `order_change` | `order_id`, `mode` (`add`, `replace`, `remove`, `note`), `request_key`, `reason` und je nach Modus `item_id`, `menu_id`, `quantity`, `note`; Service/Admin |
 | POST `order_cancel` | `order_id`, `reason`; vollständiges Storno vor Zahlung; Service/Admin |
-| POST `table_paid` | `visit_id`, `expected_total`; manuelle Bestätigung nach Abholung aller Bons; Service/Admin |
+| POST `table_paid` | `visit_id`, `expected_total`; kassiert alle noch offenen Bestellungen nach Abholung aller Bons; Service/Admin |
+| POST `order_paid` | `order_id`, `expected_total`; einzelne Bestellung bei getrennter Zahlung; Antwort `visit_closed`, wenn keine offene Bestellung bleibt; Service/Admin |
 | POST `status` | `id`, `status`; rollen- und transitionsabhängig |
 | GET `admin_users` | Benutzer ohne Passwort-Hashes; Admin |
 | POST `admin_user` | Neuen Benutzer anlegen; `name`, `username`, `password`, `roles` |
@@ -247,7 +249,7 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 24 Integrationstests erfolgreich (zuletzt ergänzt: Service-Vertretung für den unbesetzten Tresen). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 25 Integrationstests erfolgreich (zuletzt ergänzt: getrennte Zahlung pro Bestellung). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
@@ -279,7 +281,8 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Mitarbeiter können bearbeitet, mit mehreren Rollen ausgestattet, entfernt und wieder aktiviert werden; der eigene und letzte Admin-Zugang sind gegen Entfernen geschützt. Passwortverfahren und Sitzungswiderruf nach Rollenänderung weiterentwickeln.
 - Menü bearbeiten: Die Oberfläche trennt Getränke und Speisen. Ein Getränk erscheint als ein Eintrag mit seinen Portionsgrößen (ml und Preis je Größe) und wird über `admin_drink` als Ganzes gespeichert; Speisen über `admin_menu`, das bei unbekannter `id` mit 404 antwortet. Die Zuordnung der Größen zu einem Getränk ergibt sich aus dem gemeinsamen Namen vor „… ml“. Die Longdrinks haben laut Karte keine ml-Angabe; beim Bearbeiten muss dann eine Menge eingetragen werden. Station und Löschen von Produkten sind bewusst nicht änderbar; nicht mehr angebotene Produkte werden deaktiviert.
 - Archivsuche, Datum/Tischfilter und Pagination ergänzen. Das Archiv zeigt die letzten 200 Bons; aktive Bons sind seit dem 23.10.2026 nicht mehr begrenzt, damit neue Bestellungen bei Rückstau sichtbar bleiben.
-- Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
+- Bon-Timer: läuft nur bei „Neu“ ab Eingang; bei „In Arbeit“ und „Abholbereit“ steht er auf der Wartezeit bis zum Start („bis Start“), im Archiv auf der Dauer bis zur Abholung („bis Abholung“). Stornierte Bons ohne Start zeigen keinen Timer. Der Hinweis „Lange Wartezeit · X Min. auf Essen“ zählt weiter die Wartezeit des Gastes, solange Essen neu oder in Arbeit ist.
+- Getrennte Zahlung: Jede Bestellung eines Tischbesuchs kann einzeln bezahlt werden (`order_paid`), sobald ihre Bons abgeholt sind. Bezahlte Bestellungen sind für Korrekturen und Storno gesperrt und zählen nicht mehr zum offenen Betrag. Mit der letzten offenen Bestellung schließt der Tischbesuch. „Restbetrag/Alles bezahlt“ (`table_paid`) kassiert alle noch offenen Bestellungen. Die Rücknahme gilt weiterhin für den ganzen Besuch und öffnet alle Bestellungen wieder.
 - Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
