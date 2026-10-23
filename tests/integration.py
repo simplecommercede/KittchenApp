@@ -407,6 +407,16 @@ class Workflow(unittest.TestCase):
         out=in_app("session_id('dbfail'.bin2hex(random_bytes(4)));session_start();$_SESSION['uid']=1;session_write_close();$_GET['action']='tickets';$_SERVER['REQUEST_METHOD']='GET';register_shutdown_function(function(){fwrite(STDERR,(string)http_response_code());});include '/var/www/html/api/index.php';",
             env={'DB_HOST':'127.0.0.1','DB_PASSWORD':'wrong'},require_db=False)
         self.assertEqual(json.loads(out),{'error':'Datenbank vorübergehend nicht erreichbar.'})
+    def test_18_admin_drinks_need_volume(self):
+        suffix=uuid.uuid4().hex[:8];name='Testgetränk '+suffix
+        self.assertEqual(self.admin.call('admin_menu',{'name':name,'category':'Tests','station':'bar','price':300})[0],400)
+        self.assertEqual(self.admin.call('admin_menu',{'name':name+' 300 ml','category':'Tests','station':'bar','price':300,'volume_ml':300})[0],400)
+        self.assertEqual(self.admin.call('admin_menu',{'name':name,'category':'Tests','station':'bar','price':300,'volume_ml':250,'straw':True})[0],200)
+        self.assertEqual(self.admin.call('admin_menu',{'name':'Testspeise '+suffix,'category':'Tests','station':'kitchen','price':500,'straw':True})[0],200)
+        _,menu=self.admin.call('menu')
+        drink=next(m for m in menu if m['name']==name+' 250 ml');food=next(m for m in menu if m['name']=='Testspeise '+suffix)
+        self.assertEqual((drink['station'],int(drink['straw'])),('bar',1))
+        self.assertEqual(int(food['straw']),0)
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
