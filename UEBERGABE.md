@@ -123,7 +123,7 @@ Die zwei großen Implementierungsdateien wurden aus Zeitgründen kompakt geschri
 | `items` | Bonposition mit Mengen-, Namens-, Preis- und Sonderwunsch-Snapshot sowie optionaler Stornierung |
 | `events` | Wer hat einen Bon wann in welchen Status gesetzt? |
 | `order_changes` | Korrekturen mit Grund, Person, Zeitpunkt und Vorher-/Nachher-Daten |
-| `login_attempts` | Fehlversuche und zeitweise Login-Sperre |
+| `login_attempts` | Fehlversuche und zeitweise Login-Sperre: 5 pro Benutzername und Adresse (5 Min.), 30 pro Adresse unabhängig vom Namen (15 Min.); Einträge älter als ein Tag werden bei Fehlversuchen gelöscht |
 
 Wichtige Invarianten:
 
@@ -186,7 +186,7 @@ Beispielbestellung (Kennung für jede neue Bestellung neu erzeugen; für unverä
 }
 ```
 
-IDs und Mengen in Schreibanfragen als JSON-Zahlen senden. Stationswerte: `kitchen`, `bar`; Rollen zusätzlich `service`, `admin`. HTTP-Codes u.a. 400 Validierung, 401 Anmeldung, 403 Rechte/CSRF, 409 Konflikt, 429 Login-Limit, 503 Datenbankfehler.
+IDs und Mengen in Schreibanfragen als JSON-Zahlen senden. Stationswerte: `kitchen`, `bar`; Rollen zusätzlich `service`, `admin`. HTTP-Codes u.a. 400 Validierung, 401 Anmeldung, 403 Rechte/CSRF, 409 Konflikt, 413 Anfrage zu groß, 429 Login-Limit, 503 Datenbankfehler.
 
 ## 7. Verifiziert und nicht verifiziert
 
@@ -242,7 +242,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Lokalen Storage-Ausfall und beschädigte/überholte Entwürfe abfangen; ein Storagefehler nach erfolgreicher Speicherung darf nicht als ungesendete Bestellung missverstanden werden.
 - Mitarbeiter können bearbeitet, mit mehreren Rollen ausgestattet, entfernt und wieder aktiviert werden; der eigene und letzte Admin-Zugang sind gegen Entfernen geschützt. Passwortverfahren und Sitzungswiderruf nach Rollenänderung weiterentwickeln.
 - Menü bearbeiten: Die Oberfläche trennt Getränke und Speisen. Ein Getränk erscheint als ein Eintrag mit seinen Portionsgrößen (ml und Preis je Größe) und wird über `admin_drink` als Ganzes gespeichert; Speisen über `admin_menu`, das bei unbekannter `id` mit 404 antwortet. Die Zuordnung der Größen zu einem Getränk ergibt sich aus dem gemeinsamen Namen vor „… ml“. Die Longdrinks haben laut Karte keine ml-Angabe; beim Bearbeiten muss dann eine Menge eingetragen werden. Station und Löschen von Produkten sind bewusst nicht änderbar; nicht mehr angebotene Produkte werden deaktiviert.
-- Archivsuche, Datum/Tischfilter und Pagination ergänzen. **Auch aktive Bons sind derzeit auf 200 begrenzt**, nicht nur das Archiv. Bei größerem Rückstau dürfen neue Bons nicht unsichtbar werden.
+- Archivsuche, Datum/Tischfilter und Pagination ergänzen. Das Archiv zeigt die letzten 200 Bons; aktive Bons sind seit dem 23.10.2026 nicht mehr begrenzt, damit neue Bestellungen bei Rückstau sichtbar bleiben.
 - Archiv-Timer zählt momentan weiter seit Eingang; für abgeschlossene Bons eine feste Dauer bis Abholung anzeigen.
 - Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
@@ -254,7 +254,8 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Automatisierte Browser-/Mobile-Tests ergänzen. Getrennte Testdatenbank und Aufräumen erledigt `tests/run.sh`.
 - Polling ohne überlappende Requests, mit Timeout, Backoff und Schutz gegen veraltete Antworten implementieren.
 - Katalogänderungen werden alle zehn Sekunden abgefragt; verzögerte Updates und Konflikte beim Bestellen prüfen.
-- CSP/Sicherheitsheader, Session-Lebensdauer, erweitertes Login-Limiting, persistente Sessions und Monitoring vor Produktion prüfen.
+- CSP/Sicherheitsheader, Session-Lebensdauer, persistente Sessions und Monitoring vor Produktion prüfen. Login-Limit pro Adresse ist umgesetzt; im Restaurant-WLAN teilen sich alle Geräte eine Adresse, 30 Fehlversuche in 15 Minuten sperren dort also alle Anmeldungen für 15 Minuten.
+- Die API lehnt Anfragen über 64 KB (413) und JSON tiefer als 8 Ebenen (400) ab. PHP liest den Inhalt trotzdem zuerst bis `post_max_size` ein; auf Hetzner zusätzlich `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen.
 - API lädt Positionen/Events pro Bon einzeln. Bei Bedarf gebündelte Abfragen und geeignete Indizes vorsehen.
 - Tablet-Layout, Touch-Ziele, Tastaturbedienung und Kontraste auf echten Geräten prüfen.
 - Installierbare PWA, Audio-/Pushhinweise und Drag-and-drop sind Erweiterungen, noch nicht vorhanden.
