@@ -1,0 +1,10 @@
+{
+  "name": "simplecommercede/kittchen-app",
+  "type": "project",
+  "require": {"php": "^8.4", "ext-pdo": "*", "ext-mbstring": "*"},
+  "require-dev": {"phpunit/phpunit": "^11.5", "phpstan/phpstan": "^2.1", "friendsofphp/php-cs-fixer": "^3.0"},
+  "config": {"vendor-dir": "api/vendor", "sort-packages": true},
+  "autoload": {"psr-4": {"Kitchen\\": "api/src/"}, "files": ["api/src/Support/functions.php"]},
+  "autoload-dev": {"psr-4": {"Kitchen\\Tests\\": "tests/Unit/"}},
+  "scripts": {"test": "phpunit", "analyse": "phpstan analyse --memory-limit=512M", "check": ["@test", "@analyse"]}
+}

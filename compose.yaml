@@ -14,7 +14,9 @@ services:
       timeout: 3s
       retries: 30
   app:
-    build: .
+    build:
+      context: .
+      target: runtime
     ports:
       # APP_BIND=0.0.0.0 (z. B. in einer lokalen .env) macht die App im WLAN erreichbar.
       - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8087}:80"
@@ -30,5 +32,10 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+  quality:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: quality
 volumes:
   kitchen-db:

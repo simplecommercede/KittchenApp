@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - api/src
+        - api/index.php
+        - api/db.php
+        - api/migrate.php
+        - api/create-admin.php
+        - api/speisekarte.php
+    tmpDir: .phpstan-cache
