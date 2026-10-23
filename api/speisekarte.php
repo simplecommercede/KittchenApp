@@ -5,7 +5,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 // Größen sind eigene Produkte mit Mengenangabe in ml; vegane Patties/Würste und Beilagenwahl werden als Sonderwunsch erfasst.
 $sizes = fn(string $name, string $category, array $prices): array => array_map(fn($size, $price) => [$name.' '.$size, $category, 'bar', $price], array_keys($prices), $prices);
 $each = fn(array $names, callable $make): array => array_merge(...array_map($make, $names));
-return [
+$menu = [
  ...$sizes('König Pilsener vom Fass', 'Bier', ['300 ml'=>360, '500 ml'=>520]),
  ['Astra 330 ml', 'Bier', 'bar', 250],
  ['Krombacher 330 ml', 'Bier', 'bar', 280],
@@ -66,3 +66,6 @@ return [
  ['Extra Jalapenos', 'Dips & Extras', 'kitchen', 150],
  ['Extra Patty', 'Dips & Extras', 'kitchen', 450],
 ];
+// Fünfter Wert: optionale Auswahl „Mit Strohhalm“ für alkoholfreie Getränke, die Kinder typischerweise bestellen.
+$straw = fn(array $p): bool => in_array($p[1], ['Softgetränke', 'Säfte', 'Saftschorlen'], true) || str_starts_with($p[0], 'Malzbier');
+return array_map(fn($p) => [...$p, (int)$straw($p)], $menu);

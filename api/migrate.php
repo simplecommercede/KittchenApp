@@ -4,7 +4,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require __DIR__.'/db.php';
 $sql = [
 'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL, username VARCHAR(80) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
-'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
+'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, straw BOOLEAN NOT NULL DEFAULT 0)',
 'CREATE TABLE IF NOT EXISTS dining_tables (id INT PRIMARY KEY, name VARCHAR(40) NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
 'CREATE TABLE IF NOT EXISTS table_visits (id INT AUTO_INCREMENT PRIMARY KEY, table_id INT NOT NULL, opened_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME NULL, paid_by INT NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(paid_by) REFERENCES users(id), INDEX(table_id,paid_at))',
 'CREATE TABLE IF NOT EXISTS orders (id INT AUTO_INCREMENT PRIMARY KEY, request_key VARCHAR(80) NOT NULL UNIQUE, table_id INT NOT NULL, visit_id INT NULL, user_id INT NOT NULL, note VARCHAR(500) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, cancelled_at DATETIME NULL, cancelled_by INT NULL, cancellation_reason VARCHAR(300) NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(visit_id) REFERENCES table_visits(id), FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(cancelled_by) REFERENCES users(id))',
@@ -20,6 +20,7 @@ foreach($sql as $s) db()->exec($s);
 if (!query("SHOW COLUMNS FROM dining_tables LIKE 'active'")->fetch()) db()->exec('ALTER TABLE dining_tables ADD COLUMN active BOOLEAN NOT NULL DEFAULT 1');
 if (!query("SHOW COLUMNS FROM orders LIKE 'visit_id'")->fetch()) db()->exec('ALTER TABLE orders ADD COLUMN visit_id INT NULL, ADD CONSTRAINT fk_orders_visit FOREIGN KEY (visit_id) REFERENCES table_visits(id)');
 if (!query("SHOW COLUMNS FROM orders LIKE 'cancelled_at'")->fetch()) db()->exec('ALTER TABLE orders ADD COLUMN cancelled_at DATETIME NULL, ADD COLUMN cancelled_by INT NULL, ADD COLUMN cancellation_reason VARCHAR(300) NULL, ADD CONSTRAINT fk_orders_cancelled_by FOREIGN KEY (cancelled_by) REFERENCES users(id)');
+if (!query("SHOW COLUMNS FROM menu LIKE 'straw'")->fetch()) {db()->exec('ALTER TABLE menu ADD COLUMN straw BOOLEAN NOT NULL DEFAULT 0');query('UPDATE menu SET straw=1 WHERE category IN ("Softgetränke","Säfte","Saftschorlen") OR name LIKE "Malzbier%"');}
 if (!query("SHOW COLUMNS FROM tickets LIKE 'origin'")->fetch()) db()->exec('ALTER TABLE tickets ADD COLUMN origin VARCHAR(20) NOT NULL DEFAULT "initial"');
 if (!query("SHOW COLUMNS FROM items LIKE 'cancelled_at'")->fetch()) db()->exec('ALTER TABLE items ADD COLUMN cancelled_at DATETIME NULL, ADD COLUMN cancelled_by INT NULL, ADD COLUMN cancellation_reason VARCHAR(300) NULL, ADD CONSTRAINT fk_items_cancelled_by FOREIGN KEY (cancelled_by) REFERENCES users(id)');
 query('UPDATE items i JOIN tickets t ON t.id=i.ticket_id JOIN orders o ON o.id=t.order_id SET i.cancelled_at=o.cancelled_at,i.cancelled_by=o.cancelled_by,i.cancellation_reason=o.cancellation_reason WHERE o.cancelled_at IS NOT NULL AND i.cancelled_at IS NULL');
@@ -37,7 +38,7 @@ if (!query('SELECT id FROM menu LIMIT 1')->fetch()) {
  $menu = getenv('MENU_SEED')==='test'
   ? [['Hamburger mit Bacon','Speisen','kitchen',1590],['Schnitzel Wiener Art','Speisen','kitchen',1690],['Heimat Brotbrett','Vorspeisen','kitchen',750],['Karotten-Ingwersuppe','Vorspeisen','kitchen',550],['Heidjer Bauernknusper','Vorspeisen','kitchen',650],['Apfelschorle 0,3 l','Getränke','bar',350],['Pils 0,3 l','Getränke','bar',380],['Schnitzel mit Pommes','Kids','kitchen',850]]
   : require __DIR__.'/speisekarte.php';
- foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price) VALUES(?,?,?,?)',$m);
+ foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)',[$m[0],$m[1],$m[2],$m[3],$m[4]??0]);
 }
 if (getenv('APP_ENV')==='local') {
  foreach ([['Admin','admin',['admin','service','kitchen','bar']],['Robin','robin',['kitchen']],['Mia','mia',['service']],['Tresen','tresen',['bar']]] as [$name,$username,$roles]) query('INSERT IGNORE INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash(getenv('DEMO_PASSWORD') ?: 'Stimbeck-Demo-2026!',PASSWORD_DEFAULT),json_encode($roles)]);
