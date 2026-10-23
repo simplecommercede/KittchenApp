@@ -78,3 +78,8 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 
 - `sh tests/run.sh`: 19 Tests erfolgreich. Neu `test_18`: Getränk ohne ml und mit Menge im Namen wird abgelehnt (400); mit `volume_ml` 250 entsteht „… 250 ml“ an der Station `bar` mit Strohhalm-Option; bei Speisen wird `straw` ignoriert.
 - Browserprüfung als `admin`: Speisekarte mit „Getränke“ und „Speisen“, Liste alphabetisch mit Kategorie und Strohhalm-Hinweis. Das Getränkeformular hat das Pflichtfeld „Menge in ml“ und „Strohhalm-Option (Kindergetränk)“, das Speisenformular beides nicht. In der lokalen Datenbank wurde nichts angelegt.
+
+## Admin: Produkte bearbeiten, 23.10.2026
+
+- `sh tests/run.sh`: 19 Tests erfolgreich. `test_18` prüft zusätzlich: Bearbeiten eines Getränks ohne ml wird abgelehnt (400); mit neuer Menge, neuem Preis und ohne Strohhalm entsteht „… 400 ml“ mit 4,20 € und `straw=0`; unbekannte ID ergibt 404.
+- Browserprüfung als `admin`: „Bearbeiten“ bei „Apfelsaft 300 ml“ öffnet das Formular mit „Apfelsaft“, 300 ml, 3,60 €, Kategorie „Säfte“ und gesetztem Strohhalm. Unverändert gespeichert, Hinweis „Produkt gespeichert …“ erschien, Datenbankwerte danach unverändert.
