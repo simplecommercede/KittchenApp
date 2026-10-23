@@ -8,22 +8,31 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
-**Offen, nach Dringlichkeit:**
+**Aktueller Fokus: klickbarer Prototyp.** Zuerst werden die Bedienabläufe für Service, Küche, Tresen und Admin ausgearbeitet und geprüft. Backend-Härtung und Deployment auf Hetzner stehen vorerst nicht an und sind unten nur als „Später“ festgehalten.
 
-| Priorität | Punkt | Art |
-| --- | --- | --- |
-| 1 | Gleiche Bestellkennung mit anderem Inhalt wird still als Duplikat beantwortet (Payload-Fingerabdruck fehlt) | Code |
-| 1 | Unklarer Sendestatus im Frontend (Kennung festhalten, Status abfragen) | Code |
-| 1 | Passwörter nur bis 72 Byte wirksam (bcrypt), Formular erlaubt 200 | Code |
-| 1 | `admin_menu` akzeptiert weiter Getränke und Stationswechsel und umgeht so `admin_drink` | Code |
-| 1 | Unsichtbare Unicode-Steuerzeichen in Notizen/Namen können Bons optisch verfälschen | Code |
-| 2 | Login-Sperre pro Adresse trifft im Restaurant-WLAN alle Geräte gemeinsam (30 Fehlversuche/15 Min.) | Entscheidung: Grenze beibehalten, erhöhen oder WLAN-Adresse ausnehmen |
-| 2 | Abgelaufene Sitzung bei POST führt zu 403 statt zur Anmeldung | Code |
-| 2 | Service-Vertretung für unbesetzten Tresen | Funktion |
-| 2 | 6 Longdrinks ohne ml-Angabe; beim ersten Bearbeiten Pflicht | Daten, von Robin zu klären |
-| 2 | Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu bestätigen |
-| Deployment | Auf Hetzner `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen; die App prüft erst nach dem Einlesen | Serverkonfiguration (siehe Abschnitt 9) |
-| 3 | Browser-Testsuite, Polling mit Backoff, Code aufteilen, versionierte Migrationen | Wartbarkeit |
+**Offen im Prototyp:**
+
+| Punkt | Art |
+| --- | --- |
+| Service-Vertretung für unbesetzten Tresen (Service sieht und bearbeitet Getränkebons, wenn kein Tresen online ist) | Ablauf |
+| Unklarer Sendestatus: nach einem Sendefehler Entwurf und Kennung festhalten und klar anzeigen | Ablauf |
+| Getrennte Entwürfe pro Tisch statt eines Entwurfs pro Person | Ablauf |
+| Archiv: feste Dauer bis Abholung statt weiterlaufendem Timer; Suche und Filter nach Datum/Tisch | Ablauf |
+| Abgelaufene Sitzung beim Speichern (POST) führt zu „Sicherheitsprüfung fehlgeschlagen“ statt zur Anmeldung | Ablauf |
+| Bedienung auf echten iPads/Smartphones prüfen (Touch-Ziele, Tablet-Layout, Kontraste) | Prüfung |
+| 6 Longdrinks ohne ml-Angabe; Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu klären |
+
+**Später (Backend-Härtung und Betrieb, derzeit nicht im Fokus):**
+
+| Punkt | Art |
+| --- | --- |
+| Gleiche Bestellkennung mit anderem Inhalt wird still als Duplikat beantwortet (Payload-Fingerabdruck fehlt) | Backend |
+| Passwörter nur bis 72 Byte wirksam (bcrypt), Formular erlaubt 200 | Backend |
+| `admin_menu` akzeptiert weiter Getränke und Stationswechsel und umgeht so `admin_drink` | Backend |
+| Unsichtbare Unicode-Steuerzeichen in Notizen/Namen können Bons optisch verfälschen | Backend |
+| Login-Sperre pro Adresse trifft im Restaurant-WLAN alle Geräte gemeinsam (30 Fehlversuche/15 Min.) | Entscheidung |
+| Auf Hetzner `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen | Deployment (Abschnitt 9) |
+| Polling mit Backoff, Code aufteilen, versionierte Migrationen, Browser-Testsuite | Wartbarkeit |
 
 Details stehen in Abschnitt 8 und 9, die Testhistorie in `tests/RESULTS.md`.
 
