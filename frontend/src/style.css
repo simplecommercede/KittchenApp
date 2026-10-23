@@ -59,3 +59,8 @@
 /* Station acknowledgement and manual payment correction. */
 .station-alerts{background:#fff0df;border:2px solid #bf4e2f;border-radius:14px;padding:16px 18px;margin:0 0 20px}.station-alerts h2{color:#8e2e1e;margin:0 0 10px}.station-alert{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid #e8bba9}.station-alert p{margin:5px 0;color:#702b1c}.station-alert button{background:#a03526;flex:none}.payment-history{background:#fffefb;border:1px solid #d9d6df;border-radius:14px;padding:18px;margin:16px 0 24px}.payment-history h2{margin:0 0 3px}.payment-records{display:grid;gap:8px;margin-top:14px}.payment-record{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #ece8ef;padding:12px 0}.payment-record form{min-width:min(350px,100%);display:grid;gap:8px}.payment-record form label{display:grid;gap:5px;font-size:13px;font-weight:700}.payment-record form .row{justify-content:flex-end;flex-wrap:wrap}.payment-record button{font-size:13px;padding:8px 11px;min-height:38px}.payment-event{padding:8px 0;border-top:1px solid #ece8ef;margin:0}.payment-event b,.payment-record b{display:block}
 @media(max-width:760px){.station-alert,.payment-record{align-items:stretch;flex-direction:column}.station-alert button,.payment-record button{width:100%}.payment-record form{min-width:0}.payment-history{padding:14px}}
+
+.timer.stopped{color:#72776e;font-weight:600}
+.bill-order.paid{background:#f3f5f0;opacity:.8}
+.paid-badge{margin-left:8px;font-size:12px;font-weight:800;color:#24483c;background:#dfebe2;border-radius:5px;padding:2px 7px}
+.order-pay{margin:10px 0;display:grid;gap:4px}
