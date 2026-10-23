@@ -46,8 +46,8 @@ Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und sc
 
 ## Bedienung
 
-1. Als `mia` Tisch wählen und „Bestellung aufnehmen“ öffnen. Nur dann erscheinen Speisekarte und Entwurf.
-2. Positionen und Sonderwünsche eintragen. Fehler im noch nicht gesendeten Entwurf direkt an der Position korrigieren: Produkt austauschen, Menge ändern oder Position entfernen. Danach Bestellung senden. Jede gesendete Bestellung erhält eine eigene Nummer; ein atomarer Datenbankvorgang erzeugt separate Küchen- und Tresenbons.
+1. Als `mia` Tisch wählen und „Bestellung aufnehmen“ öffnen. Nur dann erscheinen Speisekarte und Entwurf. Die Karte ist in „Getränke“ und „Speisen“ getrennt und alphabetisch sortiert, Größen eines Getränks stehen mit ml-Angabe direkt untereinander.
+2. Positionen und Sonderwünsche eintragen; bei Getränken lässt sich optional „Mit Strohhalm“ antippen. Fehler im noch nicht gesendeten Entwurf direkt an der Position korrigieren: Produkt austauschen, Menge ändern oder Position entfernen. Danach Bestellung senden. Jede gesendete Bestellung erhält eine eigene Nummer; ein atomarer Datenbankvorgang erzeugt separate Küchen- und Tresenbons.
 3. Als `robin` bzw. `tresen` Bon starten und abholbereit melden.
 4. Service bestätigt die Abholung. Unter „Kassieren“ stehen alle noch zu bezahlenden Speisen und Getränke des Tischbesuchs nach Bestellnummer mit Preisen. Nach Abholung aller Bons kann Service den angezeigten Gesamtbetrag als bezahlt markieren.
 5. Unter „Kassieren“ können Positionen mit Grund ergänzt, korrigiert oder einzeln entfernt werden. Auch die Bestellnotiz ist änderbar. Nachträge und Ersatzpositionen erscheinen als neue Bons bei Küche oder Tresen unter derselben Bestellnummer. Entfernte Positionen bleiben im Änderungsverlauf sichtbar und zählen nicht mehr zum Zahlbetrag. Eine ganze unbezahlte Bestellung kann weiterhin mit Grund storniert werden. Nach der Zahlungsbestätigung sind Änderungen gesperrt.

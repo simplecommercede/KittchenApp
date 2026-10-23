@@ -56,3 +56,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Lokale Datenbank (Volume `kittchenapp_kitchen-db`) gelöscht und neu migriert. Danach: 99 Produkte aus der Speisekarte in 14 Kategorien, die 4 Demo-Konten, Tische 1–12, keine Bestellungen, Bons oder Testdaten.
 - `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Stack `kittchenapp-test` (Port 8088, frisches Volume, `MENU_SEED=test`). Der Stack wurde danach samt Volume entfernt, die lokale App blieb unverändert.
 - Browserprüfung als `mia`: Tisch 03 gewählt, „Bestellung aufnehmen“ zeigt alle 14 Kategorien in der Reihenfolge der Karte mit korrekten Preisen. Es wurde keine Bestellung gesendet.
+
+## Getränke/Speisen, ml-Angaben und Strohhalm, 23.10.2026
+
+- Lokale Datenbank erneut gelöscht und migriert (vorher geprüft: 0 Bestellungen, nur Seed-Daten). 99 Produkte, keine Mengenangabe mehr in l oder cl.
+- `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Teststack.
+- Browserprüfung als `mia`: „Getränke“ und „Speisen“ ohne Kategoriefilter, alphabetisch mit Größen untereinander (z. B. Coca-Cola 300/500 ml vor Coca-Cola Zero 300/500 ml). „Mit Strohhalm“ erscheint nur bei Getränken, wird beim Antippen in den Sonderwunsch übernommen und als aktiv markiert. Probeposition danach entfernt; es wurde nichts gesendet.
