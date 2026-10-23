@@ -50,3 +50,9 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Neu: `test_15` (Leerzeichen im Passwort bleiben erhalten), `test_16` (Bonzeit passt zu `server_time`, DB-Session und PHP laufen in UTC), `test_17` (DB-Ausfall liefert JSON-Fehler 503). `test_16` und `test_17` laufen per `docker compose exec` im App-Container und werden ohne lokalen Docker-Stack übersprungen.
 - `test_01` nutzt jetzt einen zufälligen unbekannten Benutzer; der feste Name `missing` wurde bei wiederholten Läufen von der Login-Drosselung gesperrt (429).
 - Browserprüfung im In-App-Browser: als `robin` angemeldet, PHP-Sessions im Container gelöscht. Innerhalb von drei Sekunden erschien die Anmeldung mit „Sitzung beendet. Bitte anmelden.“; die erneute Anmeldung funktionierte ohne Neuladen. Die einzige Konsolenmeldung war der erwartete 401-Request.
+
+## Speisekarte und bereinigte Datenbank, 23.10.2026
+
+- Lokale Datenbank (Volume `kittchenapp_kitchen-db`) gelöscht und neu migriert. Danach: 99 Produkte aus der Speisekarte in 14 Kategorien, die 4 Demo-Konten, Tische 1–12, keine Bestellungen, Bons oder Testdaten.
+- `sh tests/run.sh`: 18 Tests erfolgreich im getrennten Stack `kittchenapp-test` (Port 8088, frisches Volume, `MENU_SEED=test`). Der Stack wurde danach samt Volume entfernt, die lokale App blieb unverändert.
+- Browserprüfung als `mia`: Tisch 03 gewählt, „Bestellung aufnehmen“ zeigt alle 14 Kategorien in der Reihenfolge der Karte mit korrekten Preisen. Es wurde keine Bestellung gesendet.

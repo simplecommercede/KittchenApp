@@ -95,11 +95,13 @@ Port 8087 ist an `127.0.0.1` gebunden. Ein physisches iPad im WLAN kann diese In
 | `frontend/src/style.css` | Responsive Gestaltung, Grün/Creme, Karten, Boards, mobile Breakpoints |
 | `api/index.php` | API-Router, Authentifizierung, Autorisierung, Validierung und Bestellworkflow |
 | `api/db.php` | PDO-Verbindung, vorbereitete SQL-Abfragen |
-| `api/migrate.php` | CLI-Schemaanlage, nur bei `APP_ENV=local` Demo-Seed |
+| `api/migrate.php` | CLI-Schemaanlage; Speisekarte bei leerer Tabelle; nur bei `APP_ENV=local` Demo-Konten und Tische 1–12 |
+| `api/speisekarte.php` | 99 Produkte der gedruckten Speisekarte mit Kategorie, Station und Preis |
 | `api/create-admin.php` | CLI-Anlage eines initialen Administrators |
 | `Dockerfile` | Mehrstufiger Node-Build, danach PHP-Apache mit PDO MySQL |
 | `compose.yaml` | Lokale App, MariaDB, persistentes DB-Volume und Healthcheck |
 | `tests/integration.py` | HTTP-Integrationstests mit Python-Standardbibliothek |
+| `tests/run.sh` | Startet den getrennten Teststack `kittchenapp-test` auf Port 8088 mit `MENU_SEED=test` und räumt ihn danach ab |
 | `tests/RESULTS.md` | Dokumentierter erster Teststand |
 | `README.md` | Kurzanleitung, Betrieb und Funktionsumfang |
 | `output/designs/stimbeck-kueche.png` | Früher Bildentwurf Küche |
@@ -193,7 +195,7 @@ Am 23.10.2026 erfolgreich ausgeführt:
 npm run build
 php -l api/index.php
 php -l api/migrate.php
-python3 tests/integration.py
+sh tests/run.sh
 ```
 
 Docker-Image wurde gebaut, MariaDB meldete healthy und die App wurde auf Port 8087 gestartet.
@@ -211,11 +213,11 @@ Bei der ersten Übergabe bestanden acht HTTP-Integrationstests gegen die echte D
 
 Manueller Browser-Smoke-Test: Admin anmelden, Tisch 07 wählen, Hamburger mit zwei Sonderwünschen senden, Küchenbon sehen und in Arbeit nehmen. Screenshot liegt im Projekt.
 
-Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 18 Integrationstests erfolgreich (zuletzt ergänzt: Passwort-Leerzeichen, UTC-Zeitbasis, DB-Ausfall). Zwei dieser Tests führen PHP per `docker compose exec` im lokalen App-Container aus und werden ohne Docker oder bei gesetztem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
+Aktueller Stand am 23.10.2026: Docker-Build und PHP-Syntaxprüfung erfolgreich; 18 Integrationstests erfolgreich (zuletzt ergänzt: Passwort-Leerzeichen, UTC-Zeitbasis, DB-Ausfall). Zwei dieser Tests führen PHP per `docker compose exec` im Test-Container aus und werden ohne Docker oder bei nicht lokalem `TEST_URL` übersprungen. Ergänzt wurden Prüfungen für Tischbesuche, Zahlung, vollständiges Storno, Positionskorrekturen, Nachträge, idempotente Wiederholungen, Mitarbeiterverwaltung, Stationsquittierung später Stornos und protokollierte Rücknahme manueller Zahlungsbestätigungen. Die mobile Kassen- und Adminansicht sowie die Stornoquittierung wurden im Browser geprüft. Details stehen in `tests/RESULTS.md`.
 
 **Grenzen des Nachweises:** Keine automatisierte Browser-Suite, keine Parallelitäts-/Lasttests, keine realen iPad-/Safari-Tests, keine Prüfung auf Hetzner, keine Produktionsfreigabe.
 
-Die Integrationstests schreiben Daten, legen zusätzliche Benutzer/Gerichte/Tische an und hinterlassen Bons. Nur gegen eine dedizierte lokale Testdatenbank ausführen. `TEST_URL` überschreibt die Basisadresse; nicht auf Produktion setzen. Tests setzen die Demo-Benutzer und Artikel-IDs voraus.
+Die Integrationstests schreiben Daten, legen zusätzliche Benutzer/Gerichte/Tische an und hinterlassen Bons. Deshalb laufen sie seit dem 23.10.2026 über `sh tests/run.sh` in einem eigenen, jedes Mal frischen Stack mit eigenem Volume; die lokale App auf 8087 bleibt sauber. Die Tests setzen die Demo-Benutzer und die festen Testartikel mit den IDs 1–8 voraus, die nur bei `MENU_SEED=test` angelegt werden. `TEST_URL` überschreibt die Basisadresse (Standard 8088); nicht auf Produktion setzen.
 
 ## 8. Bekannte Einschränkungen und priorisierte Weiterarbeit
 
@@ -248,7 +250,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 
 - React-Komponenten, API-Typen und PHP-Handler aufteilen; Formatierung und Linting etablieren.
 - Versionierte Datenbankmigrationen einführen. `CREATE TABLE IF NOT EXISTS` aktualisiert keine vorhandenen Spalten.
-- Separate Testdatenbank, Aufräumstrategie und automatisierte Browser-/Mobile-Tests ergänzen.
+- Automatisierte Browser-/Mobile-Tests ergänzen. Getrennte Testdatenbank und Aufräumen erledigt `tests/run.sh`.
 - Polling ohne überlappende Requests, mit Timeout, Backoff und Schutz gegen veraltete Antworten implementieren.
 - Katalogänderungen werden alle zehn Sekunden abgefragt; verzögerte Updates und Konflikte beim Bestellen prüfen.
 - CSP/Sicherheitsheader, Session-Lebensdauer, erweitertes Login-Limiting, persistente Sessions und Monitoring vor Produktion prüfen.
@@ -287,7 +289,7 @@ Restaurantzuordnung und Inspiration:
 - https://www.bispingen.de/gastro/zum-stimbeck
 - https://www.tripadvisor.de/Restaurant_Review-g651860-d16948713-Reviews-Gaststatte_Zum_Stimbeck-Bispingen_Lower_Saxony.html
 
-Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht auslesen. Logo, Bildentwürfe, Beispielkarte und Preise sind keine verifizierten aktuellen Originaldaten des Restaurants. Vor realem Einsatz von Robin bestätigen lassen.
+Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht auslesen. Logo und Bildentwürfe sind keine verifizierten Originaldaten des Restaurants. Die Speisekarte in `api/speisekarte.php` wurde am 23.10.2026 aus der PDF unter `speisekarte/` übernommen. Annahmen dabei: jede Größe ist ein eigenes Produkt; Säfte gibt es laut Karte auch als Schorle (eigene Kategorie „Saftschorlen“); der Seniorenteller (−3,00 €) wurde für beide Schnitzel angelegt; vegane Patties/Würste, die Beilagenwahl beim Schnitzel und der inklusive Dip werden als Sonderwunsch erfasst, weitere Dips und Extras als eigene Produkte. Schreibweisen „Rhababer“ und „Ramazotti“ wurden zu „Rhabarber“ und „Ramazzotti“ korrigiert. Vor realem Einsatz von Robin bestätigen lassen.
 
 ## 11. Kopierbarer Startauftrag für die nächste KI
 

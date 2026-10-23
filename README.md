@@ -2,7 +2,7 @@
 
 Für die Weiterentwicklung mit einer anderen Person oder KI zuerst [UEBERGABE.md](UEBERGABE.md) lesen.
 
-Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, MariaDB 11.4. Keine externen Backenddienste. Beispielkarte und Preise sind keine bestätigten Restaurantdaten.
+Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, MariaDB 11.4. Keine externen Backenddienste. Die Speisekarte stammt aus `speisekarte/Zum Stimbeck - Speisekarte.pdf` (Stand 07.09.2026) und wird bei leerer Datenbank aus [api/speisekarte.php](api/speisekarte.php) eingespielt.
 
 ## Start mit Docker
 
@@ -29,10 +29,10 @@ Für parallele Rollen unterschiedliche Browserprofile oder private Fenster verwe
 
 ## Tests
 
-Optional nach dem Start und der Migration; die Integrationstests benötigen Python 3 auf dem Host und schreiben Testdaten in die **lokale** Datenbank:
+Die Integrationstests benötigen Docker und Python 3 auf dem Host. Sie starten einen eigenen, frischen Stack (`kittchenapp-test`, Port 8088, eigenes Datenbank-Volume mit festen Testartikeln) und räumen ihn danach wieder ab. Die lokale App auf Port 8087 und ihre Daten bleiben unberührt:
 
 ```sh
-python3 tests/integration.py
+sh tests/run.sh
 ```
 
 Für einen zusätzlichen Host-Build sind Node.js und npm erforderlich. Der Docker-Build führt denselben Frontend-Build bereits aus:
@@ -42,7 +42,7 @@ npm ci
 npm run build
 ```
 
-Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben in die lokale Datenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Positionskorrekturen, Zahlbetrag, Validierung, Adminfunktionen, Logout und Login-Drosselung. Testbenutzer und Testdaten bleiben lokal erhalten. Nicht gegen Produktion ausführen.
+Die Integrationstests rufen die echte PHP-API mit separaten Sitzungen auf und schreiben nur in die Testdatenbank. Geprüft werden Anmeldung, CSRF, Rollen, Stationsisolation, wiederholtes Senden, Sonderwünsche, Statusablauf, Archivverlauf, Tischrechnung, Storno, Positionskorrekturen, Zahlbetrag, Validierung, Adminfunktionen, Logout und Login-Drosselung. Ohne `TEST_URL` zielen sie auf Port 8088, nie auf die lokale App. Nicht gegen Produktion ausführen.
 
 ## Bedienung
 
@@ -62,14 +62,16 @@ Die Oberfläche fragt alle zwei Sekunden Änderungen ab. Timer verwenden die Ser
 - `frontend/src/main.tsx`: rollenabhängige Oberfläche, Bestellaufnahme, Stationsboards, Archiv, Admin.
 - `api/index.php`: JSON-Endpunkte, Authentifizierung, Rollenprüfung, CSRF, Workflow.
 - `api/db.php`: PDO-Verbindung und vorbereitete SQL-Abfragen.
-- `api/migrate.php`: wiederholbar ausführbare Schemaanlage und lokale Beispieldaten.
+- `api/migrate.php`: wiederholbar ausführbare Schemaanlage, Speisekarte bei leerer Tabelle, lokale Demo-Konten und Tische.
+- `api/speisekarte.php`: Produkte und Preise der gedruckten Speisekarte.
+- `tests/run.sh`: startet den getrennten Teststack und führt die Integrationstests aus.
 - `tests/integration.py`: unabhängige HTTP-Integrationstests, nur Python-Standardbibliothek.
 
 API-Routing über `/api/index.php?action=...` benötigt keine Rewrite-Regeln. Schreibzugriffe sind POST und benötigen einen CSRF-Token. Benutzerrollen werden bei jedem Zugriff aus der Datenbank gelesen. Bons haben die Zustände `new → working → ready → collected`; beim Storno erhalten betroffene Bons den Zustand `cancelled`. Statusänderungen sperren den Bon innerhalb einer Transaktion. Die eindeutige technische Bestellkennung verhindert doppelte Speicherung; die sichtbare Bestellnummer leitet sich aus der Datenbank-ID ab. Gesendete Positionen speichern Name und Preis als Snapshot. Korrekturen haben eigene Kennungen und einen Verlauf mit Grund, Person und Vorher-/Nachher-Daten. Die Zahlungsbestätigung prüft den zuletzt angezeigten Betrag erneut auf dem Server. Alle Zeitstempel sind UTC; die Oberfläche zeigt lokale Uhrzeit.
 
 ## Hetzner Managed Server
 
-Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Verzeichnis `api/` in das Document Root der eigenen Subdomain laden. PHP 8.4 mit PDO MySQL vorausgesetzt. DB_HOST, DB_NAME, DB_USER, DB_PASSWORD und APP_ENV=production sicher in der Serverumgebung setzen. Migration per PHP-CLI ausführen. Bei production werden keine Demo-Benutzer erzeugt und Session-Cookies erfordern HTTPS. Vor echtem Einsatz den initialen Administrator per `ADMIN_USERNAME` und `ADMIN_PASSWORD` in der CLI-Umgebung mit `php api/create-admin.php` anlegen; die öffentliche Registrierung ist bewusst nicht vorhanden. Automatisierte Backups müssen am Hosting eingerichtet werden.
+Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Verzeichnis `api/` in das Document Root der eigenen Subdomain laden. PHP 8.4 mit PDO MySQL vorausgesetzt. DB_HOST, DB_NAME, DB_USER, DB_PASSWORD und APP_ENV=production sicher in der Serverumgebung setzen. Migration per PHP-CLI ausführen; sie spielt bei leerer Tabelle die Speisekarte ein. Bei production werden keine Demo-Benutzer und Tische erzeugt und Session-Cookies erfordern HTTPS. Vor echtem Einsatz den initialen Administrator per `ADMIN_USERNAME` und `ADMIN_PASSWORD` in der CLI-Umgebung mit `php api/create-admin.php` anlegen; die öffentliche Registrierung ist bewusst nicht vorhanden. Automatisierte Backups müssen am Hosting eingerichtet werden.
 
 ## Umfang dieser ersten Version
 
@@ -85,4 +87,4 @@ Geplant: Wenn kein Tresen-Mitarbeiter aktiv ist, aber Service online ist, übern
 docker compose down
 ```
 
-Das benannte Volume behält die Daten. `docker compose down -v` löscht ausdrücklich die lokale Demo-Datenbank.
+Das benannte Volume behält die Daten. `docker compose down -v` löscht ausdrücklich die lokale Datenbank; die nächste Migration legt Speisekarte, Demo-Konten und Tische neu an.
