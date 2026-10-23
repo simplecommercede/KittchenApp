@@ -17,21 +17,23 @@ function passwordText(mixed $v): string {if(!is_string($v)||strlen($v)>200) fail
 function rollbackQuietly(): void {try{$db=dbConnection(false);if($db?->inTransaction())$db->rollBack();}catch(Throwable){}}
 function positive(mixed $v,int $max=999999): int {if(!is_int($v)||$v<1||$v>$max) fail('Ungültige Zahl.');return $v;}
 function staffRoles(mixed $roles): array {if(!is_array($roles)||!$roles||count($roles)>4)fail('Mindestens eine gültige Rolle wählen.');foreach($roles as $role)if(!is_string($role)||!in_array($role,['admin','service','kitchen','bar'],true))fail('Ungültige Rolle.');return array_values(array_unique($roles));}
+// Counts a failed login; $limit failures within $minutes block the key for $minutes.
+function loginFailure(string $key,int $limit,int $minutes): void {query('INSERT INTO login_attempts(identity_hash,attempts,blocked_until,updated_at) VALUES(?,1,NULL,NOW()) ON DUPLICATE KEY UPDATE attempts=IF(updated_at<NOW()-INTERVAL ? MINUTE OR (blocked_until IS NOT NULL AND blocked_until<NOW()),1,attempts+1), blocked_until=IF(attempts>=?,NOW()+INTERVAL ? MINUTE,NULL), updated_at=NOW()',[$key,$minutes,$limit,$minutes]);}
 function drinkBase(string $name): string {return preg_match('/^(.*?)\s+\d+\s*ml$/u',$name,$m)?$m[1]:$name;}
 function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
 try {
  $action=$_GET['action']??'me'; $method=$_SERVER['REQUEST_METHOD'];
  $body=[];
- if($method==='POST') { try {$body=json_decode(file_get_contents('php://input'),true,512,JSON_THROW_ON_ERROR);}catch(Throwable){fail('Ungültiges JSON.');} if(!is_array($body)) fail('Ungültige Anfrage.'); if(!hash_equals($_SESSION['csrf']??'invalid',$_SERVER['HTTP_X_CSRF_TOKEN']??'')) fail('Sicherheitsprüfung fehlgeschlagen.',403); }
+ if($method==='POST') { $raw=(int)($_SERVER['CONTENT_LENGTH']??0)>65536?false:file_get_contents('php://input',false,null,0,65537); if($raw===false||strlen($raw)>65536) fail('Anfrage ist zu groß.',413); try {$body=json_decode($raw,true,8,JSON_THROW_ON_ERROR);}catch(Throwable){fail('Ungültiges JSON.');} if(!is_array($body)) fail('Ungültige Anfrage.'); if(!hash_equals($_SESSION['csrf']??'invalid',$_SERVER['HTTP_X_CSRF_TOKEN']??'')) fail('Sicherheitsprüfung fehlgeschlagen.',403); }
  $_SESSION['csrf']??=bin2hex(random_bytes(32));
  if($action==='session' && $method==='GET') out(['csrf'=>$_SESSION['csrf'],'user'=>isset($_SESSION['uid'])?user():null]);
  if($action==='login' && $method==='POST') {
   $username=shortText($body['username']??'',80); $password=passwordText($body['password']??'');
-  $key=hash('sha256',strtolower($username).'|'.($_SERVER['REMOTE_ADDR']??''));
-  $attempt=query('SELECT * FROM login_attempts WHERE identity_hash=?',[$key])->fetch();
-  if($attempt && $attempt['blocked_until'] && strtotime($attempt['blocked_until'])>time()) fail('Zu viele Versuche. Bitte später erneut versuchen.',429);
+  // Two limits: 5 failures per username and address (5 min), 30 failures per address regardless of username (15 min).
+  $ip=$_SERVER['REMOTE_ADDR']??'';$key=hash('sha256',strtolower($username).'|'.$ip);$ipKey=hash('sha256','ip|'.$ip);
+  if(query('SELECT 1 FROM login_attempts WHERE identity_hash IN (?,?) AND blocked_until>NOW() LIMIT 1',[$key,$ipKey])->fetch()) fail('Zu viele Versuche. Bitte später erneut versuchen.',429);
   $u=query('SELECT * FROM users WHERE username=? AND active=1',[$username])->fetch();
-  if(!$u||!password_verify($password,$u['password'])) {query('INSERT INTO login_attempts(identity_hash,attempts,blocked_until) VALUES(?,1,NULL) ON DUPLICATE KEY UPDATE attempts=IF(blocked_until IS NOT NULL AND blocked_until<NOW(),1,attempts+1), blocked_until=IF(attempts>=5,DATE_ADD(NOW(),INTERVAL 5 MINUTE),NULL)',[$key]);fail('Benutzername oder Passwort falsch.',401);}
+  if(!$u||!password_verify($password,$u['password'])) {loginFailure($key,5,5);loginFailure($ipKey,30,15);query('DELETE FROM login_attempts WHERE updated_at<NOW()-INTERVAL 1 DAY AND (blocked_until IS NULL OR blocked_until<NOW())');fail('Benutzername oder Passwort falsch.',401);}
   query('DELETE FROM login_attempts WHERE identity_hash=?',[$key]);session_regenerate_id(true);$_SESSION['uid']=$u['id'];$_SESSION['csrf']=bin2hex(random_bytes(32));out(['user'=>user(),'csrf'=>$_SESSION['csrf']]);
  }
  $u=user();
@@ -76,7 +78,7 @@ try {
  if($action==='tickets' && $method==='GET') {
   $archive=($_GET['archive']??'0')==='1'; $params=[]; $where=$archive?'t.status IN ("collected","cancelled")':'t.status NOT IN ("collected","cancelled")';
   if(!allows($u,'service')) { $stations=[]; if(allows($u,'kitchen')) $stations[]='kitchen';if(allows($u,'bar')) $stations[]='bar';if(!$stations) fail('Keine Berechtigung.',403);$where.=' AND t.station IN ('.implode(',',array_fill(0,count($stations),'?')).')';$params=$stations; }
-  $tickets=query('SELECT t.*,o.table_id,o.note,o.user_id,o.cancellation_reason,d.name AS table_name,u.name AS server FROM tickets t JOIN orders o ON o.id=t.order_id JOIN dining_tables d ON d.id=o.table_id JOIN users u ON u.id=o.user_id WHERE '.$where.' ORDER BY t.created_at '.($archive?'DESC':'ASC').',t.id '.($archive?'DESC':'ASC').' LIMIT 200',$params)->fetchAll();
+  $tickets=query('SELECT t.*,o.table_id,o.note,o.user_id,o.cancellation_reason,d.name AS table_name,u.name AS server FROM tickets t JOIN orders o ON o.id=t.order_id JOIN dining_tables d ON d.id=o.table_id JOIN users u ON u.id=o.user_id WHERE '.$where.' ORDER BY t.created_at '.($archive?'DESC':'ASC').',t.id '.($archive?'DESC':'ASC').($archive?' LIMIT 200':''),$params)->fetchAll();
   foreach($tickets as &$ticket){$ticket['items']=query('SELECT * FROM items WHERE ticket_id=?',[$ticket['id']])->fetchAll();if($archive)$ticket['events']=query('SELECT e.action,e.created_at,u.name FROM events e JOIN users u ON u.id=e.user_id WHERE ticket_id=? ORDER BY e.id',[$ticket['id']])->fetchAll();}unset($ticket);
   $alerts=[];
   if(!$archive){
