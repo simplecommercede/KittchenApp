@@ -17,6 +17,7 @@ function passwordText(mixed $v): string {if(!is_string($v)||strlen($v)>200) fail
 function rollbackQuietly(): void {try{$db=dbConnection(false);if($db?->inTransaction())$db->rollBack();}catch(Throwable){}}
 function positive(mixed $v,int $max=999999): int {if(!is_int($v)||$v<1||$v>$max) fail('Ungültige Zahl.');return $v;}
 function staffRoles(mixed $roles): array {if(!is_array($roles)||!$roles||count($roles)>4)fail('Mindestens eine gültige Rolle wählen.');foreach($roles as $role)if(!is_string($role)||!in_array($role,['admin','service','kitchen','bar'],true))fail('Ungültige Rolle.');return array_values(array_unique($roles));}
+function drinkBase(string $name): string {return preg_match('/^(.*?)\s+\d+\s*ml$/u',$name,$m)?$m[1]:$name;}
 function itemState(array $item): array {return ['id'=>(int)$item['id'],'menu_id'=>(int)$item['menu_id'],'name'=>$item['name'],'quantity'=>(int)$item['quantity'],'price'=>(int)$item['price'],'note'=>$item['note']];}
 try {
  $action=$_GET['action']??'me'; $method=$_SERVER['REQUEST_METHOD'];
@@ -235,6 +236,23 @@ try {
    $straw=false;if($station==='bar'){$ml=$body['volume_ml']??null;if(!is_int($ml)||$ml<1||$ml>5000)fail('Bei Getränken die Menge in ml angeben.');if(preg_match('/\d+\s*(ml|cl|l)$/i',$name))fail('Menge nur im Feld ml angeben, nicht im Namen.');$name.=' '.$ml.' ml';if(strlen($name)>120)fail('Name ist zu lang.');$straw=($body['straw']??false)===true;}
    $id=$body['id']??null;if($id){positive($id);if(!query('SELECT id FROM menu WHERE id=?',[$id])->fetch())fail('Produkt nicht gefunden.',404);query('UPDATE menu SET name=?,category=?,station=?,price=?,straw=? WHERE id=?',[$name,$cat,$station,$price,$straw?1:0,$id]);}else query('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)',[$name,$cat,$station,$price,$straw?1:0]);out(['ok'=>true]);}
   if($action==='admin_menu_status' && $method==='POST'){$id=positive($body['id']??null);$active=$body['active']??null;if(!is_bool($active))fail('Status prüfen.');if(!query('SELECT id FROM menu WHERE id=?',[$id])->fetch())fail('Produkt nicht gefunden.',404);query('UPDATE menu SET active=? WHERE id=?',[$active?1:0,$id]);out(['ok'=>true]);}
+  if($action==='admin_drink' && $method==='POST'){
+   // One drink with its portion sizes. Each size stays its own menu row ("Apfelschorle 300 ml") so orders keep per-size names and prices.
+   $name=shortText($body['name']??'',100);$cat=shortText($body['category']??'',40);$straw=($body['straw']??false)===true;$sizes=$body['sizes']??null;
+   if(!$name||!$cat||preg_match('/\d+\s*(ml|cl|l)$/i',$name))fail('Getränkename ohne Menge und Kategorie angeben.');
+   if(!is_array($sizes)||!$sizes||count($sizes)>6)fail('Mindestens eine Größe mit ml und Preis angeben.');
+   $volumes=[];$ids=[];foreach($sizes as $size){if(!is_array($size))fail('Größe prüfen.');$ml=$size['volume_ml']??null;$price=$size['price']??null;$active=$size['active']??true;if(!is_int($ml)||$ml<1||$ml>5000||!is_int($price)||$price<0||$price>100000||!is_bool($active))fail('Jede Größe braucht ml und Preis.');if(in_array($ml,$volumes,true))fail('Jede Menge nur einmal angeben.');$volumes[]=$ml;if(isset($size['id']))$ids[]=positive($size['id']);}
+   if(count(array_unique($ids))!==count($ids))fail('Größe doppelt angegeben.');
+   db()->beginTransaction();
+   $byId=array_column(query('SELECT id,name FROM menu WHERE station="bar" FOR UPDATE')->fetchAll(),'name','id');
+   $base=null;foreach($ids as $id){if(!isset($byId[$id]))fail('Größe nicht gefunden.',404);$b=drinkBase($byId[$id]);if($base!==null&&$b!==$base)fail('Größen gehören zu verschiedenen Getränken.');$base=$b;}
+   $group=$base===null?[]:array_keys(array_filter($byId,fn($n)=>drinkBase($n)===$base));
+   if(array_diff($group,$ids))fail('Alle vorhandenen Größen mitsenden; nicht mehr angebotene Größen deaktivieren.');
+   foreach($byId as $id=>$n)if(!in_array($id,$group,true)&&mb_strtolower(drinkBase($n))===mb_strtolower($name))fail('Ein Getränk mit diesem Namen gibt es bereits.',409);
+   $saved=[];foreach($sizes as $size){$values=[$name.' '.$size['volume_ml'].' ml',$cat,$size['price'],$straw?1:0,($size['active']??true)?1:0];
+    if(isset($size['id'])){query('UPDATE menu SET name=?,category=?,price=?,straw=?,active=? WHERE id=?',[...$values,$size['id']]);$saved[]=$size['id'];}
+    else{query('INSERT INTO menu(name,category,price,straw,active,station) VALUES(?,?,?,?,?,"bar")',$values);$saved[]=(int)db()->lastInsertId();}}
+   db()->commit();out(['ok'=>true,'ids'=>$saved]);}
   if($action==='admin_table' && $method==='POST'){$id=positive($body['id']??null,999);$name=shortText($body['name']??'',40);if(!$name)fail('Tischname fehlt.');query('INSERT INTO dining_tables(id,name) VALUES(?,?) ON DUPLICATE KEY UPDATE name=VALUES(name)',[$id,$name]);out(['ok'=>true]);}
   if($action==='admin_table_status' && $method==='POST'){$id=positive($body['id']??null,999);$active=$body['active']??null;if(!is_bool($active))fail('Status prüfen.');if(!query('SELECT id FROM dining_tables WHERE id=?',[$id])->fetch())fail('Tisch nicht gefunden.',404);query('UPDATE dining_tables SET active=? WHERE id=?',[$active?1:0,$id]);out(['ok'=>true]);}
  }

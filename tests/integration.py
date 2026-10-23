@@ -423,6 +423,26 @@ class Workflow(unittest.TestCase):
         _,menu=self.admin.call('menu');changed=next(m for m in menu if int(m['id'])==int(drink['id']))
         self.assertEqual((changed['name'],int(changed['price']),int(changed['straw'])),(name+' 400 ml',420,0))
         self.assertEqual(self.admin.call('admin_menu',{**edit,'id':999999})[0],404)
+    def test_19_admin_drink_with_sizes(self):
+        suffix=uuid.uuid4().hex[:8];name='Testschorle '+suffix
+        drink={'name':name,'category':'Tests','straw':True,'sizes':[{'volume_ml':300,'price':350},{'volume_ml':500,'price':520}]}
+        self.assertEqual(self.bar.call('admin_drink',drink)[0],403)
+        self.assertEqual(self.admin.call('admin_drink',{**drink,'sizes':[]})[0],400)
+        self.assertEqual(self.admin.call('admin_drink',{**drink,'sizes':[{'volume_ml':300,'price':350},{'volume_ml':300,'price':400}]})[0],400)
+        self.assertEqual(self.admin.call('admin_drink',{**drink,'name':name+' 300 ml'})[0],400)
+        code,created=self.admin.call('admin_drink',drink);self.assertEqual(code,200,created)
+        small,large=created['ids']
+        self.assertEqual(self.admin.call('admin_drink',drink)[0],409)
+        sizes=lambda:{m['name']:(int(m['price']),int(m['straw']),int(m['active'])) for m in self.admin.call('menu')[1] if m['name'].startswith('Testschorle') and suffix in m['name']}
+        self.assertEqual(sizes(),{name+' 300 ml':(350,1,1),name+' 500 ml':(520,1,1)})
+        self.assertEqual(self.admin.call('admin_drink',{**drink,'sizes':[{'id':small,'volume_ml':300,'price':350}]})[0],400)
+        renamed='Testsaft '+suffix
+        edit={'name':renamed,'category':'Tests','straw':False,'sizes':[{'id':small,'volume_ml':300,'price':360,'active':False},{'id':large,'volume_ml':500,'price':550},{'volume_ml':1000,'price':900}]}
+        code,saved=self.admin.call('admin_drink',edit);self.assertEqual(code,200,saved)
+        self.assertEqual(saved['ids'][:2],[small,large])
+        menu={m['name']:m for m in self.admin.call('menu')[1] if suffix in m['name']}
+        self.assertEqual(sorted(menu),[renamed+' 1000 ml',renamed+' 300 ml',renamed+' 500 ml'])
+        self.assertEqual((int(menu[renamed+' 300 ml']['id']),int(menu[renamed+' 300 ml']['active']),int(menu[renamed+' 500 ml']['price']),int(menu[renamed+' 1000 ml']['straw'])),(small,0,550,0))
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
