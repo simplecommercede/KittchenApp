@@ -64,3 +64,7 @@
 .bill-order.paid{background:#f3f5f0;opacity:.8}
 .paid-badge{margin-left:8px;font-size:12px;font-weight:800;color:#24483c;background:#dfebe2;border-radius:5px;padding:2px 7px}
 .order-pay{margin:10px 0;display:grid;gap:4px}
+.notify-toggle{width:auto;min-height:38px;padding:6px 10px;margin:0}
+.notify-panel{display:grid;gap:10px;margin-bottom:16px}
+.notify-panel .check small{display:inline;margin-left:6px}
+.notify-panel>button{width:auto;justify-self:start}
