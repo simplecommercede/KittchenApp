@@ -133,3 +133,12 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Reine Frontend-Änderung; Docker-Build mit TypeScript-Prüfung erfolgreich.
 - Browserprüfung als `mia`: Nach „⤢ Fokus“ sind Kopfzeile, Begrüßung, Fußzeile und Zahlungsbestätigungen ausgeblendet (`display: none`), Tresen-Hinweis, Tischleiste und Bon-Board bleiben, unten rechts erscheint „● Service · Fokus beenden“. Nach Neuladen bleibt der Modus aktiv; auf 375 px Breite kein horizontaler Überlauf. „Fokus beenden“ stellt die Kopfzeile wieder her. Echtes Vollbild wurde im eingebetteten Browser nicht gewährt (erwartet).
 - Nicht geprüft: Vollbild auf echten Tablets.
+
+## PHP-Refactoring (23.10.2026)
+
+- Composer-PSR-4-Namespace `Kitchen\`, Models, Services und separate SQL-Repositories eingeführt.
+- PHPUnit 11: **10 Tests, 25 Assertions**, erfolgreich lokal und im Docker-Target `quality`.
+- PHPStan 2: **Level 5, keine Fehler**, ohne Baseline; lokal und in Docker geprüft.
+- `sh tests/run.sh`: **25 HTTP-/MariaDB-Integrationstests erfolgreich** nach dem Refactoring. Eigener Teststack; lokale App-Daten unverändert.
+- Produktions-Docker-Target `runtime` und separates Entwicklungstarget `quality` erfolgreich gebaut.
+- `git diff --check` erfolgreich. Bestehende Frontend-Dateien wurden nicht geändert.

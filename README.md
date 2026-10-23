@@ -110,3 +110,31 @@ docker compose down
 ```
 
 Das benannte Volume behält die Daten. `docker compose down -v` löscht ausdrücklich die lokale Datenbank; die nächste Migration legt Speisekarte, Demo-Konten und Tische neu an.
+
+## PHP-Struktur und Qualitätsprüfungen
+
+Das Backend verwendet Composer-PSR-4-Autoloading unter `Kitchen\`:
+
+- `api/src/Http`: Request-/Session-Einstieg, Routing und JSON-Antworten.
+- `api/src/Model`: unveränderliche Benutzer- und Positionsmodelle.
+- `api/src/Service`: Auth, Katalog, Tische, Bons, Bestellungen, Zahlungen und Administration; hier liegen Workflow und Transaktionen.
+- `api/src/Repository`: zugehörige SQL-Abfragen mit injizierter Datenbankverbindung.
+- `api/src/Infrastructure`: verzögerter PDO-Verbindungsaufbau mit UTC.
+- `api/src/Support`: gemeinsame Validierung und Berechtigungsfunktionen.
+
+`api/index.php` ist nur noch der Einstieg. Die CLI-Migration und Adminanlage nutzen `api/db.php` als kleine Kompatibilitätsschicht. API-Routen und JSON-Formate bleiben erhalten. Die bestehenden Datensätze benötigen für dieses Refactoring keine Schemaänderung.
+
+```sh
+composer install
+composer test       # PHPUnit, ohne Datenbank
+composer analyse    # PHPStan Level 5, ohne Baseline
+composer check      # beides
+
+# Alternativ vollständig in Docker:
+docker compose --profile tools run --build --rm quality
+
+# Echte HTTP-/Datenbanktests im isolierten Teststack:
+sh tests/run.sh
+```
+
+Bei Deployment ohne Composer auf dem Server zuvor `composer install --no-dev --optimize-autoloader` in einer separaten Buildkopie ausführen und **api/vendor/** mit ausliefern. Die CLI-Migration benötigt ebenfalls den Autoloader. PHP benötigt PDO MySQL und mbstring. Docker erstellt den Produktions-Autoloader automatisch; Entwicklungstools sind nur im separaten `quality`-Target enthalten.
