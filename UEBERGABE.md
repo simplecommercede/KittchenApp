@@ -4,7 +4,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 ## 0. Aktueller Stand auf einen Blick (23.10.2026)
 
-**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung. `sh tests/run.sh`: 25 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
+**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung, Hinweise mit Ton/Vibration/Benachrichtigung bei geöffneter App. `sh tests/run.sh`: 25 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
@@ -18,6 +18,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 | Getrennte Entwürfe pro Tisch statt eines Entwurfs pro Person | Ablauf |
 | Archiv: Suche und Filter nach Datum/Tisch | Ablauf |
 | Einzelne Bestellzahlung zurücknehmen, solange der Tisch noch offen ist (heute nur Rücknahme des ganzen Besuchs) | Ablauf |
+| Hinweise auf echten Geräten prüfen (Ton nach erstem Tippen, Vibration auf Android, Bildschirmsperre) | Prüfung |
 | Abgelaufene Sitzung beim Speichern (POST) führt zu „Sicherheitsprüfung fehlgeschlagen“ statt zur Anmeldung | Ablauf |
 | Bedienung auf echten iPads/Smartphones prüfen (Touch-Ziele, Tablet-Layout, Kontraste); über das WLAN jetzt möglich | Prüfung |
 | 6 Longdrinks ohne ml-Angabe; Seniorenteller für beide Schnitzel angenommen | Daten, von Robin zu klären |
@@ -33,6 +34,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 | Login-Sperre pro Adresse trifft im Restaurant-WLAN alle Geräte gemeinsam (30 Fehlversuche/15 Min.) | Entscheidung |
 | Auf Hetzner `post_max_size` bzw. Apache `LimitRequestBody` niedrig setzen | Deployment (Abschnitt 9) |
 | Polling mit Backoff, Code aufteilen, versionierte Migrationen, Browser-Testsuite | Wartbarkeit |
+| Hinweise bei geschlossener App (Web-Push): braucht HTTPS, Service Worker, Push-Dienst im Backend; auf iPhone/iPad nur als installierte Web-App | Backend/Betrieb |
 
 Details stehen in Abschnitt 8 und 9, die Testhistorie in `tests/RESULTS.md`.
 
@@ -284,6 +286,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Bon-Timer: läuft nur bei „Neu“ ab Eingang; bei „In Arbeit“ und „Abholbereit“ steht er auf der Wartezeit bis zum Start („bis Start“), im Archiv auf der Dauer bis zur Abholung („bis Abholung“). Stornierte Bons ohne Start zeigen keinen Timer. Der Hinweis „Lange Wartezeit · X Min. auf Essen“ zählt weiter die Wartezeit des Gastes, solange Essen neu oder in Arbeit ist.
 - Getrennte Zahlung: Jede Bestellung eines Tischbesuchs kann einzeln bezahlt werden (`order_paid`), sobald ihre Bons abgeholt sind. Bezahlte Bestellungen sind für Korrekturen und Storno gesperrt und zählen nicht mehr zum offenen Betrag. Mit der letzten offenen Bestellung schließt der Tischbesuch. „Restbetrag/Alles bezahlt“ (`table_paid`) kassiert alle noch offenen Bestellungen. Die Rücknahme gilt weiterhin für den ganzen Besuch und öffnet alle Bestellungen wieder.
 - Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.
+- **Hinweise (Ton, Vibration, Benachrichtigung):** Umgesetzt am 23.10.2026, rein im Frontend. Über das 🔔 in der Kopfzeile stellt jede Person pro Gerät Ton, Vibration und Gerätebenachrichtigung ein (localStorage `notify-<id>`; Standard: Ton und Vibration an). Ausgelöst wird beim Vergleich zweier Abfragen: Küche/Tresen bei neuen Bons und neuen Stornohinweisen ihrer Station, Service bei Bons, die abholbereit werden, und bei unbesetztem Tresen zusätzlich bei neuen Getränkebons und Tresen-Stornos. Die Admin-Ansicht meldet nichts. Beim Laden und Ansichtswechsel wird nur der Stand gemerkt, ohne Hinweis. Jeder Hinweis erscheint zusätzlich als Meldung in der App. Grenzen: Ton erst nach dem ersten Tippen (Browserregel); Vibration nur in Browsern, die sie anbieten (nicht iPhone/iPad); Gerätebenachrichtigungen nur über HTTPS oder localhost, über die WLAN-Adresse also nicht; alles nur bei geöffneter App.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
 ### Priorität 3: Wartbarkeit, Tests und Betrieb
@@ -298,7 +301,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Die API lehnt Anfragen über 64 KB (413) und JSON tiefer als 8 Ebenen (400) ab. PHP liest den Inhalt aber zuerst bis `post_max_size` ein (lokal 8 MB). Das ist erst beim Deployment lösbar, siehe Abschnitt 9.
 - API lädt Positionen/Events pro Bon einzeln. Bei Bedarf gebündelte Abfragen und geeignete Indizes vorsehen.
 - Tablet-Layout, Touch-Ziele, Tastaturbedienung und Kontraste auf echten Geräten prüfen.
-- Installierbare PWA, Audio-/Pushhinweise und Drag-and-drop sind Erweiterungen, noch nicht vorhanden.
+- Hinweise bei geöffneter App sind umgesetzt (siehe Abschnitt 8, Priorität 2). Installierbare PWA, Push bei geschlossener App und Drag-and-drop sind Erweiterungen, noch nicht vorhanden.
 
 ## 9. Hetzner: Vorgehen und offene Punkte
 
