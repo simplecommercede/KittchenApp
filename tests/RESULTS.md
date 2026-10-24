@@ -142,3 +142,10 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - `sh tests/run.sh`: **25 HTTP-/MariaDB-Integrationstests erfolgreich** nach dem Refactoring. Eigener Teststack; lokale App-Daten unverändert.
 - Produktions-Docker-Target `runtime` und separates Entwicklungstarget `quality` erfolgreich gebaut.
 - `git diff --check` erfolgreich. Bestehende Frontend-Dateien wurden nicht geändert.
+
+## Service rufen aus Küche und Tresen, 24.10.2026
+
+- Neue Tabelle `service_calls`, `ServiceCallService` und `ServiceCallRepository` im Muster der neuen PHP-Struktur, Routen im `Kernel`.
+- `docker compose --profile tools run --build --rm quality`: PHPUnit 11 Tests, 30 Assertions (neu: Platzhalter-Filter der Stationen); PHPStan Level 5 ohne Fehler.
+- `sh tests/run.sh`: 26 Tests erfolgreich. Neu `test_25`: Service und Tresen dürfen nicht für die Küche rufen (403); Küchenruf 201, zweiter Ruf aktualisiert nur den Grund; Service und Küche sehen den Ruf, der Tresen nicht; Tresen darf nicht antworten (403), Service antwortet, Doppelantwort ist unschädlich; beantworteter Ruf lässt sich nicht zurücknehmen (409) und zeigt „Mia“; zurückgenommener Ruf verschwindet und lässt sich nicht mehr beantworten.
+- Browserprüfung im kurzzeitig gestarteten Teststack: Als `robin` „Bitte in die Küche“ gerufen, Anzeige mit Wartezeit und „Ruf zurücknehmen“; nach Antwort von Mia (per API) „✓ Mia kommt“ und Hinweis „Service kommt · Mia ist unterwegs“. Als `mia` erschien ein neuer Küchenruf in Orange mit Hinweis „Küche ruft den Service · Essen abholen · Robin“; nach „Ich komme“ stand „✓ Mia ist unterwegs · Küche“. Teststack danach entfernt, lokale Datenbank unberührt.

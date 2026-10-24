@@ -4,7 +4,7 @@ Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde P
 
 ## 0. Aktueller Stand auf einen Blick (23.10.2026)
 
-**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung, Hinweise mit Ton/Vibration/Benachrichtigung bei geöffneter App, Fokus-Modus zum Arbeiten. `sh tests/run.sh`: 25 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
+**Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung, Hinweise mit Ton/Vibration/Benachrichtigung bei geöffneter App, Fokus-Modus zum Arbeiten, Küche/Tresen können den Service rufen. `sh tests/run.sh`: 26 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
@@ -162,6 +162,7 @@ Die zwei großen Implementierungsdateien wurden aus Zeitgründen kompakt geschri
 | `items` | Bonposition mit Mengen-, Namens-, Preis- und Sonderwunsch-Snapshot sowie optionaler Stornierung |
 | `events` | Wer hat einen Bon wann in welchen Status gesetzt? |
 | `order_changes` | Korrekturen mit Grund, Person, Zeitpunkt und Vorher-/Nachher-Daten |
+| `service_calls` | Rufe von Küche/Tresen an den Service: Station, Grund, rufende Person, Zeit, Antwort (wer, wann) oder Rücknahme |
 | `login_attempts` | Fehlversuche und zeitweise Login-Sperre: 5 pro Benutzername und Adresse (5 Min.), 30 pro Adresse unabhängig vom Namen (15 Min.); Einträge älter als ein Tag werden bei Fehlversuchen gelöscht |
 
 Wichtige Invarianten:
@@ -194,6 +195,10 @@ Zuerst `GET session` ausführen; die Antwort enthält `csrf` und ggf. `user`. Be
 | GET `tickets` | Aktive Bons, Stornohinweise, `bar_cover` und `server_time`; nach Rollen gefiltert. Optional `view` (`service`, `kitchen`, `bar`, `admin`) meldet die offene Ansicht für die Tresen-Anwesenheit |
 | GET `tickets&archive=1` | Abgeholte und stornierte Bons mit `events` |
 | POST `station_alert_ack` | `id`; gestarteten oder abholbereiten Stornohinweis an der zuständigen Station quittieren |
+| GET `service_calls` | Offene und in den letzten 2 Minuten beantwortete Servicerufe; Service sieht Küche und Tresen, Stationen nur ihre eigenen |
+| POST `service_call` | `station` (`kitchen`/`bar`), `note`; Küche oder Tresen ruft den Service; pro Station ein offener Ruf, ein zweiter aktualisiert nur den Grund |
+| POST `service_call_ack` | `id`; Service antwortet „Ich komme“ |
+| POST `service_call_cancel` | `id`; rufende Station nimmt einen offenen Ruf zurück |
 | GET `payments` | Rücknehmbare jüngste Zahlungsbestätigungen und protokollierter Zahlungsverlauf; Service/Admin |
 | POST `payment_reverse` | `visit_id`, `reason`; manuelle Zahlungsbestätigung des jüngsten Tischbesuchs zurücknehmen; Service/Admin |
 | POST `order` | `request_key`, `table_id`, `note`, `items`; Service/Admin |
@@ -291,6 +296,7 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 - Vollständiges und positionsweises Storno, Nachträge, Ersatzpositionen sowie Änderungen der Bestellnotiz sind für unbezahlte Bestellungen mit Grund und Verlauf umgesetzt. Späte Stornos erfordern jetzt eine Quittierung an Küche oder Tresen. Eine manuelle Zahlungsbestätigung kann beim jüngsten Tischbesuch mit Grund zurückgenommen werden; echte Zahlungsabwicklung und Erstattung fehlen weiterhin.
 - **Hinweise (Ton, Vibration, Benachrichtigung):** Umgesetzt am 23.10.2026, rein im Frontend. Über das 🔔 in der Kopfzeile stellt jede Person pro Gerät Ton, Vibration und Gerätebenachrichtigung ein (localStorage `notify-<id>`; Standard: Ton und Vibration an). Ausgelöst wird beim Vergleich zweier Abfragen: Küche/Tresen bei neuen Bons und neuen Stornohinweisen ihrer Station, Service bei Bons, die abholbereit werden, und bei unbesetztem Tresen zusätzlich bei neuen Getränkebons und Tresen-Stornos. Die Admin-Ansicht meldet nichts. Beim Laden und Ansichtswechsel wird nur der Stand gemerkt, ohne Hinweis. Jeder Hinweis erscheint zusätzlich als Meldung in der App. Grenzen: Ton erst nach dem ersten Tippen (Browserregel); Vibration nur in Browsern, die sie anbieten (nicht iPhone/iPad); Gerätebenachrichtigungen nur über HTTPS oder localhost, über die WLAN-Adresse also nicht; alles nur bei geöffneter App.
 - **Fokus-Modus:** Umgesetzt am 23.10.2026. „⤢ Fokus“ in der Kopfzeile blendet Kopfzeile, Begrüßung mit Datum und Archivknopf, Fußzeile und „Letzte Zahlungsbestätigungen“ aus (CSS-Klasse `focus-mode` am `body`). Meldungen, Offline-Hinweis, Tresen-Vertretung, Stornohinweise, Tisch und Bons bleiben. Unten rechts zeigt eine kleine Leiste Verbindungsstatus und Ansicht mit „Fokus beenden“. Der Zustand wird pro Gerät gespeichert (localStorage `focus-mode`). Beim Einschalten wird zusätzlich echtes Vollbild angefordert, wo der Browser es erlaubt (nicht im eingebetteten Testbrowser, auf iPhone nicht; auf dem iPad startet die App vom Homescreen ohnehin ohne Browserleiste). Ansichtswechsel und Abmelden gehen nur nach „Fokus beenden“.
+- **Service rufen:** Umgesetzt am 24.10.2026 (`ServiceCallService`, `ServiceCallRepository`). Küche und Tresen haben über dem Bon-Board „🛎 Service rufen“ mit Schnellgründen („Bitte in die Küche“ bzw. „an den Tresen“, „Essen/Getränke abholen“, „Rückfrage zur Bestellung“). Ein offener Ruf zeigt die Wartezeit und „Ruf zurücknehmen“. Der Service sieht offene Rufe in Orange mit „Ich komme“; danach steht für 2 Minuten „✓ Name ist unterwegs“ bei Service und Station. Hinweise (Ton, Vibration, Meldung) gibt es beim Service für neue Rufe und bei der Station, wenn jemand kommt.
 - Tischname/Servicename kommen aktuell aus Joins, sind keine historischen Snapshots. Entscheiden, ob spätere Umbenennungen auch in alten Bons erscheinen dürfen.
 
 ### Priorität 3: Wartbarkeit, Tests und Betrieb
