@@ -155,3 +155,11 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Migration legte `menu_addons` an und verknüpfte 12 Gerichte (Burger je 9, Schlemmerpommes je 8, Pommes-Gerichte je 6).
 - Quality-Target: PHPUnit 11 Tests, PHPStan ohne Fehler. `sh tests/run.sh`: 27 Tests erfolgreich. Neu `test_26`: Zubuchbares setzen und in `menu` lesen; Getränk, sich selbst oder unbekannte ID als Extra → 400; Extras an einem Getränk → 400; Speichern ohne `addons` behält die Verknüpfung; neues Gericht mit Extras liefert `id`; Bestellung mit Extra-Position 201; Aufräumen.
 - Browserprüfung auf der echten Karte, nur lokaler Entwurf, nichts gesendet: Hamburger öffnet die Auswahl mit 9 Extras; mit Dip Mayo und Extra Bacon entstehen drei Positionen („zu Hamburger“), Einblendung „Hamburger hinzugefügt + 2 Extras · jetzt 1× im Entwurf“, Zähler auf drei Karten. Zweiter Hamburger ohne Extras erhöht auf 2×, ein dritter wurde über „Rückgängig“ zurückgenommen. Die Einblendung war mit 4 Sekunden zu kurz und läuft jetzt 6 Sekunden; die Auswahl war in der schmalen Karte gedrängt und nutzt jetzt die volle Rasterbreite. Auf 375 px Breite feste Leiste „Tisch 04 · 4 Positionen · 34,80 €“ mit „Entwurf“ und „Senden“, kein horizontaler Überlauf. Probe-Entwurf danach verworfen.
+
+## Herbstkarte und Sonderwünsche je Produkt, 24.10.2026
+
+- Gelieferte PDFs mit poppler im Container ausgelesen: „Kopie von Zum Stimbeck – Speisekarte“ textgleich mit der bisherigen Karte; „Herbstkarte“ mit 8 Gerichten neu.
+- Migration auf der lokalen Datenbank führte den Schritt `2026-10-24-sonderwuensche-herbstkarte` einmal aus (zweiter Lauf ohne Wiederholung): 107 Produkte, 29 mit Sonderwünschen, 8 Herbstgerichte; Dip Ketchup ohne Sonderwünsche.
+- Frische Installation in einem eigenen Stack (Port 8089, danach entfernt): ebenfalls 107/29/8 und 12 Gerichte mit Extras.
+- Quality-Target: PHPUnit 11 Tests, PHPStan ohne Fehler. `sh tests/run.sh`: 28 Tests erfolgreich. Neu `test_27`: Sonderwünsche werden bereinigt (Leerzeichen, Doppelte, Leere), Speichern ohne `wishes` behält sie, zu lang/zu viele/bei Getränken → 400.
+- Browserprüfung, nur lokaler Entwurf: Hamburger zeigt „Veganes Patty | Ohne Romana | Ohne Tomate | … | Dip inkl.: Ketchup“, die zugebuchte Position Dip Ketchup keine Schnellwahl; alle 8 Herbstgerichte unter „Speisen“. Probe-Entwurf verworfen.
