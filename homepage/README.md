@@ -4,7 +4,7 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 
 | Datei | Inhalt |
 | --- | --- |
-| `index.html` | Startseite: Willkommensbereich, Das Haus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt mit Karte |
+| `index.html` | Startseite: Willkommensbereich, Das Gasthaus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt mit Karte |
 | `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
 | `impressum.html` | Impressum (Entwurf) |
 | `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1440 px Desktop |
