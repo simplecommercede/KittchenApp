@@ -4,12 +4,13 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 
 | Datei | Inhalt |
 | --- | --- |
-| `index.html` | Hero-Slider, Das Haus, Speisekarte (Auszug + Dateien), Öffnungszeiten, Kontakt, Anfahrt |
+| `index.html` | Startseite: Hero-Slider, Das Haus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt |
+| `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
 | `impressum.html` | Impressum (Entwurf) |
 | `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1440 px Desktop |
-| `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Karten-Dateien, Großansicht |
+| `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Speisekarten-Ansicht mit Großansicht |
 | `slider.js` | Slider: 7 s Autoplay mit Fortschrittsbalken, Pfeile, Punkte, Pfeiltasten, Wischen; pausiert bei Maus/Fokus und bei reduzierter Bewegung |
-| `karte/` | Speisekarte und weitere Karten als PDF oder Bild |
+| `karte/` | Erzeugte Seitenbilder und `karten.js`; nicht von Hand bearbeiten |
 
 Der Hero zeigt eine gezeichnete Heidelandschaft (SVG). Jede Folie hat eine eigene Stimmung (Abend, Herbst, Nacht), die über `data-mood` und die Farbvariablen in `style.css` gesteuert wird.
 
@@ -19,23 +20,24 @@ Lokal ansehen:
 python3 -m http.server 8090 --bind 127.0.0.1 --directory homepage
 ```
 
-Dann http://127.0.0.1:8090/ öffnen. Über `file://` funktioniert die Seite auch, nur die automatische Erkennung der Karten-Dateien nicht.
+Dann http://127.0.0.1:8090/ öffnen. Die Seiten funktionieren auch direkt über `file://`.
 
 ## Speisekarte austauschen
 
-Die Karten liegen in `karte/`. Jeder Eintrag im Abschnitt „Komplette Karten ansehen“ sucht der Reihe nach `<name>.pdf`, `<name>.png`, `<name>.jpg` und nimmt die erste vorhandene Datei:
+Die Speisekarte wird auf `speisekarte.html` direkt angezeigt, nicht als Download. Dafür werden die Karten in Seitenbilder umgewandelt (eine PDF-Seite = ein Bild). Die Original-PDF liegt außerhalb des Webordners in `speisekarte/` und wird nicht veröffentlicht.
 
-| Eintrag | Dateiname | ohne Datei |
-| --- | --- | --- |
-| Speisen- und Getränkekarte | `karte/speisekarte.pdf` / `.png` / `.jpg` | Link auf die PDF bleibt stehen |
-| Herbstkarte | `karte/herbstkarte.pdf` / `.png` / `.jpg` | Eintrag wird ausgeblendet |
+Neue Karte einpflegen (nur auf dem Mac, aus dem Projektverzeichnis):
 
-- **PDF** öffnet sich in einem neuen Tab, **PNG/JPG** in einer Großansicht mit „Herunterladen“. Dateityp und Größe erscheinen automatisch.
-- Neue Karte: Datei mit gleichem Namen ersetzen, fertig. Bei PNG/JPG die alte PDF löschen, sonst gewinnt die PDF.
-- `karte/speisekarte-vorschau.png` ist das Vorschaubild der PDF-Kachel. Neu erzeugen auf dem Mac: `sips -s format png -Z 240 karte/speisekarte.pdf --out karte/speisekarte-vorschau.png`
-- Weitere Karte (z. B. Weihnachtskarte): in `index.html` einen `menu-file`-Block kopieren, Titel und `data-files` anpassen, `data-optional` behalten.
-- Die aktuelle PDF ist 6,2 MB groß. Für Handys im Mobilfunk lohnt es sich, sie vor dem Hochladen zu verkleinern (z. B. in Vorschau: Exportieren → Quartz-Filter „Reduce File Size“).
-- Die Gerichte im Auszug auf der Seite (Herbstkarte, Klassiker, Burger) stehen fest in `index.html` und stammen aus `api/speisekarte.php`. Preisänderungen dort mitpflegen; nach dem 22.11.2026 den Herbstkarten-Block austauschen oder entfernen. Auch der zweite Slider zur Herbstkarte muss dann geändert werden.
+```sh
+swift scripts/homepage-karte.swift "Speisekarte=speisekarte/Zum Stimbeck - Speisekarte.pdf"
+```
+
+- Jedes Argument ist `Titel=Datei`, erlaubt sind PDF, PNG und JPG. Mehrere Karten werden als Reiter angezeigt, z. B. zusätzlich `"Herbstkarte=speisekarte/herbstkarte.png"`.
+- Gleicher Titel mehrfach hängt weitere Seiten an dieselbe Karte an (z. B. zwei fotografierte Seiten).
+- Jeder Aufruf erzeugt `homepage/karte/` komplett neu: Seitenbilder (JPG, 1400 px breit) und `karten.js`. Danach den Ordner `homepage/` hochladen.
+- Der erste Lauf dauert gut eine Minute, weil Swift das Skript übersetzt.
+- Auf der Seite: Wischen oder Pfeile zum Blättern, Seitenzahlen zum Springen, Antippen öffnet die Großansicht mit Blättern. Es gibt keinen Download-Link; Rechtsklick und langes Tippen auf die Bilder sind gesperrt. Ganz verhindern lässt sich das Speichern von Bildern im Web nicht (z. B. per Bildschirmfoto).
+- Die Herbstkarte auf `speisekarte.html` (`#herbst`) steht fest im HTML und stammt aus `api/speisekarte.php`. Nach dem 22.11.2026 den Abschnitt entfernen und die zweite Slider-Folie sowie den Hinweistext auf der Startseite anpassen.
 
 ## Vor der Veröffentlichung
 

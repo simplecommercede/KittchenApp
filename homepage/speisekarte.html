@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Speisekarte · Zum Stimbeck</title>
+  <meta name="description" content="Speisekarte und Herbstkarte der Gaststätte Zum Stimbeck in Bispingen-Steinbeck (Luhe).">
+  <meta name="theme-color" content="#faf6ee">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-sub page-karte">
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+  <header class="site-header" data-header>
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html" aria-label="Zum Stimbeck, zur Startseite">
+        <span class="brand-badge"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <span class="brand-text">Zum Stimbeck<small>Gaststätte · Steinbeck/Luhe</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hauptnav" data-nav-toggle>
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="sr-only">Menü</span>
+      </button>
+      <nav class="nav" id="hauptnav" aria-label="Hauptnavigation" data-nav>
+        <a href="index.html#haus">Das Haus</a>
+        <a href="index.html#zeiten">Öffnungszeiten</a>
+        <a href="index.html#anfahrt">Anfahrt</a>
+        <a class="nav-cta" href="speisekarte.html" aria-current="page">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>
+          Speisekarte
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="inhalt">
+    <div class="wrap page-hero">
+      <p class="kicker">Aus unserer Küche</p>
+      <h1>Unsere <em>Speisekarte</em></h1>
+      <p class="lead">Bodenständig, frisch und mit Liebe gekocht. Bis zum 22. November gibt es zusätzlich unsere <a href="#herbst">Herbstkarte</a>.</p>
+    </div>
+
+    <section class="karte-section" aria-label="Speisekarte">
+      <div class="wrap">
+        <div class="karte-viewer" data-karten>
+          <div class="karte-tabs" role="tablist" aria-label="Karten" data-karte-tabs hidden></div>
+          <div class="karte-stage">
+            <button class="karte-arrow prev" type="button" aria-label="Vorherige Seite" data-karte-prev>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
+            <div class="karte-track" tabindex="0" aria-label="Seiten der Karte, zum Blättern wischen oder Pfeiltasten nutzen" data-karte-track></div>
+            <button class="karte-arrow next" type="button" aria-label="Nächste Seite" data-karte-next>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="karte-bar">
+            <span class="karte-count" aria-live="polite" data-karte-count></span>
+            <div class="karte-pages" data-karte-pages></div>
+            <span class="karte-hint">Seite antippen zum Vergrößern</span>
+          </div>
+          <noscript><p class="karte-empty">Bitte JavaScript aktivieren, um die Speisekarte anzuzeigen.</p></noscript>
+        </div>
+      </div>
+    </section>
+
+    <section id="herbst" class="section season">
+      <div class="wrap season-grid">
+        <div class="season-text reveal">
+          <p class="kicker">Saisonal · bis 22. November</p>
+          <h2>Unsere <em>Herbstkarte</em></h2>
+          <p class="lead">Kürbis, Pfifferlinge und Apfel: Diese Gerichte gibt es nur für kurze Zeit zusätzlich zur Karte.</p>
+          <p class="note">Preise in Euro inkl. MwSt. Fragen Sie unser Team gern nach Allergenen.</p>
+        </div>
+        <article class="menu-card menu-card-season reveal">
+          <header>
+            <h3>Herbstkarte</h3>
+            <span class="badge">Nur bis 22.11.</span>
+          </header>
+          <ul class="menu-list">
+            <li><span>Kürbiscremesuppe</span><i></i><b>7,90 €</b></li>
+            <li><span>Hausbrot mit zweierlei Chutneys</span><i></i><b>6,50 €</b></li>
+            <li><span>Herbst Burger</span><i></i><b>18,90 €</b></li>
+            <li><span>Schnitzel mit Pfifferlingen</span><i></i><b>20,50 €</b></li>
+            <li><span>Kartoffel-Kürbis-Auflauf</span><i></i><b>15,50 €</b></li>
+            <li><span>Roastbeef „kalt“</span><i></i><b>21,50 €</b></li>
+            <li><span>Hokkaido-Crème-brûlée</span><i></i><b>8,50 €</b></li>
+            <li><span>Apfelcrumble mit Vanilleeis</span><i></i><b>7,50 €</b></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <svg class="footer-hills" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 80 V40 C 200 0 420 30 640 30 S 1080 0 1440 30 V80 Z"/></svg>
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <span class="brand-badge brand-badge-lg"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <p>Familiäre Gaststätte mit bodenständigen Gerichten in Steinbeck an der Luhe.</p>
+      </div>
+      <div>
+        <h4>Besuch</h4>
+        <p>Am Lütten Stimbeck 4<br>29646 Bispingen</p>
+      </div>
+      <div>
+        <h4>Geöffnet</h4>
+        <p>Do – So · 17 – 22 Uhr<br>Warme Küche bis 21 Uhr</p>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <p><a href="tel:+4951948789828">05194 878 98 28</a><br><a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a></p>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Gaststätte Zum Stimbeck</span>
+      <span class="footer-links"><a href="index.html">Startseite</a><a href="impressum.html">Impressum</a></span>
+    </div>
+  </footer>
+
+  <dialog class="lightbox" data-lightbox aria-label="Kartenseite vergrößert">
+    <div class="lightbox-bar">
+      <span class="lightbox-title" data-lightbox-title></span>
+      <div class="lightbox-actions">
+        <button type="button" data-lightbox-prev aria-label="Vorherige Seite">‹</button>
+        <button type="button" data-lightbox-next aria-label="Nächste Seite">›</button>
+        <button type="button" data-lightbox-close>Schließen</button>
+      </div>
+    </div>
+    <div class="lightbox-body"><img data-lightbox-img alt="" draggable="false"></div>
+  </dialog>
+
+  <script src="karte/karten.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>

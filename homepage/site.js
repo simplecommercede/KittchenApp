@@ -1,4 +1,4 @@
-// Seitenlogik: Menü, Kopfzeile, Öffnungsstatus, Einblenden, Karten-Dateien, Großansicht.
+// Seitenlogik: Menü, Kopfzeile, Öffnungsstatus, Einblenden, Speisekarten-Ansicht mit Großansicht.
 (() => {
   document.documentElement.classList.add('js');
 
@@ -87,66 +87,151 @@
     revealItems.forEach(el => el.classList.add('is-visible'));
   }
 
-  // Großansicht für Kartenbilder
-  const box = document.querySelector('[data-lightbox]');
-  function openLightbox(src, title) {
-    if (!box || typeof box.showModal !== 'function') { window.open(src, '_blank', 'noopener'); return; }
-    box.querySelector('[data-lightbox-img]').src = src;
-    box.querySelector('[data-lightbox-img]').alt = title;
-    box.querySelector('[data-lightbox-title]').textContent = title;
-    box.querySelector('[data-lightbox-download]').href = src;
-    box.showModal();
+  // Speisekarte: Seiten aus karte/karten.js zum Blättern anzeigen (ohne Download-Links)
+  const viewer = document.querySelector('[data-karten]');
+  const karten = Array.isArray(window.STIMBECK_KARTEN) ? window.STIMBECK_KARTEN.filter(k => k.seiten && k.seiten.length) : [];
+  if (viewer && !karten.length) {
+    viewer.innerHTML = '<p class="karte-empty">Die Speisekarte wird gerade aktualisiert. Fragen Sie gern telefonisch nach: 05194 878 98 28.</p>';
   }
-  if (box) {
-    box.querySelector('[data-lightbox-close]').addEventListener('click', () => box.close());
-    box.addEventListener('click', e => { if (e.target === box || e.target.classList.contains('lightbox-body')) box.close(); });
-    box.addEventListener('close', () => { box.querySelector('[data-lightbox-img]').removeAttribute('src'); });
-  }
+  if (viewer && karten.length) {
+    const tabs = viewer.querySelector('[data-karte-tabs]');
+    const track = viewer.querySelector('[data-karte-track]');
+    const count = viewer.querySelector('[data-karte-count]');
+    const pageNav = viewer.querySelector('[data-karte-pages]');
+    const prev = viewer.querySelector('[data-karte-prev]');
+    const next = viewer.querySelector('[data-karte-next]');
+    const box = document.querySelector('[data-lightbox]');
+    let karte = 0;
+    let page = 0;
 
-  // Karten-Dateien: erste vorhandene Datei aus data-files verwenden (PDF, PNG oder JPG)
-  const formatSize = bytes => bytes > 1048576
-    ? `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    // Bilder nicht per Rechtsklick, Ziehen oder langem Tippen speichern lassen
+    const protect = img => {
+      img.draggable = false;
+      img.addEventListener('contextmenu', e => e.preventDefault());
+    };
 
-  async function findFile(candidates) {
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
-        if (res.ok) return { url, size: Number(res.headers.get('content-length')) || 0 };
-      } catch (e) {
-        return null; // z. B. bei file:// – dann bleibt das HTML, wie es ist
+    const pageEls = () => [...track.children];
+    const step = () => {
+      const els = pageEls();
+      return els.length > 1 ? els[1].offsetLeft - els[0].offsetLeft : track.clientWidth;
+    };
+
+    function updateBar() {
+      const total = karten[karte].seiten.length;
+      count.textContent = `Seite ${page + 1} von ${total}`;
+      [...pageNav.children].forEach((b, i) => b.setAttribute('aria-current', String(i === page)));
+      prev.disabled = page === 0;
+      next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+    }
+
+    function goTo(index, smooth = true) {
+      const total = karten[karte].seiten.length;
+      page = Math.max(0, Math.min(total - 1, index));
+      track.scrollTo({ left: step() * page, behavior: smooth ? 'smooth' : 'auto' });
+      updateBar();
+    }
+
+    function showKarte(index) {
+      karte = index;
+      page = 0;
+      const { titel, seiten } = karten[karte];
+      track.innerHTML = '';
+      pageNav.innerHTML = '';
+      seiten.forEach((seite, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'karte-page';
+        btn.setAttribute('aria-label', `${titel}, Seite ${i + 1} vergrößern`);
+        const img = document.createElement('img');
+        img.src = seite.src;
+        img.width = seite.w;
+        img.height = seite.h;
+        img.alt = `${titel}, Seite ${i + 1}`;
+        img.loading = i < 2 ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        protect(img);
+        btn.appendChild(img);
+        btn.addEventListener('click', () => openLightbox(i));
+        track.appendChild(btn);
+
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.textContent = String(i + 1);
+        dot.setAttribute('aria-label', `Seite ${i + 1}`);
+        dot.addEventListener('click', () => goTo(i));
+        pageNav.appendChild(dot);
+      });
+      if (tabs) {
+        [...tabs.children].forEach((t, i) => t.setAttribute('aria-selected', String(i === karte)));
       }
+      track.scrollLeft = 0;
+      updateBar();
     }
-    return false;
+
+    if (karten.length > 1) {
+      karten.forEach((k, i) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.setAttribute('role', 'tab');
+        tab.textContent = k.titel;
+        tab.addEventListener('click', () => showKarte(i));
+        tabs.appendChild(tab);
+      });
+      tabs.hidden = false;
+    }
+
+    prev.addEventListener('click', () => goTo(page - 1));
+    next.addEventListener('click', () => goTo(page + 1));
+    track.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(page - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(page + 1); }
+    });
+    let scrollTimer = null;
+    track.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        page = Math.round(track.scrollLeft / step());
+        updateBar();
+      }, 80);
+    }, { passive: true });
+    window.addEventListener('resize', () => goTo(page, false));
+
+    // Großansicht mit Blättern
+    let boxPage = 0;
+    function renderLightbox() {
+      const { titel, seiten } = karten[karte];
+      const img = box.querySelector('[data-lightbox-img]');
+      img.src = seiten[boxPage].src;
+      img.alt = `${titel}, Seite ${boxPage + 1}`;
+      box.querySelector('[data-lightbox-title]').textContent = `${titel} · Seite ${boxPage + 1} von ${seiten.length}`;
+      box.querySelector('[data-lightbox-prev]').disabled = boxPage === 0;
+      box.querySelector('[data-lightbox-next]').disabled = boxPage === seiten.length - 1;
+      box.querySelector('.lightbox-body').scrollTop = 0;
+    }
+    function openLightbox(index) {
+      if (!box || typeof box.showModal !== 'function') return;
+      boxPage = index;
+      renderLightbox();
+      box.showModal();
+    }
+    if (box) {
+      protect(box.querySelector('[data-lightbox-img]'));
+      const move = d => {
+        const total = karten[karte].seiten.length;
+        boxPage = Math.max(0, Math.min(total - 1, boxPage + d));
+        renderLightbox();
+      };
+      box.querySelector('[data-lightbox-prev]').addEventListener('click', () => move(-1));
+      box.querySelector('[data-lightbox-next]').addEventListener('click', () => move(1));
+      box.querySelector('[data-lightbox-close]').addEventListener('click', () => box.close());
+      box.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft') move(-1);
+        if (e.key === 'ArrowRight') move(1);
+      });
+      box.addEventListener('click', e => { if (e.target === box || e.target.classList.contains('lightbox-body')) box.close(); });
+      box.addEventListener('close', () => goTo(boxPage, false));
+    }
+
+    showKarte(0);
   }
-
-  document.querySelectorAll('[data-menu-file]').forEach(async link => {
-    const title = link.querySelector('strong').textContent;
-    const found = await findFile(link.dataset.files.split(/\s+/));
-    if (found === null) return;
-    if (found === false) { if (link.hasAttribute('data-optional')) link.hidden = true; return; }
-
-    const isImage = /\.(png|jpe?g|webp)$/i.test(found.url);
-    const type = found.url.split('.').pop().toUpperCase().replace('JPEG', 'JPG');
-    link.href = found.url;
-    link.hidden = false;
-
-    const icon = link.querySelector('.menu-file-icon');
-    icon.dataset.type = type.toLowerCase();
-    if (isImage) {
-      icon.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = found.url; img.alt = ''; img.loading = 'lazy';
-      icon.appendChild(img);
-      link.removeAttribute('target');
-      link.addEventListener('click', e => { e.preventDefault(); openLightbox(found.url, title); });
-    } else if (!icon.querySelector('img')) {
-      icon.textContent = type;
-    }
-
-    const meta = link.querySelector('[data-file-meta]');
-    const base = meta.dataset.base || meta.textContent.replace(/^(PDF|PNG|JPG)\s·\s/, '');
-    meta.dataset.base = base;
-    meta.textContent = [type, base, found.size ? formatSize(found.size) : ''].filter(Boolean).join(' · ');
-  });
 })();

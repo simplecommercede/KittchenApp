@@ -25,7 +25,7 @@
   --radius: 18px;
   --radius-sm: 12px;
   --header-h: 68px;
-  --section-y: 72px;
+  --section-y: 56px;
   --shadow: 0 1px 2px rgba(15, 33, 28, .06), 0 10px 30px -12px rgba(15, 33, 28, .22);
   --ease: cubic-bezier(.2, .7, .2, 1);
 }
@@ -132,7 +132,7 @@ p { margin: 0 0 1em; }
   margin-top: 24px; align-self: flex-start; display: inline-flex; align-items: center; gap: 10px;
   font: 600 1rem var(--sans); padding: 14px 24px; border: 0; border-radius: 999px; background: var(--amber);
 }
-.nav-cta svg { width: 18px; height: 18px; fill: currentColor; }
+.nav-cta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -327,29 +327,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 .menu-card-season .menu-list b { color: var(--amber-dark); }
 .menu-note { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .12); font-size: .9rem; color: rgba(255, 255, 255, .7); }
 
-/* Karten zum Ansehen und Herunterladen (PDF oder Bild) */
-.menu-files { display: grid; gap: 14px; margin-top: 36px; }
-.menu-files-title { font-family: var(--sans); font-size: .78rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--amber-soft); margin: 0 0 4px; }
-.menu-file {
-  display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14);
-  color: #fff; text-decoration: none; transition: background-color .2s, border-color .2s, transform .2s var(--ease);
-}
-.menu-file:hover { background: rgba(255, 255, 255, .13); border-color: rgba(243, 217, 168, .5); transform: translateY(-2px); }
-.menu-file-icon {
-  flex: none; width: 48px; height: 56px; border-radius: 6px; display: grid; place-items: end center; padding-bottom: 7px;
-  background: var(--cream); color: var(--green-dark); font: 800 .66rem var(--sans); letter-spacing: .06em;
-  clip-path: polygon(0 0, 72% 0, 100% 22%, 100% 100%, 0 100%);
-  overflow: hidden; position: relative;
-}
-.menu-file-icon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.menu-file-icon[data-type="pdf"] { background: #f7e3e0; color: #a3372b; }
-.menu-file-text { flex: 1; min-width: 0; }
-.menu-file-text strong { display: block; font-family: var(--serif); font-weight: 500; font-size: 1.15rem; }
-.menu-file-text span { font-size: .85rem; color: rgba(255, 255, 255, .65); }
-.menu-file-go { flex: none; width: 22px; height: 22px; fill: none; stroke: var(--amber-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-/* Großansicht für Kartenbilder */
+/* Großansicht der Kartenseiten */
 .lightbox {
   width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
   background: rgba(10, 20, 17, .94); color: #fff;
@@ -359,13 +337,85 @@ a.fact:hover strong { color: var(--amber-soft); }
 .lightbox-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px var(--gutter); }
 .lightbox-title { font-family: var(--serif); font-size: 1.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lightbox-actions { display: flex; gap: 8px; flex: none; }
-.lightbox-actions a, .lightbox-actions button {
+.lightbox-actions button {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
   border: 1.5px solid rgba(255, 255, 255, .4); background: transparent; color: #fff; font: 600 .9rem var(--sans); text-decoration: none; cursor: pointer;
 }
-.lightbox-actions a:hover, .lightbox-actions button:hover { background: rgba(255, 255, 255, .15); }
+.lightbox-actions button:hover { background: rgba(255, 255, 255, .15); }
+.lightbox-actions button:disabled { opacity: .35; cursor: default; }
+.lightbox-actions [data-lightbox-prev], .lightbox-actions [data-lightbox-next] { width: 44px; justify-content: center; padding: 0; font-size: 1.4rem; }
 .lightbox-body { flex: 1; overflow: auto; display: grid; place-items: start center; padding: 0 var(--gutter) 24px; -webkit-overflow-scrolling: touch; }
-.lightbox-body img { width: 100%; max-width: 1000px; height: auto; border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); background: #fff; }
+.lightbox-body img { -webkit-touch-callout: none; user-select: none; width: 100%; max-width: 1000px; height: auto; border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); background: #fff; }
+
+/* Hinweis auf die Speisekarte (Startseite) */
+.menu-teaser {
+  color: #fff; padding: 56px 0;
+  background:
+    radial-gradient(900px 400px at 90% -20%, rgba(201, 138, 43, .3), transparent 60%),
+    radial-gradient(700px 400px at -10% 120%, rgba(139, 91, 143, .3), transparent 60%),
+    var(--green-dark);
+}
+.menu-teaser-inner { display: grid; gap: 24px; align-items: center; }
+.menu-teaser h2 { color: #fff; margin-bottom: .35em; }
+.menu-teaser h2 em { color: var(--amber-soft); }
+.menu-teaser-text p:last-child { margin: 0; max-width: 52ch; color: rgba(255, 255, 255, .8); }
+.menu-teaser-btn { justify-self: start; }
+.menu-teaser-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s var(--ease); }
+.menu-teaser-btn:hover svg { transform: translateX(3px); }
+
+/* Speisekarten-Seite: Seiten zum Blättern */
+.page-karte main { padding-bottom: 0; }
+.page-karte .page-hero { margin-bottom: 32px; }
+.karte-section {
+  padding: 36px 0 40px; color: #fff;
+  background:
+    radial-gradient(1000px 500px at 85% -10%, rgba(201, 138, 43, .22), transparent 60%),
+    radial-gradient(800px 500px at -10% 110%, rgba(139, 91, 143, .22), transparent 60%),
+    var(--green-dark);
+}
+.karte-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
+.karte-tabs button {
+  min-height: 44px; padding: 0 20px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, .3); background: transparent; color: #fff; font: 600 .95rem var(--sans);
+}
+.karte-tabs button[aria-selected="true"] { background: var(--amber); border-color: var(--amber); }
+.karte-stage { position: relative; }
+.karte-track {
+  display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none; padding: 6px 2px 18px;
+}
+.karte-track::-webkit-scrollbar { display: none; }
+.karte-page {
+  flex: 0 0 86%; scroll-snap-align: start; padding: 0; border: 0; border-radius: 6px; overflow: hidden;
+  background: #fff; cursor: zoom-in; box-shadow: 0 24px 50px -24px rgba(0, 0, 0, .7);
+  -webkit-touch-callout: none; user-select: none; transition: transform .25s var(--ease);
+}
+.karte-page:hover { transform: translateY(-3px); }
+.karte-page img { width: 100%; height: auto; pointer-events: none; }
+.karte-arrow {
+  display: none; position: absolute; top: 50%; z-index: 2; width: 52px; height: 52px; margin-top: -26px; border-radius: 50%;
+  place-items: center; border: 0; background: var(--cream); color: var(--green-dark); cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35); transition: opacity .2s, transform .2s var(--ease);
+}
+.karte-arrow:hover:not(:disabled) { transform: scale(1.06); }
+.karte-arrow:disabled { opacity: 0; pointer-events: none; }
+.karte-arrow.prev { left: -10px; }
+.karte-arrow.next { right: -10px; }
+.karte-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.karte-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; font-size: .9rem; color: rgba(255, 255, 255, .75); }
+.karte-count { font-variant-numeric: tabular-nums; min-width: 8.5em; }
+.karte-pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.karte-pages button {
+  width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font: 600 .9rem var(--sans);
+  border: 1.5px solid rgba(255, 255, 255, .25); background: transparent; color: #fff;
+}
+.karte-pages button[aria-current="true"] { background: var(--amber); border-color: var(--amber); }
+.karte-hint { display: none; }
+.karte-empty { text-align: center; padding: 40px 0; color: rgba(255, 255, 255, .85); }
+
+/* Herbstkarte */
+.season-grid { display: grid; gap: 32px; align-items: center; }
+.season .menu-card-season { box-shadow: var(--shadow); }
 
 /* Öffnungszeiten */
 .visit { background: var(--cream-2); }
@@ -433,6 +483,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 .site-footer p { margin: 0; }
 .site-footer a { color: #fff; text-decoration: none; }
 .site-footer a:hover { color: var(--amber-soft); text-decoration: underline; }
+.footer-links { display: flex; gap: 20px; }
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: .85rem; }
 
 /* ---------- Unterseite (Impressum) ---------- */
@@ -454,24 +505,27 @@ a.fact:hover strong { color: var(--amber-soft); }
 
 /* ---------- Tablet ab 640px ---------- */
 @media (min-width: 640px) {
-  :root { --gutter: 28px; --section-y: 96px; }
+  :root { --gutter: 28px; --section-y: 72px; }
   .quickfacts-grid { grid-template-columns: repeat(3, 1fr); padding-top: 0; padding-bottom: 0; }
   .fact { padding: 22px 0; }
   .fact + .fact { border-top: 0; border-left: 1px solid rgba(255, 255, 255, .1); padding-left: 20px; }
   .features { grid-template-columns: 1fr 1fr; }
   .features li:last-child { grid-column: span 2; }
   .menu-card { padding: 34px 32px; }
-  .menu-files { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .menu-files-title { grid-column: 1 / -1; }
   .footer-grid { grid-template-columns: 1.4fr 1fr; }
   .slide { padding-bottom: 150px; }
   .hero-arrow { display: grid; }
+  .menu-teaser { padding: 72px 0; }
+  .karte-section { padding: 48px 0 56px; }
+  .karte-page { flex-basis: 70%; }
+  .karte-arrow { display: grid; }
+  .karte-hint { display: inline; }
   .legal-block { padding: 30px 32px; }
 }
 
 /* ---------- Laptop ab 1024px ---------- */
 @media (min-width: 1024px) {
-  :root { --gutter: 40px; --header-h: 84px; --section-y: 120px; }
+  :root { --gutter: 40px; --header-h: 84px; --section-y: 96px; }
   body { font-size: 18px; }
   .nav-toggle { display: none; }
   .nav {
@@ -504,6 +558,14 @@ a.fact:hover strong { color: var(--amber-soft); }
   .menu-card { padding: 42px 40px; }
 
   .visit-grid { grid-template-columns: 1.4fr 1fr; gap: 64px; }
+
+  .menu-teaser-inner { grid-template-columns: 1fr auto; gap: 48px; }
+  .karte-track { gap: 24px; }
+  /* Zwei Seiten nebeneinander, aber nie höher als das Fenster (Seitenformat A4 ≈ 0,707) */
+  .karte-page { flex-basis: min(calc((100% - 24px) / 2), max(420px, calc((100svh - var(--header-h) - 150px) * .707))); }
+  .karte-arrow.prev { left: -26px; }
+  .karte-arrow.next { right: -26px; }
+  .season-grid { grid-template-columns: 1fr 1.1fr; gap: 72px; }
   .contact-card { padding: 38px 34px; position: sticky; top: calc(var(--header-h) + 24px); }
 
   .directions-grid { grid-template-columns: 1.1fr 1fr; gap: 72px; }
@@ -513,11 +575,12 @@ a.fact:hover strong { color: var(--amber-soft); }
 
 /* ---------- Großer Desktop ab 1440px ---------- */
 @media (min-width: 1440px) {
-  :root { --max: 1320px; --gutter: 48px; --section-y: 140px; }
+  :root { --max: 1320px; --gutter: 48px; --section-y: 112px; }
   body { font-size: 19px; }
   .hero { max-height: 1100px; }
   .nav { gap: 38px; }
   .menu-card { padding: 50px 48px; }
+  .karte-viewer { max-width: 1180px; margin: 0 auto; }
 }
 
 /* Niedrige Bildschirme im Querformat (Handy quer, kleine Laptops) */
@@ -530,7 +593,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 }
 
 @media (hover: none) {
-  .btn:hover, .features li:hover, .menu-file:hover { transform: none; }
+  .btn:hover, .features li:hover, .karte-page:hover { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -540,7 +603,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 }
 
 @media print {
-  .site-header, .hero, .hero-controls, .scroll-hint, .map, .btn, .menu-files { display: none !important; }
+  .site-header, .hero, .hero-controls, .scroll-hint, .map, .btn, .karte-section { display: none !important; }
   .js .reveal { opacity: 1; transform: none; }
   body { background: #fff; }
 }
