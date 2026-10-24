@@ -12,7 +12,6 @@
   --amber: #c98a2b;
   --amber-dark: #a96f1c;
   --amber-soft: #f3d9a8;
-  --heather: #8b5b8f;
   --ink: #23302b;
   --muted: #5f6b65;
   --line: rgba(36, 72, 60, .14);
@@ -134,58 +133,29 @@ p { margin: 0 0 1em; }
 }
 .nav-cta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
-/* ---------- Hero ---------- */
-.hero {
-  position: relative; overflow: hidden; isolation: isolate;
-  height: 88vh; height: 88svh; min-height: 560px; max-height: 860px;
-  color: #fff; background: var(--green-ink);
-}
-.scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
-
-/* Farben der Landschaft (Abendstimmung) */
-.hero {
-  --sky-top: #0f2a2a; --sky-mid: #3c5a4f; --sky-low: #e3a65a;
-  --sun: #ffd28a; --glow: 1; --stars: .25;
-  --far: #4d6b5c; --mid: #355446; --heath: #2a4639; --near: #17302a;
-  --heather: #8b5b8f; --tree: #1d3a30; --window: #ffcf7a; --leaf: #b9893f;
-}
-.sky-top { stop-color: var(--sky-top); }
-.sky-mid { stop-color: var(--sky-mid); }
-.sky-low { stop-color: var(--sky-low); }
-.sun { fill: var(--sun); }
-.sun-glow { opacity: var(--glow); }
-.stars { fill: #fff; opacity: var(--stars); }
-.hill-far { fill: var(--far); }
-.hill-mid { fill: var(--mid); }
-.hill-heath { fill: var(--heath); }
-.hill-near { fill: var(--near); }
-.heather { fill: var(--heather); }
-.trees-mid { fill: var(--tree); }
-.house-body { fill: var(--tree); }
-.house-roof, .house-chimney { fill: var(--near); }
-.window { fill: var(--window); filter: drop-shadow(0 0 6px var(--window)); }
-.birch path { stroke: #e9e2d2; stroke-width: 7; stroke-linecap: round; fill: none; }
-.birch path + path { stroke-width: 3; }
-.leaves { fill: var(--leaf); opacity: .9; }
-
+/* ---------- Hero (Foto mit Logo) ----------
+   Handy/Tablet: Foto vollständig, Text darunter. Laptop: Text unten auf dem Foto. */
+.hero { --hero-focus: 50% 0%; position: relative; padding-top: var(--header-h); background: var(--green-ink); color: #fff; }
+/* Handy: 4:3-Ausschnitt, das Logo in der Bildmitte bleibt vollständig sichtbar */
+.hero-media { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; }
+.hero-media picture, .hero-media img { display: block; width: 100%; height: 100%; }
+/* --hero-focus: Bildpunkt, der beim Zuschneiden sichtbar bleibt (dort sitzt das Logo im Foto) */
+.hero-media img { object-fit: cover; object-position: var(--hero-focus, 50% 42%); animation: hero-zoom 14s ease-out both; }
+@keyframes hero-zoom { from { transform: scale(1.06); } }
 .hero-shade {
-  position: absolute; inset: 0; z-index: -1;
+  position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(10, 22, 18, .55) 0%, rgba(10, 22, 18, 0) 22%),
-    linear-gradient(0deg, rgba(10, 22, 18, .75) 0%, rgba(10, 22, 18, .25) 45%, rgba(10, 22, 18, 0) 70%);
+    linear-gradient(180deg, rgba(10, 18, 16, .6) 0%, rgba(10, 18, 16, 0) 22%),
+    linear-gradient(0deg, var(--green-ink) 0%, rgba(15, 33, 28, 0) 22%);
 }
-
-.hero-content {
-  position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
-  padding-top: calc(var(--header-h) + 24px); padding-bottom: 96px;
-}
+.hero-content { position: relative; padding-top: 4px; padding-bottom: 36px; display: flex; flex-direction: column; align-items: flex-start; }
 .hero-content > * { animation: rise .8s var(--ease) both; }
-.hero-content > :nth-child(2) { animation-delay: .08s; }
-.hero-content > :nth-child(3) { animation-delay: .16s; }
-.hero-content > :nth-child(4) { animation-delay: .24s; }
-.hero-content > :nth-child(5) { animation-delay: .32s; }
-@keyframes rise { from { opacity: 0; transform: translateY(18px); } }
-.hero-content > .status { align-self: flex-start; }
+.hero-content > :nth-child(3) { animation-delay: .1s; }
+.hero-content > :nth-child(4) { animation-delay: .2s; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+.hero-text { font-size: clamp(1.05rem, .95rem + .5vw, 1.25rem); max-width: 40ch; color: rgba(255, 255, 255, .9); margin-bottom: 1.3em; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.status { align-self: flex-start; }
 
 .hero h1 {
   color: #fff; font-size: clamp(2.6rem, 1.6rem + 5vw, 5.4rem); line-height: 1.02; margin-bottom: .35em;
@@ -194,7 +164,6 @@ p { margin: 0 0 1em; }
 .hero h1 em { color: var(--amber-soft); }
 .hero-text { font-size: clamp(1.05rem, .95rem + .5vw, 1.3rem); max-width: 34ch; color: rgba(255, 255, 255, .9); margin-bottom: 1.6em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.eyebrow { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .18em; color: var(--amber-soft); margin-bottom: 1em; }
 
 .status {
   display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.2em;
@@ -206,15 +175,6 @@ p { margin: 0 0 1em; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #e0a35a; }
 .status.is-open .status-dot { background: #6fd39a; animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(111, 211, 154, .6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(111, 211, 154, 0); } }
-
-.scroll-hint {
-  display: none; position: absolute; z-index: 3; right: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter))); bottom: 32px;
-  width: 48px; height: 48px; border-radius: 50%; place-items: center; color: #fff;
-  border: 1.5px solid rgba(255, 255, 255, .4);
-  animation: bob 2.4s ease-in-out infinite;
-}
-.scroll-hint svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-@keyframes bob { 50% { transform: translateY(6px); } }
 
 /* ---------- Schnellinfos ---------- */
 .quickfacts { position: relative; z-index: 4; background: var(--green-dark); color: #fff; }
@@ -486,7 +446,11 @@ a.fact:hover strong { color: var(--amber-soft); }
   .features li:last-child { grid-column: span 2; }
   .menu-card { padding: 34px 32px; }
   .footer-grid { grid-template-columns: 1.4fr 1fr; }
-  .hero-content { padding-bottom: 110px; }
+  .hero-content { padding-bottom: 44px; }
+  .hero-media { aspect-ratio: 1672 / 941; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .fact strong { font-size: 1rem; white-space: nowrap; }
   .map-real { height: 400px; }
   .menu-teaser { padding: 72px 0; }
   .karte-section { padding: 48px 0 56px; }
@@ -517,8 +481,25 @@ a.fact:hover strong { color: var(--amber-soft); }
   .brand-badge { width: 54px; height: 54px; }
   .brand-text { font-size: 1.4rem; }
 
-  .hero-content { justify-content: center; padding-bottom: 60px; }
-  .scroll-hint { display: grid; bottom: 44px; }
+  /* Foto füllt den Bildschirm, Text liegt unten mittig auf dem Foto */
+  /* Foto beginnt unter der Kopfzeile, damit das Logo oben im Bild frei bleibt */
+  .hero-media {
+    aspect-ratio: auto; min-height: 520px;
+    height: min(56.3vw, calc(100vh - var(--header-h)));
+    height: min(56.3vw, calc(100svh - var(--header-h)));
+  }
+  .hero-shade {
+    background:
+      linear-gradient(180deg, rgba(10, 18, 16, .7) 0%, rgba(10, 18, 16, 0) 20%),
+      linear-gradient(0deg, rgba(10, 18, 16, .95) 0%, rgba(10, 18, 16, .72) 18%, rgba(10, 18, 16, 0) 36%);
+  }
+  .hero-content {
+    position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto;
+    flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 28px;
+    padding-bottom: 32px; text-align: center;
+  }
+  .hero-content .status { margin: 0; }
+  .hero-text { margin: 0; max-width: none; font-size: 1.05rem; }
 
   .about-grid { grid-template-columns: 1.05fr 1fr; gap: 80px; align-items: center; }
   .features { grid-template-columns: 1fr; }
@@ -550,7 +531,6 @@ a.fact:hover strong { color: var(--amber-soft); }
 @media (min-width: 1440px) {
   :root { --max: 1320px; --gutter: 48px; --section-y: 112px; }
   body { font-size: 19px; }
-  .hero { max-height: 920px; }
   .nav { gap: 38px; }
   .menu-card { padding: 50px 48px; }
   .karte-viewer { max-width: 1180px; margin: 0 auto; }
@@ -558,11 +538,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 
 /* Niedrige Bildschirme im Querformat (Handy quer, kleine Laptops) */
 @media (max-height: 560px) and (orientation: landscape) {
-  .hero { min-height: 480px; }
-  .hero-content { justify-content: flex-end; padding-bottom: 40px; }
-  .hero h1 { font-size: clamp(2rem, 6vh + 1rem, 3rem); }
-  .hero-text { margin-bottom: 1em; }
-  .status, .scroll-hint { display: none; }
+  .hero-media { max-height: 100vh; max-height: 100svh; }
 }
 
 @media (hover: none) {
@@ -576,7 +552,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 }
 
 @media print {
-  .site-header, .hero, .scroll-hint, .map, .btn, .karte-section { display: none !important; }
+  .site-header, .hero, .map, .btn, .karte-section { display: none !important; }
   .js .reveal { opacity: 1; transform: none; }
   body { background: #fff; }
 }

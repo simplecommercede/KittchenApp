@@ -12,7 +12,12 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 | `karte/` | Erzeugte Seitenbilder und `karten.js`; nicht von Hand bearbeiten |
 | `img/anfahrt-karte.jpg` | Kartenausschnitt aus OpenStreetMap (Zoom 14, 1600 × 900 px), Standort bei 60 % / 40 % |
 
-Der Willkommensbereich zeigt eine gezeichnete Heidelandschaft (SVG); die Farben stehen als Variablen unter `.hero` in `style.css`.
+Der Willkommensbereich zeigt das Foto `img/hero.webp` (Gastraum mit Logo, 1672 × 941 px), dazu `img/hero.jpg` und `img/hero-900.jpg` für Browser ohne WebP und für Handys. Weil Logo und Name im Foto stehen, liegt kein Text darauf; die Überschrift ist nur für Suchmaschinen und Screenreader im Code.
+
+- Handy (unter 640 px): Ausschnitt 4:3 unter der Kopfzeile, Text und Knöpfe darunter.
+- Tablet (640–1023 px): Foto vollständig, Text darunter.
+- Laptop und Desktop (ab 1024 px): Foto füllt den Bildschirm unter der Kopfzeile, Text und Knöpfe unten auf einem dunklen Verlauf.
+- Neues Foto: alle drei Dateien ersetzen (`sips -s format jpeg -s formatOptions 82 neu.webp --out img/hero.jpg` und mit `-Z 900` für `hero-900.jpg`). Liegt das Logo woanders als oben, `--hero-focus` unter `.hero` in `style.css` anpassen (z. B. `50% 42%` für mittig). Für große Bildschirme wäre eine Vorlage ab 1920 px Breite schärfer.
 
 Lokal ansehen:
 

@@ -37,70 +37,23 @@
 
   <main id="top">
     <section class="hero" aria-label="Willkommen im Zum Stimbeck">
-      <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop class="sky-top" offset="0"/>
-            <stop class="sky-mid" offset=".55"/>
-            <stop class="sky-low" offset="1"/>
-          </linearGradient>
-          <radialGradient id="glow" cx=".5" cy=".5" r=".5">
-            <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <rect width="1440" height="900" fill="url(#sky)"/>
-        <g class="stars">
-          <circle cx="120" cy="90" r="1.6"/><circle cx="260" cy="170" r="1.2"/><circle cx="410" cy="70" r="1.8"/>
-          <circle cx="560" cy="140" r="1.1"/><circle cx="700" cy="60" r="1.5"/><circle cx="860" cy="120" r="1.2"/>
-          <circle cx="1010" cy="50" r="1.7"/><circle cx="1180" cy="150" r="1.3"/><circle cx="1330" cy="80" r="1.6"/>
-          <circle cx="330" cy="260" r="1"/><circle cx="930" cy="240" r="1.1"/><circle cx="1260" cy="260" r="1"/>
-        </g>
-        <circle class="sun-glow" cx="1060" cy="430" r="260" fill="url(#glow)"/>
-        <circle class="sun" cx="1060" cy="430" r="62"/>
-        <path class="hill hill-far" d="M0 560 C 180 500 320 520 470 540 S 760 470 930 500 S 1230 540 1440 490 V900 H0 Z"/>
-        <path class="hill hill-mid" d="M0 640 C 160 590 340 610 520 630 S 820 580 1000 600 S 1300 650 1440 610 V900 H0 Z"/>
-        <g class="trees-mid">
-          <path d="M210 628 l14 -58 l14 58 z"/><path d="M236 630 l10 -40 l10 40 z"/>
-          <path d="M1240 622 l16 -66 l16 66 z"/><path d="M1270 626 l11 -44 l11 44 z"/><path d="M1300 628 l9 -34 l9 34 z"/>
-        </g>
-        <g class="house" transform="translate(860 548)">
-          <path class="house-body" d="M0 40 L50 6 L100 40 V84 H0 Z"/>
-          <path class="house-roof" d="M-8 44 L50 0 L108 44 L100 44 L50 8 L0 44 Z"/>
-          <rect class="house-chimney" x="74" y="8" width="10" height="20"/>
-          <rect class="window" x="16" y="52" width="16" height="14" rx="2"/>
-          <rect class="window" x="68" y="52" width="16" height="14" rx="2"/>
-          <rect class="window" x="42" y="58" width="16" height="26" rx="2"/>
-        </g>
-        <path class="hill hill-heath" d="M0 720 C 200 670 380 700 560 710 S 900 660 1100 690 S 1340 720 1440 700 V900 H0 Z"/>
-        <g class="heather">
-          <circle cx="90" cy="712" r="5"/><circle cx="130" cy="706" r="4"/><circle cx="310" cy="700" r="5"/>
-          <circle cx="350" cy="704" r="3.5"/><circle cx="640" cy="704" r="4.5"/><circle cx="700" cy="698" r="5"/>
-          <circle cx="1020" cy="690" r="4"/><circle cx="1150" cy="694" r="5"/><circle cx="1360" cy="706" r="4.5"/>
-        </g>
-        <path class="hill hill-near" d="M0 800 C 240 760 520 790 760 790 S 1180 750 1440 780 V900 H0 Z"/>
-        <g class="birch">
-          <path d="M96 800 V610" /><path d="M96 680 l-34 -40 M96 650 l30 -38 M96 720 l26 -24"/>
-        </g>
-        <g class="leaves">
-          <circle cx="62" cy="636" r="26"/><circle cx="104" cy="604" r="32"/><circle cx="130" cy="640" r="24"/><circle cx="84" cy="664" r="20"/>
-        </g>
-      </svg>
-      <div class="hero-shade" aria-hidden="true"></div>
-
+      <div class="hero-media">
+        <picture>
+          <source type="image/webp" media="(min-width: 700px)" srcset="img/hero.webp">
+          <img src="img/hero.jpg" srcset="img/hero-900.jpg 900w, img/hero.jpg 1672w" sizes="100vw" width="1672" height="941"
+               alt="Gastraum des Zum Stimbeck mit Backsteingewölbe, gedeckten Tischen, Kerzen und Heidekraut; oben das Logo mit dem Spruch „schlemmen &amp; schnacken im Herzen Steinbecks“" fetchpriority="high">
+        </picture>
+        <div class="hero-shade" aria-hidden="true"></div>
+      </div>
       <div class="wrap hero-content">
+        <h1 class="sr-only">Zum Stimbeck – Gaststätte in Steinbeck an der Luhe, Lüneburger Heide</h1>
         <p class="status" data-status hidden><span class="status-dot"></span><span data-status-text></span></p>
-        <p class="eyebrow">Gaststätte in der Lüneburger Heide</p>
-        <h1>Willkommen im<br><em>Zum Stimbeck</em></h1>
         <p class="hero-text">Bodenständige Küche, freundliche Bedienung und eine heimelige Stube in Steinbeck an der Luhe.</p>
         <div class="hero-actions">
           <a class="btn btn-amber" href="speisekarte.html">Zur Speisekarte</a>
           <a class="btn btn-light" href="#anfahrt">Anfahrt</a>
         </div>
       </div>
-      <a class="scroll-hint" href="#inhalt" aria-label="Weiter nach unten">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-      </a>
     </section>
 
     <div id="inhalt" class="quickfacts">

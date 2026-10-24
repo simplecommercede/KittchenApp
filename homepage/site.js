@@ -19,11 +19,11 @@
     window.matchMedia('(min-width: 1024px)').addEventListener('change', e => { if (e.matches) setOpen(false); });
   }
 
-  // Kopfzeile wird beim Scrollen über dem Hero deckend
+  // Kopfzeile wird deckend, sobald die Seite gescrollt ist (sonst läge sie auf dem Foto)
   const header = document.querySelector('[data-header]');
   const hero = document.querySelector('.hero');
   if (header && hero) {
-    const update = () => header.classList.toggle('is-solid', window.scrollY > hero.offsetHeight - header.offsetHeight - 10);
+    const update = () => header.classList.toggle('is-solid', window.scrollY > 8);
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
