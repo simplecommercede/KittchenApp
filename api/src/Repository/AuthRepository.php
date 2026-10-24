@@ -18,7 +18,7 @@ final class AuthRepository extends Repository
 
     public function deleteLoginAttempts(): \PDOStatement
     {
-        return $this->execute('DELETE FROM login_attempts WHERE updated_at<NOW()-INTERVAL 1 DAY AND (blocked_until IS NULL OR blocked_until<NOW())');
+        return $this->execute('DELETE FROM login_attempts WHERE updated_at<'. $this->database->ago(1, 'DAY') . ' AND (blocked_until IS NULL OR blocked_until<NOW())');
     }
 
     public function deleteLoginAttempts2(mixed $key): \PDOStatement

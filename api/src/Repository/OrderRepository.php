@@ -83,12 +83,12 @@ final class OrderRepository extends Repository
 
     public function findTickets(mixed $orderId): \PDOStatement
     {
-        return $this->execute('SELECT id FROM tickets WHERE order_id=? AND status NOT IN ("collected","cancelled")', [$orderId]);
+        return $this->execute('SELECT id FROM tickets WHERE order_id=? AND status NOT IN (\'collected\',\'cancelled\')', [$orderId]);
     }
 
     public function insertEvents2(mixed $ticket, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"note_changed")', [$ticket['id'],$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,\'note_changed\')', [$ticket['id'],$u['id']]);
     }
 
     public function findItems(mixed $itemId, mixed $orderId): \PDOStatement
@@ -98,7 +98,7 @@ final class OrderRepository extends Repository
 
     public function updateItems(mixed $u, mixed $reason, mixed $itemId): \PDOStatement
     {
-        return $this->execute('UPDATE items SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$itemId]);
+        return $this->execute('UPDATE items SET cancelled_at=CURRENT_TIMESTAMP,cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$itemId]);
     }
 
     public function insertStationAlerts(mixed $old, mixed $orderId, mixed $reason, mixed $u): \PDOStatement
@@ -113,17 +113,17 @@ final class OrderRepository extends Repository
 
     public function updateTickets(mixed $old): \PDOStatement
     {
-        return $this->execute('UPDATE tickets SET status="cancelled" WHERE id=?', [$old['old_ticket_id']]);
+        return $this->execute('UPDATE tickets SET status=\'cancelled\' WHERE id=?', [$old['old_ticket_id']]);
     }
 
     public function insertEvents3(mixed $old, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"cancelled")', [$old['old_ticket_id'],$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,\'cancelled\')', [$old['old_ticket_id'],$u['id']]);
     }
 
     public function insertEvents4(mixed $old, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"item_removed")', [$old['old_ticket_id'],$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,\'item_removed\')', [$old['old_ticket_id'],$u['id']]);
     }
 
     public function findMenu2(mixed $menuId): \PDOStatement
@@ -138,7 +138,7 @@ final class OrderRepository extends Repository
 
     public function insertEvents5(mixed $ticketId, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"new")', [$ticketId,$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,\'new\')', [$ticketId,$u['id']]);
     }
 
     public function insertItems2(mixed $ticketId, mixed $menuId, mixed $product, mixed $quantity, mixed $note): \PDOStatement
@@ -153,7 +153,7 @@ final class OrderRepository extends Repository
 
     public function updateOrders2(mixed $u, mixed $reason, mixed $orderId): \PDOStatement
     {
-        return $this->execute('UPDATE orders SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$orderId]);
+        return $this->execute('UPDATE orders SET cancelled_at=CURRENT_TIMESTAMP,cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$orderId]);
     }
 
     public function insertOrderChanges(mixed $key, mixed $orderId, mixed $u, mixed $mode, mixed $reason, mixed $before, mixed $after): \PDOStatement
@@ -188,7 +188,7 @@ final class OrderRepository extends Repository
 
     public function updateOrders3(mixed $u, mixed $reason, mixed $orderId): \PDOStatement
     {
-        return $this->execute('UPDATE orders SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$orderId]);
+        return $this->execute('UPDATE orders SET cancelled_at=CURRENT_TIMESTAMP,cancelled_by=?,cancellation_reason=? WHERE id=?', [$u['id'],$reason,$orderId]);
     }
 
     public function insertStationAlerts2(mixed $ticket, mixed $orderId, mixed $reason, mixed $u): \PDOStatement
@@ -198,21 +198,21 @@ final class OrderRepository extends Repository
 
     public function updateItems2(mixed $u, mixed $reason, mixed $ticket): \PDOStatement
     {
-        return $this->execute('UPDATE items SET cancelled_at=UTC_TIMESTAMP(),cancelled_by=?,cancellation_reason=? WHERE ticket_id=? AND cancelled_at IS NULL', [$u['id'],$reason,$ticket['id']]);
+        return $this->execute('UPDATE items SET cancelled_at=CURRENT_TIMESTAMP,cancelled_by=?,cancellation_reason=? WHERE ticket_id=? AND cancelled_at IS NULL', [$u['id'],$reason,$ticket['id']]);
     }
 
     public function updateTickets2(mixed $ticket): \PDOStatement
     {
-        return $this->execute('UPDATE tickets SET status="cancelled" WHERE id=?', [$ticket['id']]);
+        return $this->execute('UPDATE tickets SET status=\'cancelled\' WHERE id=?', [$ticket['id']]);
     }
 
     public function insertEvents6(mixed $ticket, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,"cancelled")', [$ticket['id'],$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,?,\'cancelled\')', [$ticket['id'],$u['id']]);
     }
 
     public function insertOrderChanges2(mixed $orderId, mixed $u, mixed $reason): \PDOStatement
     {
-        return $this->execute('INSERT INTO order_changes(request_key,order_id,user_id,action,reason,after_state) VALUES(?,?,?,?,?,?)',[bin2hex(random_bytes(20)),$orderId,$u['id'],'order_cancel',$reason,json_encode(['cancelled' => true])]);
+        return $this->execute('INSERT INTO order_changes(request_key,order_id,user_id,action,reason,after_state) VALUES(?,?,?,?,?,?)', [bin2hex(random_bytes(20)),$orderId,$u['id'],'order_cancel',$reason,json_encode(['cancelled' => true])]);
     }
 }

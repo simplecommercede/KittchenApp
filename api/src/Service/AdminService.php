@@ -262,7 +262,7 @@ final class AdminService
             if (!is_bool($active)) {
                 fail('Status prüfen.');
             }if (!$this->repository->findDiningTables($id)->fetch()) {
-                fail('Tisch nicht gefunden.',404);
+                fail('Tisch nicht gefunden.', 404);
             }$this->repository->updateDiningTables($active, $id);
             out(['ok' => true]);
         }

@@ -7,3 +7,7 @@ api/vendor
 .phpstan-cache
 .phpunit-cache
 .idea
+config/*.ini
+build
+
+api/config-path.php

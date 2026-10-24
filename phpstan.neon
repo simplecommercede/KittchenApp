@@ -5,6 +5,10 @@ parameters:
         - api/index.php
         - api/db.php
         - api/migrate.php
+        - api/migrate-postgres.php
+        - api/seed.php
+        - api/check-environment.php
+        - api/bootstrap.php
         - api/create-admin.php
         - api/speisekarte.php
     tmpDir: .phpstan-cache

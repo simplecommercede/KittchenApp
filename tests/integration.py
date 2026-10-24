@@ -400,7 +400,7 @@ class Workflow(unittest.TestCase):
         ticket=next(t for t in data['tickets'] if int(t['order_id'])==oid)
         parse=lambda s:datetime.datetime.fromisoformat(s.replace(' ','T'))
         self.assertLess(abs((parse(data['server_time'])-parse(ticket['created_at'])).total_seconds()),60)
-        out=in_app("$tz=query('SELECT @@session.time_zone AS tz, TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),NOW()) AS diff')->fetch();echo json_encode([$tz['tz'],(int)$tz['diff'],date_default_timezone_get()]);")
+        out=in_app("$driver=Kitchen\\Infrastructure\\Database::instance()->driver();$sql=$driver==='pgsql'?\"SELECT current_setting('TimeZone') AS tz, 0 AS diff\":'SELECT @@session.time_zone AS tz, TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),NOW()) AS diff';$tz=query($sql)->fetch();echo json_encode([$tz['tz']==='UTC'?'+00:00':$tz['tz'],(int)$tz['diff'],date_default_timezone_get()]);")
         self.assertEqual(json.loads(out),['+00:00',0,'UTC'])
     def test_17_unreachable_database_returns_json_503(self):
         # A session with a user forces a DB query, which must fail cleanly without a second connection attempt.
@@ -467,7 +467,7 @@ class Workflow(unittest.TestCase):
     def test_22_login_ip_throttling_and_cleanup(self):
         # Runs last: it blocks the test client's address and clears the throttling table afterwards.
         old='0'*64
-        in_app("query('INSERT INTO login_attempts(identity_hash,attempts,updated_at) VALUES(?,1,NOW()-INTERVAL 2 DAY) ON DUPLICATE KEY UPDATE updated_at=VALUES(updated_at)',['"+old+"']);")
+        in_app("query('DELETE FROM login_attempts WHERE identity_hash=?',['"+old+"']);query('INSERT INTO login_attempts(identity_hash,attempts,updated_at) VALUES(?,1,?)',['"+old+"',gmdate('Y-m-d H:i:s',time()-172800)]);")
         try:
             c=Client();codes=[]
             for _ in range(35):
@@ -491,7 +491,7 @@ class Workflow(unittest.TestCase):
         self.assertFalse(self.service.call('tickets&view=service')[1]['bar_cover'])
         self.assertEqual(self.service.call('status',{'id':drink,'status':'working'})[0],403)
         # Tresen presence goes stale: service covers until Abholbereit, the bon stays at the bar station.
-        in_app("query('UPDATE users SET last_seen=NOW()-INTERVAL 1 MINUTE WHERE last_view=\"bar\"');")
+        in_app("query('UPDATE users SET last_seen=? WHERE last_view=?',[gmdate('Y-m-d H:i:s',time()-60),'bar']);")
         self.assertTrue(self.service.call('tickets&view=service')[1]['bar_cover'])
         self.assertFalse(self.kitchen.call('tickets&view=kitchen')[1]['bar_cover'])
         for state in ['working','ready','collected']: self.assertEqual(self.service.call('status',{'id':drink,'status':state})[0],200)

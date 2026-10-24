@@ -7,7 +7,7 @@ COPY frontend ./frontend
 COPY public ./public
 RUN npm run build
 FROM php:8.4-apache AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends libonig-dev unzip && docker-php-ext-install pdo_mysql mbstring && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends libonig-dev libpq-dev unzip && docker-php-ext-install pdo_mysql pdo_pgsql mbstring && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /var/www/html
 COPY --from=frontend /build/dist /var/www/html
@@ -21,3 +21,8 @@ RUN composer install --no-interaction --prefer-dist
 COPY phpunit.xml phpstan.neon /var/www/html/
 COPY tests/Unit /var/www/html/tests/Unit
 CMD ["composer", "check"]
+
+# Export ohne Entwicklungswerkzeuge oder Zugangsdaten: deploy/build.sh
+FROM scratch AS release
+COPY --from=frontend /build/dist /public
+COPY --from=runtime /var/www/html/api /public/api

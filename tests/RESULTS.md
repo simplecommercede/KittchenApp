@@ -1,5 +1,16 @@
 # Validierung
 
+## 24.10.2026 – PostgreSQL und Live-Vorbereitung
+
+- `sh tests/run.sh mysql`: 28/28 Integrationstests erfolgreich im separaten MariaDB-Teststack.
+- `sh tests/run.sh pgsql`: 28/28 Integrationstests erfolgreich mit PostgreSQL 16.
+- Anschließender PostgreSQL-Produktionstest in eigener frischer Testdatenbank: Migration zweimal erfolgreich, keine Demo-Benutzer/Tische, Speisekarte und Zusatzverknüpfungen vorhanden, keine doppelten Gerichte. CLI-Verbindungstest erfolgreich.
+- PHPUnit: 16 Tests, 37 Assertions erfolgreich; darunter private INI-Werte, Umgebungspriorität, DSN-Prüfung und Treiberwahl.
+- PHPStan Level 5 ohne Fehler (lokal mit `--debug` ohne parallele Worker).
+- `sh deploy/build.sh`: lokales Release inklusive Frontend-Build und Composer-Produktionsabhängigkeiten erfolgreich. Kein Upload.
+- Echte Hetzner-Verbindung und Live-HTTPS wurden in diesem Schritt nicht getestet; Zugangsdaten fehlen noch.
+
+
 Am 23.10.2026 lokal ausgeführt:
 
 - `npm run build`: TypeScript-Prüfung und Vite-Produktionsbuild erfolgreich.
@@ -163,3 +174,7 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 - Frische Installation in einem eigenen Stack (Port 8089, danach entfernt): ebenfalls 107/29/8 und 12 Gerichte mit Extras.
 - Quality-Target: PHPUnit 11 Tests, PHPStan ohne Fehler. `sh tests/run.sh`: 28 Tests erfolgreich. Neu `test_27`: Sonderwünsche werden bereinigt (Leerzeichen, Doppelte, Leere), Speichern ohne `wishes` behält sie, zu lang/zu viele/bei Getränken → 400.
 - Browserprüfung, nur lokaler Entwurf: Hamburger zeigt „Veganes Patty | Ohne Romana | Ohne Tomate | … | Dip inkl.: Ketchup“, die zugebuchte Position Dip Ketchup keine Schnellwahl; alle 8 Herbstgerichte unter „Speisen“. Probe-Entwurf verworfen.
+
+## 24.10.2026 – Erstinstallation auf Hetzner
+
+Öffentliche HTTPS-Prüfung erfolgreich: Zertifikat, Basic-Auth, SPA und Assets, Secure-Session-Cookie, Admin-Anmeldung, Menü (107 Einträge), Tische, Bons, Benutzerverwaltung (lesend), Abmeldung. Keine Testbestellungen in Live erzeugt. Server-PHP 8.4.27, PostgreSQL-Verbindung mit TLS und initiale Migration erfolgreich. Details: deploy/STATUS.md.

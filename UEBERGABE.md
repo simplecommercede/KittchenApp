@@ -1,14 +1,18 @@
 # Übergabe: Zum Stimbeck – Kitchen Manager
 
-Stand: 23.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde Person und ihre KI. Sie beschreibt den tatsächlich vorhandenen Stand, die ursprüngliche Absicht und offene Arbeiten. Bei Abweichungen zuerst den aktuellen Code prüfen; Aussagen zu Testergebnissen sind historische Ergebnisse, keine Garantie für spätere Änderungen.
+> **Live-Update 24.10.2026:** Erstinstallation auf https://app.zumstimbeck.de erfolgt. SSH-Port 222; festes Webroot `public_html/app`, PostgreSQL und Admin eingerichtet. HTTPS-/API-Smoke-Test erfolgreich. Maßgeblich für den aktuellen Deploymentstand: [deploy/STATUS.md](deploy/STATUS.md). Ältere Aussagen „noch kein Upload“ unten sind historisch. Tische/Mitarbeiter und Backupbetrieb noch einzurichten.
 
-## 0. Aktueller Stand auf einen Blick (23.10.2026)
+Stand: 24.10.2026. Diese Datei ist der Einstieg für die nächste entwickelnde Person und ihre KI. Sie beschreibt den tatsächlich vorhandenen Stand, die ursprüngliche Absicht und offene Arbeiten. Bei Abweichungen zuerst den aktuellen Code prüfen; Aussagen zu Testergebnissen sind historische Ergebnisse, keine Garantie für spätere Änderungen.
+
+## 0. Aktueller Stand auf einen Blick (24.10.2026)
 
 **Läuft lokal und ist getestet:** Bestellaufnahme mit Getränke/Speisen-Trennung und Größenauswahl in ml, Sonderwünsche inkl. optionalem Strohhalm, Küchen- und Tresenbons, Abholung, Kassieren mit Korrekturen, Storno und Zahlungsrücknahme, Mitarbeiterverwaltung, Kartenpflege (ein Eintrag pro Getränk mit Portionsgrößen und eigenem Preis), echte Speisekarte (99 Produkte), Login-Limits, Größenbegrenzung der Anfragen, Service-Vertretung für den unbesetzten Tresen, Timer hält beim Start an, getrennte Zahlung pro Bestellung, Hinweise mit Ton/Vibration/Benachrichtigung bei geöffneter App, Fokus-Modus zum Arbeiten, Küche/Tresen können den Service rufen, Beilagen/Extras zubuchbar, kompaktere Bestellaufnahme mit Rückmeldung und Kurzübersicht, Herbstkarte und passende Sonderwünsche je Produkt. `sh tests/run.sh`: 28 Integrationstests erfolgreich in einem getrennten Teststack. Noch kein Deployment auf Hetzner, keine Tests auf echten iPads.
 
 **Heute erledigt:** Passwörter ungekürzt, UTC-Zeitbasis, sauberer DB-Fehlerpfad (503), Rückkehr zur Anmeldung bei abgelaufener Sitzung, Testdaten bereinigt und Tests vom Betriebsbestand getrennt, Speisekarte aus der PDF, Kartenansicht und Kartenpflege umgebaut, Login-Limit pro Adresse mit Aufräumen, Anfragen über 64 KB abgelehnt, aktive Bons nicht mehr auf 200 begrenzt.
 
-**Aktueller Fokus: klickbarer Prototyp.** Zuerst werden die Bedienabläufe für Service, Küche, Tresen und Admin ausgearbeitet und geprüft. Backend-Härtung und Deployment auf Hetzner stehen vorerst nicht an und sind unten nur als „Später“ festgehalten.
+**Aktueller Fokus: Live-Vorbereitung.** Auf Benutzerwunsch läuft Live mit PostgreSQL auf `app.zumstimbeck.de`; Docker bleibt zum Testen. `origin/main` wurde bis `5858b14` übernommen. PostgreSQL-Unterstützung, separate versionierte Migrationen, privates Live-INI, CLI-Verbindungstest und lokaler Paketbau sind vorbereitet. Erster Upload soll später gemeinsam erfolgen; noch kein Upload. Die lokalen, ignorierten Dateien `config/live.ini` und `config/upload.ini` enthalten auszufüllende Platzhalter. Maßgeblicher Ablauf: [deploy/README.md](deploy/README.md).
+
+**Aktuell geprüft:** 28 HTTP-Integrationstests jeweils gegen MariaDB und PostgreSQL; 16 PHPUnit-Tests, 37 Assertions; PHPStan Level 5 fehlerfrei. PostgreSQL-Produktionstest: Migration zweimal, keine Demo-Konten/Tische, Speisekarte und Zusatzverknüpfungen vorhanden. Lokales Release gebaut. Hosting-PHP, Zugänge, TLS zur DB und DocumentRoot sind noch nicht auf dem Live-Server geprüft.
 
 **Offen im Prototyp:**
 
@@ -70,7 +74,7 @@ Vereinbart und umgesetzt:
 - Docker Compose für die lokale Entwicklung und Tests.
 - Auf Hetzner sollen statische Builddateien und PHP laufen; Docker und ein dauerhafter Node-Prozess werden dort nicht vorausgesetzt.
 
-Frühere Vorschläge mit Next.js, Supabase, PostgreSQL oder SSE wurden durch diese Hostingentscheidung ersetzt. Sie sind **nicht** der aktuelle Stack. Nicht ohne neuen Grund wieder darauf umstellen.
+Next.js, Supabase und SSE gehören nicht zum Stack. PostgreSQL ist seit 24.10.2026 auf ausdrücklichen Benutzerwunsch das Live-Ziel; MariaDB bleibt als bestehende lokale Option erhalten. `DB_DRIVER` wählt den SQL-Dialekt, standardmäßig mysql. Neue Datenbankänderungen künftig für beide Treiber pflegen; PostgreSQL-DDL liegt in `api/migrations/postgresql/`, gemeinsame Startdaten in `api/seed.php`. Bestehende MariaDB-Daten werden nicht automatisch nach PostgreSQL konvertiert.
 
 ## 3. Projekt übernehmen und starten
 
@@ -319,26 +323,11 @@ Die folgenden technischen Punkte wurden bei der Übergabe aus dem Code abgeleite
 
 ## 9. Hetzner: Vorgehen und offene Punkte
 
-Keine Produktionsdateien wurden verändert. Es wurde nichts auf Hetzner hochgeladen, keine Domain eingerichtet und keine produktive Datenbank angelegt.
+Der Benutzer hat Domain und DNS eingerichtet und meldet, dass alles funktioniert. Von dieser Entwicklungssitzung wurde noch nichts auf den Server hochgeladen. Ziel: `app.zumstimbeck.de`, Managed Server `dedi1693.your-server.de`, PostgreSQL.
 
-Vor Deployment klären:
+Der aktuelle Ablauf und die Zielstruktur stehen in [deploy/README.md](deploy/README.md). Noch erforderlich: DB-Zugang inklusive TLS-Modus, SSH-Benutzer, privater App-Stammpfad, DocumentRoot, PHP >=8.4 in CLI/Web mit pdo_pgsql, Session-Speicherung, Logs und Backups. `config/live.ini` und `config/upload.ini` lokal ausfüllen; keine Kennwörter in Git oder Chat. `api/check-environment.php` prüft die Verbindung ohne Datenänderungen. Die private Datei `shared/app.ini` wird automatisch außerhalb des Webroots geladen, alternativ per `APP_CONFIG_FILE`; eine `.env` wird nicht gelesen.
 
-- Eigene Zielsubdomain, Document Root, PHP-Version und PDO-MySQL-Verfügbarkeit.
-- SSH/SFTP-Zugang und CLI-PHP; sicherer Weg zur Konfiguration von Umgebungsvariablen für Web-PHP und CLI.
-- Datenbankhost/-name/-benutzer, Berechtigungen und Zeichensatz.
-- HTTPS, Zeitzone, Session-Speicherung, Fehlerlogs, Backups und Wiederherstellung.
-- Anfragegröße serverseitig begrenzen: `post_max_size` (z. B. 1M) bzw. Apache `LimitRequestBody` (z. B. 131072) für die Subdomain setzen, falls konsoleH das erlaubt. Die App weist größere Anfragen zwar mit 413 ab, kann das Einlesen aber nicht verhindern.
-
-Geplanter Weg:
-
-1. `npm ci && npm run build` auf Entwicklungs-/Buildsystem.
-2. Inhalt von `dist/` und Verzeichnis `api/` in die separate Subdomain ausliefern. Keine Demo-DB und keine lokalen Zugangsdaten übernehmen.
-3. `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `APP_ENV=production` sicher konfigurieren. Eine `.env` wird vom aktuellen PHP-Code **nicht automatisch geladen**.
-4. `php api/migrate.php` mit produktiver Umgebung ausführen; dadurch werden keine Demo-Konten angelegt.
-5. Initialen Admin per CLI `php api/create-admin.php` mit sicher gesetzten `ADMIN_USERNAME` und `ADMIN_PASSWORD` anlegen. Keine Kennwörter in Git oder Chat schreiben.
-6. Menü und Tische anlegen; kontrollierter Funktions-/Berechtigungstest unter HTTPS, anschließend Backup/Wiederherstellung prüfen.
-
-Das ist ein Plan, kein bereits geprüftes Deployment. App und API unter derselben Origin halten. HTTPS-Cookies sind außerhalb `APP_ENV=local` aktiviert. Bestehende Shops auf dem Managed Server bleiben separate Anwendungen.
+Anfragegröße serverseitig begrenzen (`post_max_size`, ggf. `LimitRequestBody`). App und API unter derselben HTTPS-Origin betreiben. Bestehende Shops bleiben separate Anwendungen. Kein produktives Deployment ohne konkreten Auftrag und geprüfte Zielpfade.
 
 ## 10. Gestaltung und Restaurantinformationen
 
@@ -353,7 +342,7 @@ Der öffentlich verlinkte Facebook-Auftritt ließ sich bei der Recherche nicht a
 
 ## 11. Kopierbarer Startauftrag für die nächste KI
 
-> Lies zuerst UEBERGABE.md, README.md, tests/RESULTS.md und den tatsächlichen Code. Arbeite am vorhandenen React/TypeScript-, PHP- und MariaDB-Projekt weiter. Ziel ist der vorhandene Hetzner Managed Server; Supabase, Next.js und ein produktiver Node-Dienst sind nicht vorausgesetzt. Prüfe den Git- und Docker-Zustand, ohne vorhandene Daten zu löschen. Starte die App lokal nach Anleitung und führe Build sowie Integrationstests nur gegen eine lokale Testdatenbank aus. Übernimm die beschriebenen Rollen und den unabhängigen Workflow für Küche und Tresen. Plane auch die Service-Vertretung für einen unbesetzten Tresen gemäß Priorität 2 ein. Priorisiere zunächst die unter „Priorität 1“ beschriebenen Zuverlässigkeitslücken und ergänze passende Regressionstests. Halte funktionierende Abläufe und die Gestaltung bei. Unterscheide geprüfte Ergebnisse, offene Annahmen und fehlende Funktionen. Dokumentiere Änderungen und den neuen Teststand. Führe kein produktives Deployment ohne konkreten Auftrag und geklärtes Ziel durch.
+> Lies zuerst UEBERGABE.md, README.md, tests/RESULTS.md und den tatsächlichen Code. Arbeite am vorhandenen React/TypeScript-, PHP-Projekt mit MariaDB lokal und PostgreSQL als Live-Ziel weiter. Ziel ist der vorhandene Hetzner Managed Server; Supabase, Next.js und ein produktiver Node-Dienst sind nicht vorausgesetzt. Prüfe den Git- und Docker-Zustand, ohne vorhandene Daten zu löschen. Starte die App lokal nach Anleitung und führe Build sowie Integrationstests nur gegen eine lokale Testdatenbank aus. Übernimm die beschriebenen Rollen und den unabhängigen Workflow für Küche und Tresen. Plane auch die Service-Vertretung für einen unbesetzten Tresen gemäß Priorität 2 ein. Priorisiere zunächst die unter „Priorität 1“ beschriebenen Zuverlässigkeitslücken und ergänze passende Regressionstests. Halte funktionierende Abläufe und die Gestaltung bei. Unterscheide geprüfte Ergebnisse, offene Annahmen und fehlende Funktionen. Dokumentiere Änderungen und den neuen Teststand. Führe kein produktives Deployment ohne konkreten Auftrag und geklärtes Ziel durch.
 
 ## Aktualisierung: PHP-Refactoring vom 23.10.2026
 

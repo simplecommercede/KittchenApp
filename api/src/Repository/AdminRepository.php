@@ -68,7 +68,7 @@ final class AdminRepository extends Repository
 
     public function findKitchenProducts(array $ids): \PDOStatement
     {
-        return $this->execute('SELECT id FROM menu WHERE station="kitchen" AND id IN ('.implode(',', array_fill(0, count($ids), '?')).')', $ids);
+        return $this->execute('SELECT id FROM menu WHERE station=\'kitchen\' AND id IN ('.implode(',', array_fill(0, count($ids), '?')).')', $ids);
     }
 
     public function replaceAddons(int $menuId, array $addonIds): void
@@ -91,7 +91,7 @@ final class AdminRepository extends Repository
 
     public function findMenu3(): \PDOStatement
     {
-        return $this->execute('SELECT id,name FROM menu WHERE station="bar" FOR UPDATE');
+        return $this->execute('SELECT id,name FROM menu WHERE station=\'bar\' FOR UPDATE');
     }
 
     public function updateMenu3(mixed $values, mixed $size): \PDOStatement
@@ -101,12 +101,12 @@ final class AdminRepository extends Repository
 
     public function insertMenu2(mixed $values): \PDOStatement
     {
-        return $this->execute('INSERT INTO menu(name,category,price,straw,active,station) VALUES(?,?,?,?,?,"bar")', $values);
+        return $this->execute('INSERT INTO menu(name,category,price,straw,active,station) VALUES(?,?,?,?,?,\'bar\')', $values);
     }
 
     public function insertDiningTables(mixed $id, mixed $name): \PDOStatement
     {
-        return $this->execute('INSERT INTO dining_tables(id,name) VALUES(?,?) ON DUPLICATE KEY UPDATE name=VALUES(name)', [$id,$name]);
+        return $this->execute($this->database->driver() === 'pgsql' ? 'INSERT INTO dining_tables(id,name) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name' : 'INSERT INTO dining_tables(id,name) VALUES(?,?) ON DUPLICATE KEY UPDATE name=VALUES(name)', [$id,$name]);
     }
 
     public function findDiningTables(mixed $id): \PDOStatement

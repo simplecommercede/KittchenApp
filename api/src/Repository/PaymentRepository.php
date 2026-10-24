@@ -8,7 +8,7 @@ final class PaymentRepository extends Repository
 {
     public function findTableVisits(): \PDOStatement
     {
-        return $this->execute('SELECT v.id AS visit_id,v.table_id,v.paid_at,d.name AS table_name,COALESCE(u.name,"Unbekannt") AS paid_by FROM table_visits v JOIN dining_tables d ON d.id=v.table_id LEFT JOIN users u ON u.id=v.paid_by WHERE v.paid_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM table_visits newer WHERE newer.table_id=v.table_id AND newer.id>v.id) ORDER BY v.paid_at DESC,v.id DESC');
+        return $this->execute('SELECT v.id AS visit_id,v.table_id,v.paid_at,d.name AS table_name,COALESCE(u.name,\'Unbekannt\') AS paid_by FROM table_visits v JOIN dining_tables d ON d.id=v.table_id LEFT JOIN users u ON u.id=v.paid_by WHERE v.paid_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM table_visits newer WHERE newer.table_id=v.table_id AND newer.id>v.id) ORDER BY v.paid_at DESC,v.id DESC');
     }
 
     public function findPaymentEvents(): \PDOStatement
@@ -33,7 +33,7 @@ final class PaymentRepository extends Repository
 
     public function findTickets(mixed $visitId): \PDOStatement
     {
-        return $this->execute('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND t.status NOT IN ("collected","cancelled")', [$visitId]);
+        return $this->execute('SELECT COUNT(*) AS amount FROM tickets t JOIN orders o ON o.id=t.order_id WHERE o.visit_id=? AND t.status NOT IN (\'collected\',\'cancelled\')', [$visitId]);
     }
 
     public function findOrders(mixed $visitId): \PDOStatement
@@ -43,17 +43,17 @@ final class PaymentRepository extends Repository
 
     public function updateOrders(mixed $u, mixed $visitId): \PDOStatement
     {
-        return $this->execute('UPDATE orders SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE visit_id=? AND cancelled_at IS NULL AND paid_at IS NULL', [$u['id'],$visitId]);
+        return $this->execute('UPDATE orders SET paid_at=CURRENT_TIMESTAMP,paid_by=? WHERE visit_id=? AND cancelled_at IS NULL AND paid_at IS NULL', [$u['id'],$visitId]);
     }
 
     public function updateTableVisits(mixed $u, mixed $visitId): \PDOStatement
     {
-        return $this->execute('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?', [$u['id'],$visitId]);
+        return $this->execute('UPDATE table_visits SET paid_at=CURRENT_TIMESTAMP,paid_by=? WHERE id=?', [$u['id'],$visitId]);
     }
 
     public function insertPaymentEvents(mixed $visitId, mixed $amount, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO payment_events(visit_id,action,amount,user_id) VALUES(?,"confirmed",?,?)', [$visitId,(int)$amount['total'],$u['id']]);
+        return $this->execute('INSERT INTO payment_events(visit_id,action,amount,user_id) VALUES(?,\'confirmed\',?,?)', [$visitId,(int)$amount['total'],$u['id']]);
     }
 
     public function findOrders2(mixed $orderId): \PDOStatement
@@ -78,7 +78,7 @@ final class PaymentRepository extends Repository
 
     public function findTickets2(mixed $orderId): \PDOStatement
     {
-        return $this->execute('SELECT COUNT(*) AS amount FROM tickets WHERE order_id=? AND status NOT IN ("collected","cancelled")', [$orderId]);
+        return $this->execute('SELECT COUNT(*) AS amount FROM tickets WHERE order_id=? AND status NOT IN (\'collected\',\'cancelled\')', [$orderId]);
     }
 
     public function findTickets3(mixed $orderId): \PDOStatement
@@ -88,12 +88,12 @@ final class PaymentRepository extends Repository
 
     public function updateOrders2(mixed $u, mixed $orderId): \PDOStatement
     {
-        return $this->execute('UPDATE orders SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?', [$u['id'],$orderId]);
+        return $this->execute('UPDATE orders SET paid_at=CURRENT_TIMESTAMP,paid_by=? WHERE id=?', [$u['id'],$orderId]);
     }
 
     public function insertPaymentEvents2(mixed $visitId, mixed $orderId, mixed $total, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO payment_events(visit_id,order_id,action,amount,user_id) VALUES(?,?,"order_paid",?,?)', [$visitId,$orderId,$total,$u['id']]);
+        return $this->execute('INSERT INTO payment_events(visit_id,order_id,action,amount,user_id) VALUES(?,?,\'order_paid\',?,?)', [$visitId,$orderId,$total,$u['id']]);
     }
 
     public function findOrders4(mixed $visitId): \PDOStatement
@@ -103,7 +103,7 @@ final class PaymentRepository extends Repository
 
     public function updateTableVisits2(mixed $u, mixed $visitId): \PDOStatement
     {
-        return $this->execute('UPDATE table_visits SET paid_at=UTC_TIMESTAMP(),paid_by=? WHERE id=?', [$u['id'],$visitId]);
+        return $this->execute('UPDATE table_visits SET paid_at=CURRENT_TIMESTAMP,paid_by=? WHERE id=?', [$u['id'],$visitId]);
     }
 
     public function findTableVisits5(mixed $visitId): \PDOStatement
@@ -138,6 +138,6 @@ final class PaymentRepository extends Repository
 
     public function insertPaymentEvents3(mixed $visitId, mixed $amount, mixed $reason, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO payment_events(visit_id,action,amount,reason,user_id) VALUES(?,"reversed",?,?,?)',[$visitId,$amount,$reason,$u['id']]);
+        return $this->execute('INSERT INTO payment_events(visit_id,action,amount,reason,user_id) VALUES(?,\'reversed\',?,?,?)', [$visitId,$amount,$reason,$u['id']]);
     }
 }
