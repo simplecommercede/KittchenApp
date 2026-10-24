@@ -80,7 +80,7 @@ final class Kernel
         } catch (PDOException $e) {
             rollbackQuietly();
             error_log($e->getMessage());
-            (new Response(['error' => $e->getCode() === '23000' ? 'Datensatz bereits vorhanden. Bei einer Bestellung bitte mit derselben Bestellkennung wiederholen.' : 'Datenbank vorübergehend nicht erreichbar.'], $e->getCode() === '23000' ? 409 : 503))->send();
+            (new Response(['error' => in_array($e->getCode(), ['23000', '23505'], true) ? 'Datensatz bereits vorhanden. Bei einer Bestellung bitte mit derselben Bestellkennung wiederholen.' : 'Datenbank vorübergehend nicht erreichbar.'], in_array($e->getCode(), ['23000', '23505'], true) ? 409 : 503))->send();
         } catch (Throwable $e) {
             rollbackQuietly();
             error_log((string)$e);

@@ -10,7 +10,7 @@ final class ServiceCallRepository extends Repository
     public function findVisible(array $stations): \PDOStatement
     {
         $placeholders = implode(',', array_fill(0, count($stations), '?'));
-        return $this->execute('SELECT c.id,c.station,c.note,c.created_at,c.acknowledged_at,u.name AS requested_by,a.name AS acknowledged_by FROM service_calls c JOIN users u ON u.id=c.created_by LEFT JOIN users a ON a.id=c.acknowledged_by WHERE c.cancelled_at IS NULL AND (c.acknowledged_at IS NULL OR c.acknowledged_at>NOW()-INTERVAL 2 MINUTE) AND c.station IN ('.$placeholders.') ORDER BY c.id', $stations);
+        return $this->execute('SELECT c.id,c.station,c.note,c.created_at,c.acknowledged_at,u.name AS requested_by,a.name AS acknowledged_by FROM service_calls c JOIN users u ON u.id=c.created_by LEFT JOIN users a ON a.id=c.acknowledged_by WHERE c.cancelled_at IS NULL AND (c.acknowledged_at IS NULL OR c.acknowledged_at>'. $this->database->ago(2, 'MINUTE') . ') AND c.station IN ('.$placeholders.') ORDER BY c.id', $stations);
     }
 
     public function findOpenForStation(string $station): \PDOStatement

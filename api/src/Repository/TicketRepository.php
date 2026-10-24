@@ -38,12 +38,12 @@ final class TicketRepository extends Repository
 
     public function updateStationAlerts(mixed $u, mixed $id): \PDOStatement
     {
-        return $this->execute('UPDATE station_alerts SET acknowledged_at=UTC_TIMESTAMP(),acknowledged_by=? WHERE id=?', [$u['id'],$id]);
+        return $this->execute('UPDATE station_alerts SET acknowledged_at=CURRENT_TIMESTAMP,acknowledged_by=? WHERE id=?', [$u['id'],$id]);
     }
 
     public function insertEvents(mixed $alert, mixed $u): \PDOStatement
     {
-        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,? ,"cancel_acknowledged")', [$alert['ticket_id'],$u['id']]);
+        return $this->execute('INSERT INTO events(ticket_id,user_id,action) VALUES(?,? ,\'cancel_acknowledged\')', [$alert['ticket_id'],$u['id']]);
     }
 
     public function findTickets2(mixed $id): \PDOStatement

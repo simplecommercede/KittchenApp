@@ -9,3 +9,9 @@ api/vendor/
 .phpstan-cache/
 .phpunit-cache/
 .php-cs-fixer.cache
+
+# Private Live-Zugangsdaten und lokale Release-Pakete
+/config/*.ini
+/build/
+
+/api/config-path.php

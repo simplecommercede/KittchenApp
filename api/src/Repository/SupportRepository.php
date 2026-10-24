@@ -13,11 +13,19 @@ final class SupportRepository extends Repository
 
     public function findUsers2(): \PDOStatement
     {
-        return $this->execute('SELECT roles FROM users WHERE active=1 AND last_view="bar" AND last_seen>NOW()-INTERVAL 30 SECOND');
+        return $this->execute('SELECT roles FROM users WHERE active=1 AND last_view=\'bar\' AND last_seen>'. $this->database->ago(30, 'SECOND') . '');
     }
 
     public function insertLoginAttempts(mixed $key, mixed $minutes, mixed $limit): \PDOStatement
     {
+        if ($this->database->driver() === 'pgsql') {
+            // PostgreSQL evaluates SET expressions against the old row, so calculate next attempts once.
+            return $this->execute("INSERT INTO login_attempts(identity_hash,attempts,blocked_until,updated_at) VALUES(?,1,NULL,CURRENT_TIMESTAMP)
+                ON CONFLICT(identity_hash) DO UPDATE SET
+                attempts=CASE WHEN login_attempts.updated_at<CURRENT_TIMESTAMP-(CAST(? AS integer)*INTERVAL '1 minute') OR login_attempts.blocked_until<CURRENT_TIMESTAMP THEN 1 ELSE login_attempts.attempts+1 END,
+                blocked_until=CASE WHEN (CASE WHEN login_attempts.updated_at<CURRENT_TIMESTAMP-(CAST(? AS integer)*INTERVAL '1 minute') OR login_attempts.blocked_until<CURRENT_TIMESTAMP THEN 1 ELSE login_attempts.attempts+1 END)>=? THEN CURRENT_TIMESTAMP+(CAST(? AS integer)*INTERVAL '1 minute') ELSE NULL END,
+                updated_at=CURRENT_TIMESTAMP", [$key,$minutes,$minutes,$limit,$minutes]);
+        }
         return $this->execute('INSERT INTO login_attempts(identity_hash,attempts,blocked_until,updated_at) VALUES(?,1,NULL,NOW()) ON DUPLICATE KEY UPDATE attempts=IF(updated_at<NOW()-INTERVAL ? MINUTE OR (blocked_until IS NOT NULL AND blocked_until<NOW()),1,attempts+1), blocked_until=IF(attempts>=?,NOW()+INTERVAL ? MINUTE,NULL), updated_at=NOW()', [$key,$minutes,$limit,$minutes]);
     }
 

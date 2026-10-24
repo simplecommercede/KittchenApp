@@ -25,7 +25,7 @@ final class TicketService
             $cover = coversBar($u);
             $archive = ($_GET['archive'] ?? '0') === '1';
             $params = [];
-            $where = $archive ? 't.status IN ("collected","cancelled")' : 't.status NOT IN ("collected","cancelled")';
+            $where = $archive ? 't.status IN (\'collected\',\'cancelled\')' : 't.status NOT IN (\'collected\',\'cancelled\')';
             if (!allows($u, 'service')) {
                 $stations = [];
                 if (allows($u, 'kitchen')) {
