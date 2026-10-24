@@ -82,3 +82,31 @@
 .service-call-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .service-call-actions span{font-weight:700}
 .service-call-actions button{min-height:40px;padding:8px 12px}
+/* Order taking: compact cards, draft counter, add-on picker, sticky draft, toast and summary bar */
+.menu-grid .dish{position:relative;min-height:84px;padding:10px 12px;gap:4px}
+.menu-grid .dish-icon{font-size:18px;line-height:1}
+.dish-count{position:absolute;top:8px;right:8px;background:#24483c;color:#fff;border-radius:999px;font-size:12px;font-weight:800;padding:2px 8px}
+.addon-pick .addons{display:grid;gap:6px;max-height:220px;overflow:auto}
+.addon-pick .check small{display:inline;margin-left:auto;font-weight:700}
+.addon-pick .row{display:flex;gap:8px;flex-wrap:wrap}
+.addon-pick .row button{width:auto;flex:1 1 120px;margin:0}
+.addon-admin{border:1px solid #d9ddd1;border-radius:9px;padding:8px 10px}
+.addon-admin summary{font-size:13px;font-weight:700;cursor:pointer}
+.addon-admin .check{font-size:13px;margin:6px 0}
+@media(min-width:761px){.service-layout .cart{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.add-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:45;display:flex;gap:10px;align-items:center;background:#202923;color:#fff;border-radius:999px;padding:6px 6px 6px 16px;box-shadow:0 4px 14px rgba(0,0,0,.2);max-width:calc(100vw - 32px);font-size:14px}
+.add-toast button{width:auto;margin:0;min-height:34px;padding:6px 12px;border-radius:999px;background:transparent;color:#fff;border:1px solid #fff}
+.order-bar{display:none}
+@media(max-width:760px){
+.order-bar{position:fixed;left:8px;right:8px;bottom:8px;z-index:40;display:flex;align-items:center;gap:8px;background:#24483c;color:#fff;border-radius:12px;padding:8px 8px 8px 14px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.order-bar>div{flex:1;min-width:0}
+.order-bar strong{display:block;font-size:14px}
+.order-bar small{display:block;color:#dfebe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-bar button{width:auto;margin:0;min-height:42px;padding:8px 12px;background:#fff;color:#24483c}
+.order-bar .order-bar-details{background:transparent;color:#fff;border:1px solid #dfebe2}
+body.has-order-bar main{padding-bottom:96px}
+body.has-order-bar .add-toast{bottom:84px}
+body.has-order-bar .focus-exit{bottom:84px}
+}
+.addon-pick{grid-column:1/-1}
+.addon-pick .addons{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
