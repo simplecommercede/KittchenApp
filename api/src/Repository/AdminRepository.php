@@ -56,6 +56,11 @@ final class AdminRepository extends Repository
         return $this->execute('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)', [$name,$cat,$station,$price,$straw ? 1 : 0]);
     }
 
+    public function updateWishes(int $id, string $wishes): \PDOStatement
+    {
+        return $this->execute('UPDATE menu SET wishes=? WHERE id=?', [$wishes,$id]);
+    }
+
     public function lastInsertId(): int
     {
         return (int)$this->database->connection()->lastInsertId();

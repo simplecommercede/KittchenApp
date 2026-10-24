@@ -65,7 +65,51 @@ $menu = [
  ['Extra Bacon', 'Dips & Extras', 'kitchen', 200],
  ['Extra Jalapenos', 'Dips & Extras', 'kitchen', 150],
  ['Extra Patty', 'Dips & Extras', 'kitchen', 450],
+ // Herbstkarte (gültig bis 22.11.2026), saisonal; danach im Admin deaktivieren.
+ ['Kürbiscremesuppe', 'Herbstkarte', 'kitchen', 790],
+ ['Hausbrot mit zweierlei Chutneys', 'Herbstkarte', 'kitchen', 650],
+ ['Herbst Burger', 'Herbstkarte', 'kitchen', 1890],
+ ['Schnitzel mit Pfifferlingen', 'Herbstkarte', 'kitchen', 2050],
+ ['Kartoffel-Kürbis Auflauf', 'Herbstkarte', 'kitchen', 1550],
+ ['Roastbeef „kalt“', 'Herbstkarte', 'kitchen', 2150],
+ ['Hokkaido Crème brûlée', 'Herbstkarte', 'kitchen', 850],
+ ['Apfelcrumble mit Vanille Eis', 'Herbstkarte', 'kitchen', 750],
 ];
 // Fünfter Wert: optionale Auswahl „Mit Strohhalm“ für alkoholfreie Getränke, die Kinder typischerweise bestellen (bewusst nicht Malzbier).
 $straw = fn(array $p): bool => in_array($p[1], ['Softgetränke', 'Säfte', 'Saftschorlen'], true);
-return array_map(fn($p) => [...$p, (int)$straw($p)], $menu);
+// Sechster Wert: Schnellwahl-Sonderwünsche aus den Zutaten der Karte; Dips, Extras und Getränke haben keine.
+$burgerDip = 'Dip inkl.: Mayo, Dip inkl.: Ketchup';
+$schnitzel = 'Mit Pommes, Mit Bratkartoffeln';
+$salad = 'Ohne Rote Zwiebeln, Ohne Paprika, Ohne Tomate, Ohne Gurke, Dressing separat';
+$wishes = [
+ 'Stimbecks grüner Begleiter' => 'Dressing separat',
+ 'Schnitzel mit Pommes (Kids)' => 'Ohne Ketchup, Ohne Mayo',
+ 'Hähnchennuggets mit Pommes (Kids)' => 'Ohne Ketchup, Ohne Mayo',
+ 'Kartoffelpuffer mit Apfelmus (Kids)' => 'Ohne Apfelmus',
+ 'Cheese Fries' => 'Ohne Röstzwiebeln, Ohne Tomate, Ohne Rucola',
+ 'Stimbeck Fries' => 'Veganes Patty, Ohne Tomate, Ohne Gurke, Ohne Bacon-Mayo',
+ 'Crispy Chicken Fries' => 'Veganes Patty, Ohne Tomate, Ohne Pesto-Mayo',
+ 'Hamburger' => "Veganes Patty, Ohne Romana, Ohne Tomate, Ohne Gewürzgurke, Ohne Rote Zwiebel, Ohne Haussoße, $burgerDip",
+ 'Cheeseburger' => "Veganes Patty, Ohne Käsesoße, Ohne Romana, Ohne Tomate, Ohne Gewürzgurke, Ohne Rote Zwiebel, Ohne Haussoße, $burgerDip",
+ 'Crispy Chicken Burger' => "Veganes Patty, Ohne Käsesoße, Ohne Rucola, Ohne Tomate, Ohne Rote Zwiebeln, Ohne Pesto-Mayo, $burgerDip",
+ 'Crispy Chilli Burger' => "Veganes Patty, Ohne Käsesoße, Ohne Jalapenos, Ohne Romana, Ohne Tomate, Ohne Rote Zwiebeln, Ohne Sweet-Chilli-Mayo, $burgerDip",
+ 'Currywurst Pommes' => 'Vegane Wurst',
+ 'Pommes klein' => $burgerDip,
+ 'Pommes groß' => $burgerDip,
+ 'Schnitzel Wiener Art' => $schnitzel,
+ 'Jäger Schnitzel' => $schnitzel,
+ 'Schnitzel Wiener Art Seniorenteller' => $schnitzel,
+ 'Jäger Schnitzel Seniorenteller' => $schnitzel,
+ 'Stimbeck Salat' => $salad,
+ 'Stimbeck Salat mit Crispy Chicken' => "Veganes Patty, $salad",
+ 'Stimbeck Salat mit Feta' => $salad,
+ 'Stimbeck Salat mit Garnelen' => $salad,
+ 'Kürbiscremesuppe' => 'Ohne Croûtons, Ohne Kürbiskernöl',
+ 'Herbst Burger' => 'Ohne Senf-Honig-Creme, Ohne Bergkäse, Ohne Kürbis-Crunch',
+ 'Schnitzel mit Pfifferlingen' => $schnitzel.', Ohne Beilagensalat',
+ 'Kartoffel-Kürbis Auflauf' => 'Ohne Feta',
+ 'Roastbeef „kalt“' => 'Ohne Remoulade, Ohne Beilagensalat',
+ 'Hokkaido Crème brûlée' => 'Ohne Rote-Bete-Chip',
+ 'Apfelcrumble mit Vanille Eis' => 'Ohne Vanille Eis',
+];
+return array_map(fn($p) => [...$p, (int)$straw($p), $wishes[$p[0]] ?? ''], $menu);

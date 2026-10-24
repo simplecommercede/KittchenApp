@@ -587,6 +587,20 @@ class Workflow(unittest.TestCase):
         finally:
             self.admin.call('admin_menu',{**base,'addons':[]})
         self.assertEqual(addons()[1],[])
+    def test_27_dish_quick_wishes(self):
+        base={'id':2,'name':'Schnitzel Wiener Art','category':'Speisen','station':'kitchen','price':1690}
+        wishes=lambda:next(m['wishes'] for m in self.service.call('menu')[1] if int(m['id'])==2)
+        try:
+            self.assertEqual(self.admin.call('admin_menu',{**base,'wishes':' Mit Pommes ,Mit Bratkartoffeln,, Mit Pommes\n'})[0],200)
+            self.assertEqual(wishes(),'Mit Pommes, Mit Bratkartoffeln')
+            self.assertEqual(self.admin.call('admin_menu',base)[0],200)
+            self.assertEqual(wishes(),'Mit Pommes, Mit Bratkartoffeln')
+            self.assertEqual(self.admin.call('admin_menu',{**base,'wishes':'x'*41})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',{**base,'wishes':', '.join('W'+str(i) for i in range(16))})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',{'id':6,'name':'Apfelschorle','category':'Getränke','station':'bar','price':350,'volume_ml':300,'wishes':'Ohne Eis'})[0],400)
+        finally:
+            self.admin.call('admin_menu',{**base,'wishes':''})
+        self.assertEqual(wishes(),'')
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')

@@ -137,6 +137,18 @@ final class AdminService
                     fail('Zubuchbares muss aus vorhandenen Speisen bestehen.');
                 }
             }
+            // Quick special wishes per dish ("Ohne Tomate, Veganes Patty"); omitted key keeps them.
+            $wishes = null;
+            if (array_key_exists('wishes', $body)) {
+                if ($station !== 'kitchen') {
+                    fail('Sonderwünsche nur für Speisen angeben.');
+                }
+                $parts = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,\n]/', shortText($body['wishes'], 500)) ?: []), fn ($wish) => $wish !== '')));
+                if (count($parts) > 15 || array_filter($parts, fn ($wish) => mb_strlen($wish) > 40)) {
+                    fail('Höchstens 15 Sonderwünsche mit je bis zu 40 Zeichen.');
+                }
+                $wishes = implode(', ', $parts);
+            }
             $id = $body['id'] ?? null;
             $this->database->connection()->beginTransaction();
             if ($id) {
@@ -153,6 +165,9 @@ final class AdminService
                     fail('Ein Gericht kann nicht zu sich selbst zugebucht werden.');
                 }
                 $this->repository->replaceAddons((int)$id, $addons);
+            }
+            if ($wishes !== null) {
+                $this->repository->updateWishes((int)$id, $wishes);
             }
             $this->database->connection()->commit();
             out(['ok' => true,'id' => (int)$id]);

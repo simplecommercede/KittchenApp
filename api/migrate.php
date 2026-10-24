@@ -4,7 +4,8 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require __DIR__.'/db.php';
 $sql = [
 'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL, username VARCHAR(80) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, last_seen DATETIME NULL, last_view VARCHAR(20) NULL)',
-'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, straw BOOLEAN NOT NULL DEFAULT 0)',
+'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, straw BOOLEAN NOT NULL DEFAULT 0, wishes VARCHAR(500) NOT NULL DEFAULT "")',
+'CREATE TABLE IF NOT EXISTS schema_migrations (name VARCHAR(80) PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
 'CREATE TABLE IF NOT EXISTS menu_addons (menu_id INT NOT NULL, addon_id INT NOT NULL, PRIMARY KEY(menu_id,addon_id), FOREIGN KEY(menu_id) REFERENCES menu(id), FOREIGN KEY(addon_id) REFERENCES menu(id))',
 'CREATE TABLE IF NOT EXISTS dining_tables (id INT PRIMARY KEY, name VARCHAR(40) NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
 'CREATE TABLE IF NOT EXISTS table_visits (id INT AUTO_INCREMENT PRIMARY KEY, table_id INT NOT NULL, opened_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME NULL, paid_by INT NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(paid_by) REFERENCES users(id), INDEX(table_id,paid_at))',
@@ -27,6 +28,7 @@ if (!query("SHOW COLUMNS FROM orders LIKE 'paid_at'")->fetch()) db()->exec('ALTE
 if (!query("SHOW COLUMNS FROM payment_events LIKE 'order_id'")->fetch()) db()->exec('ALTER TABLE payment_events ADD COLUMN order_id INT NULL');
 if (!query("SHOW COLUMNS FROM users LIKE 'last_view'")->fetch()) db()->exec('ALTER TABLE users ADD COLUMN last_seen DATETIME NULL, ADD COLUMN last_view VARCHAR(20) NULL');
 if (!query("SHOW COLUMNS FROM login_attempts LIKE 'updated_at'")->fetch()) db()->exec('ALTER TABLE login_attempts ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ADD INDEX(updated_at)');
+if (!query("SHOW COLUMNS FROM menu LIKE 'wishes'")->fetch()) db()->exec('ALTER TABLE menu ADD COLUMN wishes VARCHAR(500) NOT NULL DEFAULT ""');
 if (!query("SHOW COLUMNS FROM menu LIKE 'straw'")->fetch()) {db()->exec('ALTER TABLE menu ADD COLUMN straw BOOLEAN NOT NULL DEFAULT 0');query('UPDATE menu SET straw=1 WHERE category IN ("Softgetränke","Säfte","Saftschorlen")');}
 if (!query("SHOW COLUMNS FROM tickets LIKE 'origin'")->fetch()) db()->exec('ALTER TABLE tickets ADD COLUMN origin VARCHAR(20) NOT NULL DEFAULT "initial"');
 if (!query("SHOW COLUMNS FROM items LIKE 'cancelled_at'")->fetch()) db()->exec('ALTER TABLE items ADD COLUMN cancelled_at DATETIME NULL, ADD COLUMN cancelled_by INT NULL, ADD COLUMN cancellation_reason VARCHAR(300) NULL, ADD CONSTRAINT fk_items_cancelled_by FOREIGN KEY (cancelled_by) REFERENCES users(id)');
@@ -45,8 +47,19 @@ if (!query('SELECT id FROM menu LIMIT 1')->fetch()) {
  $menu = getenv('MENU_SEED')==='test'
   ? [['Hamburger mit Bacon','Speisen','kitchen',1590],['Schnitzel Wiener Art','Speisen','kitchen',1690],['Heimat Brotbrett','Vorspeisen','kitchen',750],['Karotten-Ingwersuppe','Vorspeisen','kitchen',550],['Heidjer Bauernknusper','Vorspeisen','kitchen',650],['Apfelschorle 0,3 l','Getränke','bar',350],['Pils 0,3 l','Getränke','bar',380],['Schnitzel mit Pommes','Kids','kitchen',850]]
   : require __DIR__.'/speisekarte.php';
- foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)',[$m[0],$m[1],$m[2],$m[3],$m[4]??0]);
+ foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price,straw,wishes) VALUES(?,?,?,?,?,?)',[$m[0],$m[1],$m[2],$m[3],$m[4]??0,$m[5]??'']);
 }
+// One-time data steps for existing databases, recorded in schema_migrations. Each step is idempotent.
+$steps=[
+ '2026-10-24-sonderwuensche-herbstkarte'=>function(){
+  if(getenv('MENU_SEED')==='test')return;
+  foreach(require __DIR__.'/speisekarte.php' as $p){
+   if(query('SELECT id FROM menu WHERE name=?',[$p[0]])->fetch())query('UPDATE menu SET wishes=? WHERE name=? AND wishes=""',[$p[5],$p[0]]);
+   elseif($p[1]==='Herbstkarte')query('INSERT INTO menu(name,category,station,price,straw,wishes) VALUES(?,?,?,?,?,?)',[$p[0],$p[1],$p[2],$p[3],$p[4],$p[5]]);
+  }
+ },
+];
+foreach($steps as $name=>$step){if(query('SELECT name FROM schema_migrations WHERE name=?',[$name])->fetch())continue;$step();query('INSERT INTO schema_migrations(name) VALUES(?)',[$name]);echo "Migration $name ausgeführt.\n";}
 // First run with the add-on table: link dips and extras as on the printed menu (dips to fries dishes, extras to burgers and loaded fries).
 if (!$hadAddons) {
  $kitchen=query('SELECT id,name,category FROM menu WHERE station="kitchen"')->fetchAll();
