@@ -72,3 +72,18 @@ Das Zurückschalten auf ein vorheriges Release setzt nur den Code zurück. Daten
 Bei Hetzner ist `public_html/app` das feste Webverzeichnis. Die Release-Dateien werden dorthin kopiert; `.htaccess` und `.htpasswd` bleiben erhalten. `api/config-path.php` gibt ausschließlich den absoluten Pfad der privaten INI-Datei zurück. Bootstrap lädt diese Datei, wenn `APP_CONFIG_FILE` nicht gesetzt ist. Der Locator ist serverabhängig, Git-ignoriert und enthält keine Zugangsdaten. Er muss bei späteren Uploads erhalten bleiben. Das automatische Release-Layout ist weiterhin für Installationen ohne Locator verfügbar.
 
 SSH verwendet Port **222**. SFTP auf Port 22 ist ein separater Zugang ohne Shell. Für SCP über den SSH-Zugang ebenfalls Port 222 verwenden. Admin-Zugangsdaten liegen nur lokal in `config/admin.ini`; nicht ins Release übernehmen.
+
+## Homepage (www.zumstimbeck.de)
+
+Die statische Homepage im Ordner `homepage/` ist nicht Teil des App-Pakets. Sie wird separat mit rsync über SSH (Port 222) hochgeladen:
+
+```sh
+sh deploy/homepage.sh          # Probelauf: listet nur, was übertragen würde
+sh deploy/homepage.sh --live   # überträgt wirklich
+```
+
+- Ziel ist `HOMEPAGE_DOCUMENT_ROOT` in `config/upload.ini` (absoluter Pfad, vorher in konsoleH prüfen). Ohne diesen Wert bricht das Skript ab.
+- Es wird nichts gelöscht (kein `--delete`). `app/`, `.htaccess`, `.htpasswd` und andere Dateien im Ziel bleiben erhalten; gleichnamige Homepage-Dateien werden ersetzt. Entfernte Homepage-Dateien bei Bedarf von Hand auf dem Server löschen.
+- `homepage/README.md` wird nicht hochgeladen.
+- Das SSH-Passwort fragt `ssh` ab. Bequemer und sicherer ist ein SSH-Schlüssel (`ssh-copy-id -p 222 <benutzer>@<host>`).
+- Nach dem Upload im Browser neu laden; bei alten Ständen den Cache leeren (Bilder und `style.css` werden vom Browser zwischengespeichert).

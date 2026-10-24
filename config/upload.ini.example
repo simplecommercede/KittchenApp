@@ -7,3 +7,7 @@ REMOTE_APP_ROOT = "EINTRAGEN"
 PUBLIC_URL = "https://app.zumstimbeck.de"
 ; Bei Hetzner verfügbare PHP-8.4-CLI bestimmen (nicht blind php verwenden).
 PHP_CLI = "EINTRAGEN"
+
+; Statische Homepage (Ordner homepage/) für www.zumstimbeck.de, Upload mit deploy/homepage.sh.
+; DocumentRoot der Domain in konsoleH prüfen (vermutlich public_html = /usr/www/users/<benutzer>).
+HOMEPAGE_DOCUMENT_ROOT = "EINTRAGEN"
