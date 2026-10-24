@@ -1,0 +1,9 @@
+; Nur Vorbereitung: kein Upload ohne Prüfung von Zugang und Zielverzeichnis.
+SSH_HOST = "dedi1693.your-server.de"
+SSH_PORT = "222"
+SSH_USER = "EINTRAGEN"
+; Absoluter Pfad außerhalb eines öffentlich erreichbaren Verzeichnisses.
+REMOTE_APP_ROOT = "EINTRAGEN"
+PUBLIC_URL = "https://app.zumstimbeck.de"
+; Bei Hetzner verfügbare PHP-8.4-CLI bestimmen (nicht blind php verwenden).
+PHP_CLI = "EINTRAGEN"

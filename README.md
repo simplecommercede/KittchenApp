@@ -2,7 +2,7 @@
 
 Für die Weiterentwicklung mit einer anderen Person oder KI zuerst [UEBERGABE.md](UEBERGABE.md) lesen; Abschnitt 0 dort zeigt den aktuellen Stand und die offenen Punkte.
 
-Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, MariaDB 11.4. Keine externen Backenddienste. Die Speisekarte stammt aus `speisekarte/Zum Stimbeck - Speisekarte.pdf` (Stand 07.09.2026) plus der Herbstkarte (gültig bis 22.11.2026) und wird bei leerer Datenbank aus [api/speisekarte.php](api/speisekarte.php) eingespielt.
+Lokal testbare erste Version: React/TypeScript SPA, PHP 8.4 API, lokal MariaDB 11.4 oder PostgreSQL 16. Live ist PostgreSQL vorgesehen. Keine externen Backenddienste. Die Speisekarte stammt aus `speisekarte/Zum Stimbeck - Speisekarte.pdf` (Stand 07.09.2026) plus der Herbstkarte (gültig bis 22.11.2026) und wird bei leerer Datenbank aus [api/speisekarte.php](api/speisekarte.php) eingespielt.
 
 ## Start mit Docker
 
@@ -95,7 +95,13 @@ API-Routing über `/api/index.php?action=...` benötigt keine Rewrite-Regeln. Sc
 
 ## Hetzner Managed Server
 
-Frontend mit `npm ci && npm run build` erzeugen. Inhalt von `dist/` sowie das Verzeichnis `api/` in das Document Root der eigenen Subdomain laden. PHP 8.4 mit PDO MySQL vorausgesetzt. DB_HOST, DB_NAME, DB_USER, DB_PASSWORD und APP_ENV=production sicher in der Serverumgebung setzen. Migration per PHP-CLI ausführen; sie spielt bei leerer Tabelle die Speisekarte ein. Bei production werden keine Demo-Benutzer und Tische erzeugt und Session-Cookies erfordern HTTPS. Vor echtem Einsatz den initialen Administrator per `ADMIN_USERNAME` und `ADMIN_PASSWORD` in der CLI-Umgebung mit `php api/create-admin.php` anlegen; die öffentliche Registrierung ist bewusst nicht vorhanden. Automatisierte Backups müssen am Hosting eingerichtet werden.
+Ziel ist **https://app.zumstimbeck.de** mit PHP 8.4 und PostgreSQL. Die private Konfiguration wird außerhalb des Webroots aus `shared/app.ini` geladen; vorhandene Prozessvariablen haben Vorrang. Details, Voraussetzungen und Upload-Ablauf stehen in [deploy/README.md](deploy/README.md).
+
+1. `config/live.ini.example` nach `config/live.ini` kopieren und DB-Daten eintragen.
+2. `config/upload.ini.example` nach `config/upload.ini` kopieren und SSH-Benutzer, App-Stammpfad und PHP-CLI-Pfad eintragen.
+3. `sh deploy/build.sh` erstellt ein lokales Upload-Paket inklusive PHP-Abhängigkeiten, ohne Upload.
+
+Die privaten `.ini`-Dateien werden weder eingecheckt noch ins Docker-Image gepackt. Docker bleibt zum Entwickeln bestehen. Für einen separaten PostgreSQL-Stack siehe [deploy/README.md](deploy/README.md); Tests gegen beide Datenbanken: `sh tests/run.sh mysql` und `sh tests/run.sh pgsql`. Für Live müssen Migration, Adminanlage, HTTPS und Backups eingerichtet werden. Eine automatische Übernahme lokaler Testdaten findet nicht statt.
 
 ## Umfang dieser ersten Version
 
@@ -137,4 +143,4 @@ docker compose --profile tools run --build --rm quality
 sh tests/run.sh
 ```
 
-Bei Deployment ohne Composer auf dem Server zuvor `composer install --no-dev --optimize-autoloader` in einer separaten Buildkopie ausführen und **api/vendor/** mit ausliefern. Die CLI-Migration benötigt ebenfalls den Autoloader. PHP benötigt PDO MySQL und mbstring. Docker erstellt den Produktions-Autoloader automatisch; Entwicklungstools sind nur im separaten `quality`-Target enthalten.
+Bei Deployment ohne Composer auf dem Server zuvor `composer install --no-dev --optimize-autoloader` in einer separaten Buildkopie ausführen und **api/vendor/** mit ausliefern. Die CLI-Migration benötigt ebenfalls den Autoloader. PHP benötigt PDO mit dem gewählten Treiber (`pdo_pgsql` für Live bzw. `pdo_mysql` für MariaDB) und mbstring. Docker erstellt den Produktions-Autoloader automatisch; Entwicklungstools sind nur im separaten `quality`-Target enthalten.
