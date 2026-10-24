@@ -1,18 +1,18 @@
 # Homepage Zum Stimbeck
 
-Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfonts, keine eingebettete Karte, keine Cookies). Der Ordner kann so, wie er ist, auf jeden Webspace geladen werden.
+Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfonts, keine eingebettete Google-Karte, keine Cookies). Der Ordner kann so, wie er ist, auf jeden Webspace geladen werden.
 
 | Datei | Inhalt |
 | --- | --- |
-| `index.html` | Startseite: Hero-Slider, Das Haus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt |
+| `index.html` | Startseite: Willkommensbereich, Das Haus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt mit Karte |
 | `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
 | `impressum.html` | Impressum (Entwurf) |
 | `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1440 px Desktop |
 | `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Speisekarten-Ansicht mit Großansicht |
-| `slider.js` | Slider: 7 s Autoplay mit Fortschrittsbalken, Pfeile, Punkte, Pfeiltasten, Wischen; pausiert bei Maus/Fokus und bei reduzierter Bewegung |
 | `karte/` | Erzeugte Seitenbilder und `karten.js`; nicht von Hand bearbeiten |
+| `img/anfahrt-karte.jpg` | Kartenausschnitt aus OpenStreetMap (Zoom 14, 1600 × 900 px), Standort bei 60 % / 40 % |
 
-Der Hero zeigt eine gezeichnete Heidelandschaft (SVG). Jede Folie hat eine eigene Stimmung (Abend, Herbst, Nacht), die über `data-mood` und die Farbvariablen in `style.css` gesteuert wird.
+Der Willkommensbereich zeigt eine gezeichnete Heidelandschaft (SVG); die Farben stehen als Variablen unter `.hero` in `style.css`.
 
 Lokal ansehen:
 
@@ -37,12 +37,19 @@ swift scripts/homepage-karte.swift "Speisekarte=speisekarte/Zum Stimbeck - Speis
 - Jeder Aufruf erzeugt `homepage/karte/` komplett neu: Seitenbilder (JPG, 1400 px breit) und `karten.js`. Danach den Ordner `homepage/` hochladen.
 - Der erste Lauf dauert gut eine Minute, weil Swift das Skript übersetzt.
 - Auf der Seite: Wischen oder Pfeile zum Blättern, Seitenzahlen zum Springen, Antippen öffnet die Großansicht mit Blättern. Es gibt keinen Download-Link; Rechtsklick und langes Tippen auf die Bilder sind gesperrt. Ganz verhindern lässt sich das Speichern von Bildern im Web nicht (z. B. per Bildschirmfoto).
-- Die Herbstkarte auf `speisekarte.html` (`#herbst`) steht fest im HTML und stammt aus `api/speisekarte.php`. Nach dem 22.11.2026 den Abschnitt entfernen und die zweite Slider-Folie sowie den Hinweistext auf der Startseite anpassen.
+- Die Herbstkarte auf `speisekarte.html` (`#herbst`) steht fest im HTML und stammt aus `api/speisekarte.php`. Nach dem 22.11.2026 den Abschnitt entfernen und den Hinweistext „Schnitzel, Burger & Herbstkarte“ auf der Startseite anpassen.
+
+## Karte in der Anfahrt
+
+Die Karte ist ein fest gespeichertes Bild aus OpenStreetMap, keine eingebettete Google-Karte. Die Seite lädt dadurch nichts von Google oder OpenStreetMap. Erst ein Klick auf die Karte öffnet Google Maps in einem neuen Tab (Suche nach „Zum Stimbeck, Am Lütten Stimbeck 4, 29646 Bispingen“). Der Hinweis „Kartendaten © OpenStreetMap-Mitwirkende“ unter der Karte ist Pflicht und muss stehen bleiben.
+
+- Das Bild zeigt am Handy und am Laptop jeweils einen Ausschnitt in Originalgröße um den Standort (`object-fit: none`), damit Straßennamen lesbar bleiben. Der Pin sitzt per CSS bei 60 % / 40 %, genau dort liegt die Adresse im Bild (Koordinaten laut OpenStreetMap: 53.10524, 10.05680).
+- Ein neues Bild muss den Standort wieder bei 60 % / 40 % haben, sonst `.map-marker` und `object-position` in `style.css` anpassen.
 
 ## Vor der Veröffentlichung
 
 - Kontaktdaten und Öffnungszeiten stammen vom Eintrag auf bispingen.de (abgerufen 24.10.2026) und sind mit dem Betreiber abzugleichen. Die Öffnungszeiten stehen auch in `site.js` (`OPEN_DAYS`, `OPEN_FROM`, `OPEN_TO`).
 - Im Impressum die gelb markierten Stellen klären: Inhaber und Rechtsform, Umsatzsteuer-ID, inhaltlich Verantwortlicher.
 - Eine Datenschutzerklärung fehlt noch. Sie ist auch ohne Cookies nötig (Server-Logs beim Hoster) und sollte vom Betreiber bzw. mit einem Generator erstellt werden.
-- Die Lageskizze ist schematisch (Lage laut OpenStreetMap: etwa 4 km nordöstlich vom Ortskern Bispingen). Die Anfahrtsbeschreibung mit Ortskenntnis präzisieren.
+- Die Anfahrtsbeschreibung ist aus der Karte abgelesen (A7, Anschlussstelle 43 Bispingen, über Hützel und K 4). Mit Ortskenntnis prüfen.
 - Auf der Seite sind keine Fotos. Wer echte Bilder möchte, kann im Hero hinter der Landschaft ein Foto ergänzen.

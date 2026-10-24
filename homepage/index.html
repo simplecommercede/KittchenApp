@@ -36,7 +36,7 @@
   </header>
 
   <main id="top">
-    <section class="hero" data-mood="1" aria-roledescription="Karussell" aria-label="Willkommen im Zum Stimbeck" tabindex="0">
+    <section class="hero" aria-label="Willkommen im Zum Stimbeck">
       <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
@@ -88,50 +88,15 @@
       </svg>
       <div class="hero-shade" aria-hidden="true"></div>
 
-      <div class="slides">
-        <div class="slide is-active" aria-roledescription="Folie">
-          <div class="wrap slide-content">
-            <p class="status" data-status hidden><span class="status-dot"></span><span data-status-text></span></p>
-            <p class="eyebrow">Gaststätte in der Lüneburger Heide</p>
-            <h1>Willkommen im<br><em>Zum Stimbeck</em></h1>
-            <p class="slide-text">Bodenständige Küche, freundliche Bedienung und eine heimelige Stube in Steinbeck an der Luhe.</p>
-            <div class="slide-actions">
-              <a class="btn btn-amber" href="speisekarte.html">Zur Speisekarte</a>
-              <a class="btn btn-light" href="#zeiten">Öffnungszeiten</a>
-            </div>
-          </div>
+      <div class="wrap hero-content">
+        <p class="status" data-status hidden><span class="status-dot"></span><span data-status-text></span></p>
+        <p class="eyebrow">Gaststätte in der Lüneburger Heide</p>
+        <h1>Willkommen im<br><em>Zum Stimbeck</em></h1>
+        <p class="hero-text">Bodenständige Küche, freundliche Bedienung und eine heimelige Stube in Steinbeck an der Luhe.</p>
+        <div class="hero-actions">
+          <a class="btn btn-amber" href="speisekarte.html">Zur Speisekarte</a>
+          <a class="btn btn-light" href="#anfahrt">Anfahrt</a>
         </div>
-        <div class="slide" aria-roledescription="Folie">
-          <div class="wrap slide-content">
-            <p class="eyebrow">Saisonal · bis 22. November</p>
-            <h2>Die <em>Herbstkarte</em> ist da</h2>
-            <p class="slide-text">Kürbiscremesuppe, Schnitzel mit Pfifferlingen und Hokkaido-Crème-brûlée: Jetzt kommt der Herbst auf den Teller.</p>
-            <div class="slide-actions">
-              <a class="btn btn-amber" href="speisekarte.html#herbst">Herbstgerichte ansehen</a>
-            </div>
-          </div>
-        </div>
-        <div class="slide" aria-roledescription="Folie">
-          <div class="wrap slide-content">
-            <p class="eyebrow">Einkehren nach dem Heidetag</p>
-            <h2>Gemütlich <em>ankommen</em></h2>
-            <p class="slide-text">Nach der Wanderung, mit der Familie oder zum Feierabend: Bei uns ist ein Platz für Sie frei.</p>
-            <div class="slide-actions">
-              <a class="btn btn-amber" href="#anfahrt">So finden Sie uns</a>
-              <a class="btn btn-light" href="#zeiten">Öffnungszeiten</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-controls">
-        <button class="hero-arrow prev" type="button" aria-label="Vorheriges Bild">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-        </button>
-        <div class="dots"></div>
-        <button class="hero-arrow next" type="button" aria-label="Nächstes Bild">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
       </div>
       <a class="scroll-hint" href="#inhalt" aria-label="Weiter nach unten">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -229,32 +194,16 @@
 
     <section id="anfahrt" class="section directions">
       <div class="wrap directions-grid">
-        <div class="map reveal" role="img" aria-label="Lageskizze: Steinbeck an der Luhe liegt etwa 4 Kilometer nordöstlich des Ortskerns von Bispingen">
-          <svg viewBox="0 0 520 420" aria-hidden="true" focusable="false">
-            <rect width="520" height="420" rx="18" class="map-bg"/>
-            <path class="map-forest" d="M30 40 q40 -20 90 0 t80 30 q10 40 -30 60 t-110 10 q-40 -30 -30 -100z"/>
-            <path class="map-forest" d="M380 290 q50 -30 100 0 t10 70 q-40 40 -90 30 t-20 -100z"/>
-            <path class="map-heath" d="M60 200 q50 -20 90 10 t10 70 q-50 20 -90 0 t-10 -80z"/>
-            <path class="map-river" d="M120 410 C 140 360 170 320 220 280 S 300 220 330 170 S 380 80 420 0"/>
-            <path class="map-road" d="M20 330 C 60 330 90 330 120 330 S 230 260 330 170 S 450 110 510 90"/>
-            <path class="map-road map-small" d="M120 330 C 120 370 110 400 100 420"/>
-            <path class="map-road map-small" d="M120 330 C 90 300 60 270 0 250"/>
-            <circle class="map-town" cx="120" cy="330" r="10"/>
-            <text class="map-label" x="140" y="365">Bispingen</text>
-            <text class="map-label map-river-label" x="250" y="300">Luhe</text>
-            <text class="map-label map-dist" x="200" y="230">ca. 4 km</text>
-            <g class="map-pin" transform="translate(330 170)">
-              <circle r="30" class="map-pin-pulse"/>
-              <path d="M0 0 C -14 -18 -20 -26 -20 -36 a20 20 0 0 1 40 0 c0 10 -6 18 -20 36z"/>
-              <circle cy="-36" r="7" class="map-pin-dot"/>
-            </g>
-            <g class="map-tag" transform="translate(255 60)">
-              <rect width="150" height="40" rx="20"/>
-              <text x="75" y="26">Zum Stimbeck</text>
-            </g>
-            <g class="map-north" transform="translate(470 370)"><path d="M0 -22 L8 6 L0 0 L-8 6 Z"/><text y="22">N</text></g>
-          </svg>
-          <p class="map-caption">Lageskizze, nicht maßstabsgetreu</p>
+        <div class="map reveal">
+          <a class="map-real" href="https://www.google.com/maps/search/?api=1&amp;query=Zum+Stimbeck%2C+Am+L%C3%BCtten+Stimbeck+4%2C+29646+Bispingen" target="_blank" rel="noopener" aria-label="Lage von Zum Stimbeck in Google Maps öffnen (neues Fenster)">
+            <img src="img/anfahrt-karte.jpg" width="1600" height="900" loading="lazy" alt="Karte: Zum Stimbeck in Steinbeck (Luhe), nordöstlich von Bispingen">
+            <span class="map-marker" aria-hidden="true"><span class="map-pin"></span><span class="map-marker-label">Zum Stimbeck</span></span>
+            <span class="map-open" aria-hidden="true">
+              In Google Maps öffnen
+              <svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>
+            </span>
+          </a>
+          <p class="map-caption">Kartendaten © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap-Mitwirkende</a></p>
         </div>
         <div class="directions-text reveal">
           <p class="kicker">Anfahrt</p>
@@ -265,15 +214,15 @@
             29646 Bispingen – Steinbeck (Luhe)
           </address>
           <ol class="steps">
-            <li><span>1</span>Über die A7 bis zur Anschlussstelle Bispingen.</li>
-            <li><span>2</span>Der Beschilderung nach Steinbeck folgen. Der Ort liegt etwa 4 km nordöstlich vom Ortskern Bispingen.</li>
+            <li><span>1</span>Über die A7 bis zur Anschlussstelle 43 Bispingen.</li>
+            <li><span>2</span>Durch Bispingen Richtung Hützel und weiter auf der K 4 nach Steinbeck (Luhe), etwa 4 km nordöstlich vom Ortskern.</li>
             <li><span>3</span>Fürs Navi: Am Lütten Stimbeck 4, 29646 Bispingen.</li>
           </ol>
           <div class="btn-row">
             <a class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=Am+L%C3%BCtten+Stimbeck+4,+29646+Bispingen" target="_blank" rel="noopener">Route mit Google Maps</a>
             <a class="btn btn-outline" href="https://www.openstreetmap.org/search?query=Am%20L%C3%BCtten%20Stimbeck%204%2C%2029646%20Bispingen" target="_blank" rel="noopener">OpenStreetMap</a>
           </div>
-          <p class="note">Die Karte öffnet sich beim jeweiligen Anbieter. Auf dieser Seite ist keine Karte eingebettet.</p>
+          <p class="note">Ein Klick auf die Karte öffnet Google Maps. Erst dann werden Daten an Google übertragen.</p>
         </div>
       </div>
     </section>
@@ -306,6 +255,5 @@
   </footer>
 
   <script src="site.js"></script>
-  <script src="slider.js"></script>
 </body>
 </html>
