@@ -434,6 +434,8 @@ a.fact:hover strong { color: var(--amber-soft); }
 /* ---------- Einblenden beim Scrollen ---------- */
 .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
 .js .reveal.is-visible { opacity: 1; transform: none; }
+/* Sprungziele, die selbst einblenden: Verschiebung beim Anspringen ausgleichen */
+.reveal[id] { scroll-margin-top: 24px; }
 .js .menu-card-season.reveal.is-visible { transform: none; }
 
 /* ---------- Tablet ab 640px ---------- */
