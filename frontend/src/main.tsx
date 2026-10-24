@@ -6,10 +6,10 @@ type Role='admin'|'service'|'kitchen'|'bar';
 type User={id:number;name:string;username:string;roles:Role[]};
 type StaffUser=User&{active:number};
 type StaffEdit={id:number;name:string;username:string;roles:Role[]};
-type MenuEdit={id:number;name:string;category:string;price:string;addons:number[]};
+type MenuEdit={id:number;name:string;category:string;price:string;addons:number[];wishes:string};
 type SizeEdit={id?:number;volume:string;price:string;active:boolean};
 type DrinkEdit={key:string;name:string;category:string;straw:boolean;sizes:SizeEdit[]};
-type Dish={id:number;name:string;category:string;station:string;price:number;active:number;straw:number;addons?:number[]};
+type Dish={id:number;name:string;category:string;station:string;price:number;active:number;straw:number;addons?:number[];wishes?:string};
 type DiningTable={id:number;name:string;active:number};
 type TableStatus={visit_id:number;table_id:number;table_name:string;opened_at:string;pending_count:number;ready_count:number;food_count:number;food_pending:number;food_waiting_since:string|null;waiting_since:string|null;unpaid_since:string|null;payment_due:boolean};
 type ServiceMode='overview'|'order'|'payment';
@@ -184,6 +184,8 @@ function App(){
  const cartCount=cart.reduce((sum,l)=>sum+l.quantity,0);
  const cartTotal=cart.reduce((sum,l)=>sum+l.quantity*Number(menu.find(m=>Number(m.id)===l.menu_id)?.price||0),0);
  const sendBlocked=busy||!online||!cart.length||unavailableLines.length>0||cart.some(l=>!Number.isInteger(l.quantity)||l.quantity<1||l.quantity>50);
+ // Quick wishes come from the product itself: straw for children's drinks, the dish's own list for food; dips and extras have none.
+ const quickWishes=(m?:Dish)=>!m?[]:m.station==='bar'?(Number(m.straw)===1?['Mit Strohhalm']:[]):(m.wishes||'').split(',').map(w=>w.trim()).filter(Boolean);
  const activeAddons=(m:Dish)=>(m.addons||[]).map(id=>menu.find(p=>Number(p.id)===Number(id))).filter((p):p is Dish=>!!p&&Number(p.active)===1);
  function addLines(entries:{product:Dish;note:string}[]){const before=cart;const next=[...cart];for(const {product,note:lineNote} of entries){const index=next.findIndex(l=>l.menu_id===Number(product.id)&&l.note===lineNote);if(index>=0&&next[index].quantity<50)next[index]={...next[index],quantity:next[index].quantity+1};else next.push({menu_id:Number(product.id),name:product.name,quantity:1,note:lineNote});}draft(next);const main=entries[0].product;const total=next.filter(l=>l.menu_id===Number(main.id)).reduce((sum,l)=>sum+l.quantity,0);setAdded({text:main.name+' hinzugefügt'+(entries.length>1?' + '+(entries.length-1)+(entries.length===2?' Extra':' Extras'):'')+' · jetzt '+total+'× im Entwurf',undo:before,id:Date.now()});}
  async function sendOrder(){if(!selectedTable)return;const tableName=selectedTable.name;await run(async()=>{const placed=await api('order',{request_key:key,table_id:table,note,items:cart});draft([],table,'');setEditingDraftIndex(null);setAdded(null);setServiceMode('overview');setMessage('Bestellung '+orderNumber(Number(placed.id))+' für '+tableName+' gesendet.');await refresh();});}
@@ -250,7 +252,7 @@ function App(){
      </div>}
      <div className="row"><button type="button" disabled={busy} className="ghost" aria-label={'Weniger '+l.name} onClick={()=>l.quantity>1?updateDraftLine(i,{quantity:l.quantity-1}):removeDraftLine(i)}>−</button><span>{l.quantity}</span><button type="button" disabled={busy||l.quantity>=50||unavailable} className="ghost" aria-label={'Mehr '+l.name} onClick={()=>updateDraftLine(i,{quantity:l.quantity+1})}>＋</button></div>
      <input disabled={busy} aria-label={'Sonderwunsch '+l.name} maxLength={200} placeholder="Sonderwunsch …" value={l.note} onChange={e=>updateDraftLine(i,{note:e.target.value})}/>
-     {(product?.station!=='bar'||Number(product.straw)===1)&&<div className="chips">{(product?.station==='bar'?['Mit Strohhalm']:['Ohne Tomate','Extra Gurke','Sauce separat']).map(s=><button type="button" disabled={busy} className={l.note.split(' · ').includes(s)?'':'ghost'} aria-pressed={l.note.split(' · ').includes(s)} key={s} onClick={()=>updateDraftLine(i,{note:l.note.includes(s)?l.note.split(' · ').filter(n=>n!==s).join(' · '):[l.note,s].filter(Boolean).join(' · ')})}>{s}</button>)}</div>}
+     {quickWishes(product).length>0&&<div className="chips">{quickWishes(product).map(s=><button type="button" disabled={busy} className={l.note.split(' · ').includes(s)?'':'ghost'} aria-pressed={l.note.split(' · ').includes(s)} key={s} onClick={()=>updateDraftLine(i,{note:l.note.includes(s)?l.note.split(' · ').filter(n=>n!==s).join(' · '):[l.note,s].filter(Boolean).join(' · ')})}>{s}</button>)}</div>}
     </div>;
    })}
    <textarea disabled={busy} placeholder="Notiz für Küche oder Tresen …" aria-label="Bestellnotiz" maxLength={300} value={note} onChange={e=>draft(cart,table,e.target.value)}/>
@@ -293,12 +295,13 @@ function App(){
    {drinkEdit?.key==='new'?drinkForm(drinkEdit):<button type="button" disabled={busy} onClick={()=>setDrinkEdit({key:'new',name:'',category:'',straw:false,sizes:[{volume:'',price:'',active:true}]})}>Neues Getränk anlegen</button>}
    </>:<>
    {menu.filter(m=>m.station==='kitchen').sort(byNameAndSize).map(m=><div className="staff-record" key={m.id}>
-    <div className="admin-entry"><div><b>{m.name}</b><small>{money(Number(m.price))} · {m.category}{m.addons?.length?' · '+m.addons.length+' zubuchbar':''} · {Number(m.active)===1?'Verfügbar':'Nicht verfügbar'}</small></div><div className="staff-actions"><button type="button" className="ghost" disabled={busy} onClick={()=>setMenuEdit({id:Number(m.id),name:m.name,category:m.category,price:(Number(m.price)/100).toFixed(2),addons:(m.addons||[]).map(Number)})}>Bearbeiten</button><button type="button" className={Number(m.active)===1?'ghost':''} disabled={busy} onClick={()=>run(async()=>{await api('admin_menu_status',{id:Number(m.id),active:Number(m.active)!==1});await catalog();setMessage('Produktstatus aktualisiert.');})}>{Number(m.active)===1?'Deaktivieren':'Aktivieren'}</button></div></div>
-    {menuEdit?.id===Number(m.id)&&<form className="staff-edit" onSubmit={e=>{e.preventDefault();const edit=menuEdit;run(async()=>{await api('admin_menu',{id:edit.id,name:edit.name,category:edit.category,station:'kitchen',price:Math.round(Number(edit.price)*100),addons:edit.addons});await catalog();setMenuEdit(null);setMessage('Gericht gespeichert. Bereits gesendete Bestellungen behalten Name und Preis.');});}}>
+    <div className="admin-entry"><div><b>{m.name}</b><small>{money(Number(m.price))} · {m.category}{m.addons?.length?' · '+m.addons.length+' zubuchbar':''}{m.wishes?' · '+m.wishes.split(',').length+' Sonderwünsche':''} · {Number(m.active)===1?'Verfügbar':'Nicht verfügbar'}</small></div><div className="staff-actions"><button type="button" className="ghost" disabled={busy} onClick={()=>setMenuEdit({id:Number(m.id),name:m.name,category:m.category,price:(Number(m.price)/100).toFixed(2),addons:(m.addons||[]).map(Number),wishes:m.wishes||''})}>Bearbeiten</button><button type="button" className={Number(m.active)===1?'ghost':''} disabled={busy} onClick={()=>run(async()=>{await api('admin_menu_status',{id:Number(m.id),active:Number(m.active)!==1});await catalog();setMessage('Produktstatus aktualisiert.');})}>{Number(m.active)===1?'Deaktivieren':'Aktivieren'}</button></div></div>
+    {menuEdit?.id===Number(m.id)&&<form className="staff-edit" onSubmit={e=>{e.preventDefault();const edit=menuEdit;run(async()=>{await api('admin_menu',{id:edit.id,name:edit.name,category:edit.category,station:'kitchen',price:Math.round(Number(edit.price)*100),addons:edit.addons,wishes:edit.wishes});await catalog();setMenuEdit(null);setMessage('Gericht gespeichert. Bereits gesendete Bestellungen behalten Name und Preis.');});}}>
      <strong>{m.name} bearbeiten</strong>
      <label>Name<input required maxLength={120} value={menuEdit.name} onChange={e=>setMenuEdit({...menuEdit,name:e.target.value})}/></label>
      <label>Preis in Euro<input required type="number" min="0" step="0.01" value={menuEdit.price} onChange={e=>setMenuEdit({...menuEdit,price:e.target.value})}/></label>
      <label>Kategorie<input required maxLength={40} list="categories-kitchen" value={menuEdit.category} onChange={e=>setMenuEdit({...menuEdit,category:e.target.value})}/></label>
+     <label>Schnellwahl-Sonderwünsche (durch Komma getrennt)<input maxLength={500} value={menuEdit.wishes} placeholder="z. B. Ohne Tomate, Veganes Patty" onChange={e=>setMenuEdit({...menuEdit,wishes:e.target.value})}/></label>
      <details className="addon-admin"><summary>Zubuchbar beim Bestellen (Beilagen, Dips, Extras): {menuEdit.addons.length} ausgewählt</summary>{menu.filter(p=>p.station==='kitchen'&&Number(p.id)!==menuEdit.id).sort(byNameAndSize).map(p=><label className="check" key={p.id}><input type="checkbox" checked={menuEdit.addons.includes(Number(p.id))} onChange={e=>setMenuEdit({...menuEdit,addons:e.target.checked?[...menuEdit.addons,Number(p.id)]:menuEdit.addons.filter(x=>x!==Number(p.id))})}/>{p.name} · {money(Number(p.price))}</label>)}</details>
      <div className="row"><button type="button" className="ghost" disabled={busy} onClick={()=>setMenuEdit(null)}>Abbrechen</button><button type="submit" disabled={busy}>Änderungen speichern</button></div>
     </form>}
