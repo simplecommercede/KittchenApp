@@ -60,6 +60,7 @@ final class Kernel
                 'table_paid' => new \Kitchen\Service\PaymentService($database, new \Kitchen\Repository\PaymentRepository($database)),
                 'order_paid' => new \Kitchen\Service\PaymentService($database, new \Kitchen\Repository\PaymentRepository($database)),
                 'payment_reverse' => new \Kitchen\Service\PaymentService($database, new \Kitchen\Repository\PaymentRepository($database)),
+                'service_calls', 'service_call', 'service_call_ack', 'service_call_cancel' => new \Kitchen\Service\ServiceCallService($database, new \Kitchen\Repository\ServiceCallRepository($database)),
                 'admin_users' => new \Kitchen\Service\AdminService($database, new \Kitchen\Repository\AdminRepository($database)),
                 'admin_user' => new \Kitchen\Service\AdminService($database, new \Kitchen\Repository\AdminRepository($database)),
                 'admin_user_update' => new \Kitchen\Service\AdminService($database, new \Kitchen\Repository\AdminRepository($database)),

@@ -548,6 +548,25 @@ class Workflow(unittest.TestCase):
         self.assertEqual((bill['total'],bill['can_pay']),(1050,True))
         self.assertEqual(self.service.call('table_paid',{'visit_id':bill['visit_id'],'expected_total':1050})[0],200)
         self.assertEqual(self.admin.call('admin_table_status',{'id':table_id,'active':False})[0],200)
+    def test_25_kitchen_calls_service(self):
+        visible=lambda client:[c for c in client.call('service_calls')[1] if c['station']=='kitchen']
+        self.assertEqual(self.service.call('service_call',{'station':'kitchen','note':'x'})[0],403)
+        self.assertEqual(self.bar.call('service_call',{'station':'kitchen','note':'x'})[0],403)
+        code,call=self.kitchen.call('service_call',{'station':'kitchen','note':'Bitte in die Küche'});self.assertEqual(code,201,call)
+        code,again=self.kitchen.call('service_call',{'station':'kitchen','note':'Essen abholen'})
+        self.assertEqual((code,again['id'],again['duplicate']),(200,call['id'],True))
+        self.assertEqual([(c['id'],c['note'],c['acknowledged_at']) for c in visible(self.service)],[(call['id'],'Essen abholen',None)])
+        self.assertEqual([c['id'] for c in visible(self.kitchen)],[call['id']])
+        self.assertEqual(visible(self.bar),[])
+        self.assertEqual(self.bar.call('service_call_ack',{'id':call['id']})[0],403)
+        self.assertEqual(self.service.call('service_call_ack',{'id':call['id']})[0],200)
+        self.assertTrue(self.service.call('service_call_ack',{'id':call['id']})[1]['duplicate'])
+        self.assertEqual(self.kitchen.call('service_call_cancel',{'id':call['id']})[0],409)
+        self.assertEqual(visible(self.kitchen)[0]['acknowledged_by'],'Mia')
+        code,second=self.kitchen.call('service_call',{'station':'kitchen','note':'Rückfrage zur Bestellung'});self.assertEqual(code,201,second)
+        self.assertEqual(self.kitchen.call('service_call_cancel',{'id':second['id']})[0],200)
+        self.assertNotIn(second['id'],[c['id'] for c in visible(self.service)])
+        self.assertEqual(self.service.call('service_call_ack',{'id':second['id']})[0],409)
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')
