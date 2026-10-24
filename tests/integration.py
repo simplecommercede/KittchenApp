@@ -567,6 +567,26 @@ class Workflow(unittest.TestCase):
         self.assertEqual(self.kitchen.call('service_call_cancel',{'id':second['id']})[0],200)
         self.assertNotIn(second['id'],[c['id'] for c in visible(self.service)])
         self.assertEqual(self.service.call('service_call_ack',{'id':second['id']})[0],409)
+    def test_26_dish_addons(self):
+        base={'id':1,'name':'Hamburger mit Bacon','category':'Speisen','station':'kitchen','price':1590}
+        addons=lambda:{int(m['id']):[int(x) for x in m['addons']] for m in self.service.call('menu')[1]}
+        try:
+            self.assertEqual(self.admin.call('admin_menu',{**base,'addons':[3,4]})[0],200)
+            self.assertEqual(addons()[1],[3,4])
+            self.assertEqual(self.admin.call('admin_menu',{**base,'addons':[6]})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',{**base,'addons':[1]})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',{**base,'addons':[999999]})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',{'id':6,'name':'Apfelschorle','category':'Getränke','station':'bar','price':350,'volume_ml':300,'addons':[3]})[0],400)
+            self.assertEqual(self.admin.call('admin_menu',base)[0],200)
+            self.assertEqual(addons()[1],[3,4])
+            code,created=self.admin.call('admin_menu',{'name':'Testteller '+uuid.uuid4().hex[:6],'category':'Tests','station':'kitchen','price':900,'addons':[4]})
+            self.assertEqual(code,200,created);self.assertEqual(addons()[created['id']],[4])
+            # Add-ons are ordered as normal positions with their own price.
+            code,order=self.service.call('order',{'request_key':str(uuid.uuid4()),'table_id':7,'items':[{'menu_id':1,'quantity':1,'note':''},{'menu_id':3,'quantity':1,'note':'zu Hamburger mit Bacon'}]})
+            self.assertEqual(code,201,order)
+        finally:
+            self.admin.call('admin_menu',{**base,'addons':[]})
+        self.assertEqual(addons()[1],[])
 def in_app(code,env=None,require_db=True):
     """Run PHP inside the local app container; skipped when the Docker stack is not available."""
     if urllib.parse.urlparse(TEST_URL).hostname not in ('127.0.0.1','localhost') or not shutil.which('docker'): raise unittest.SkipTest('Nur gegen den lokalen Docker-Teststack.')

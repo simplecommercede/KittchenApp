@@ -56,6 +56,24 @@ final class AdminRepository extends Repository
         return $this->execute('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)', [$name,$cat,$station,$price,$straw ? 1 : 0]);
     }
 
+    public function lastInsertId(): int
+    {
+        return (int)$this->database->connection()->lastInsertId();
+    }
+
+    public function findKitchenProducts(array $ids): \PDOStatement
+    {
+        return $this->execute('SELECT id FROM menu WHERE station="kitchen" AND id IN ('.implode(',', array_fill(0, count($ids), '?')).')', $ids);
+    }
+
+    public function replaceAddons(int $menuId, array $addonIds): void
+    {
+        $this->execute('DELETE FROM menu_addons WHERE menu_id=?', [$menuId]);
+        foreach ($addonIds as $addonId) {
+            $this->execute('INSERT INTO menu_addons(menu_id,addon_id) VALUES(?,?)', [$menuId,$addonId]);
+        }
+    }
+
     public function findMenu2(mixed $id): \PDOStatement
     {
         return $this->execute('SELECT id FROM menu WHERE id=?', [$id]);

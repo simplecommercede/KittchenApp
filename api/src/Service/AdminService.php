@@ -126,7 +126,19 @@ final class AdminService
                     fail('Name ist zu lang.');
                 }$straw = ($body['straw'] ?? false) === true;
             }
+            // Optional add-ons (sides, dips, extras) are other kitchen products; omitted key keeps the current links.
+            $addons = null;
+            if (array_key_exists('addons', $body)) {
+                if ($station !== 'kitchen' || !is_array($body['addons']) || count($body['addons']) > 30) {
+                    fail('Zubuchbares nur für Speisen angeben.');
+                }
+                $addons = array_values(array_unique(array_map(fn ($addon) => positive($addon), $body['addons'])));
+                if ($addons && count($this->repository->findKitchenProducts($addons)->fetchAll()) !== count($addons)) {
+                    fail('Zubuchbares muss aus vorhandenen Speisen bestehen.');
+                }
+            }
             $id = $body['id'] ?? null;
+            $this->database->connection()->beginTransaction();
             if ($id) {
                 positive($id);
                 if (!$this->repository->findMenu($id)->fetch()) {
@@ -134,7 +146,16 @@ final class AdminService
                 }$this->repository->updateMenu($name, $cat, $station, $price, $straw, $id);
             } else {
                 $this->repository->insertMenu($name, $cat, $station, $price, $straw);
-            }out(['ok' => true]);
+                $id = $this->repository->lastInsertId();
+            }
+            if ($addons !== null) {
+                if (in_array((int)$id, $addons, true)) {
+                    fail('Ein Gericht kann nicht zu sich selbst zugebucht werden.');
+                }
+                $this->repository->replaceAddons((int)$id, $addons);
+            }
+            $this->database->connection()->commit();
+            out(['ok' => true,'id' => (int)$id]);
         }
         if ($action === 'admin_menu_status' && $method === 'POST') {
             $id = positive($body['id'] ?? null);

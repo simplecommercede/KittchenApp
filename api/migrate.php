@@ -5,6 +5,7 @@ require __DIR__.'/db.php';
 $sql = [
 'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL, username VARCHAR(80) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, last_seen DATETIME NULL, last_view VARCHAR(20) NULL)',
 'CREATE TABLE IF NOT EXISTS menu (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(40) NOT NULL, station VARCHAR(20) NOT NULL, price INT NOT NULL, active BOOLEAN NOT NULL DEFAULT 1, straw BOOLEAN NOT NULL DEFAULT 0)',
+'CREATE TABLE IF NOT EXISTS menu_addons (menu_id INT NOT NULL, addon_id INT NOT NULL, PRIMARY KEY(menu_id,addon_id), FOREIGN KEY(menu_id) REFERENCES menu(id), FOREIGN KEY(addon_id) REFERENCES menu(id))',
 'CREATE TABLE IF NOT EXISTS dining_tables (id INT PRIMARY KEY, name VARCHAR(40) NOT NULL, active BOOLEAN NOT NULL DEFAULT 1)',
 'CREATE TABLE IF NOT EXISTS table_visits (id INT AUTO_INCREMENT PRIMARY KEY, table_id INT NOT NULL, opened_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME NULL, paid_by INT NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(paid_by) REFERENCES users(id), INDEX(table_id,paid_at))',
 'CREATE TABLE IF NOT EXISTS orders (id INT AUTO_INCREMENT PRIMARY KEY, request_key VARCHAR(80) NOT NULL UNIQUE, table_id INT NOT NULL, visit_id INT NULL, user_id INT NOT NULL, note VARCHAR(500) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, cancelled_at DATETIME NULL, cancelled_by INT NULL, cancellation_reason VARCHAR(300) NULL, paid_at DATETIME NULL, paid_by INT NULL, FOREIGN KEY(table_id) REFERENCES dining_tables(id), FOREIGN KEY(visit_id) REFERENCES table_visits(id), FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(cancelled_by) REFERENCES users(id))',
@@ -17,6 +18,7 @@ $sql = [
 'CREATE TABLE IF NOT EXISTS payment_events (id INT AUTO_INCREMENT PRIMARY KEY, visit_id INT NOT NULL, order_id INT NULL, action VARCHAR(20) NOT NULL, amount INT NOT NULL, reason VARCHAR(300) NOT NULL DEFAULT "", user_id INT NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(visit_id) REFERENCES table_visits(id), FOREIGN KEY(user_id) REFERENCES users(id), INDEX(visit_id,id))',
 'CREATE TABLE IF NOT EXISTS login_attempts (identity_hash CHAR(64) PRIMARY KEY, attempts INT NOT NULL DEFAULT 0, blocked_until DATETIME NULL, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX(updated_at))'
 ];
+$hadAddons=(bool)query("SHOW TABLES LIKE 'menu_addons'")->fetch();
 foreach($sql as $s) db()->exec($s);
 if (!query("SHOW COLUMNS FROM dining_tables LIKE 'active'")->fetch()) db()->exec('ALTER TABLE dining_tables ADD COLUMN active BOOLEAN NOT NULL DEFAULT 1');
 if (!query("SHOW COLUMNS FROM orders LIKE 'visit_id'")->fetch()) db()->exec('ALTER TABLE orders ADD COLUMN visit_id INT NULL, ADD CONSTRAINT fk_orders_visit FOREIGN KEY (visit_id) REFERENCES table_visits(id)');
@@ -44,6 +46,23 @@ if (!query('SELECT id FROM menu LIMIT 1')->fetch()) {
   ? [['Hamburger mit Bacon','Speisen','kitchen',1590],['Schnitzel Wiener Art','Speisen','kitchen',1690],['Heimat Brotbrett','Vorspeisen','kitchen',750],['Karotten-Ingwersuppe','Vorspeisen','kitchen',550],['Heidjer Bauernknusper','Vorspeisen','kitchen',650],['Apfelschorle 0,3 l','Getränke','bar',350],['Pils 0,3 l','Getränke','bar',380],['Schnitzel mit Pommes','Kids','kitchen',850]]
   : require __DIR__.'/speisekarte.php';
  foreach ($menu as $m) query('INSERT INTO menu(name,category,station,price,straw) VALUES(?,?,?,?,?)',[$m[0],$m[1],$m[2],$m[3],$m[4]??0]);
+}
+// First run with the add-on table: link dips and extras as on the printed menu (dips to fries dishes, extras to burgers and loaded fries).
+if (!$hadAddons) {
+ $kitchen=query('SELECT id,name,category FROM menu WHERE station="kitchen"')->fetchAll();
+ $ids=fn(callable $match)=>array_map(fn($m)=>(int)$m['id'],array_values(array_filter($kitchen,$match)));
+ $dips=$ids(fn($m)=>str_starts_with($m['name'],'Dip '));
+ $extras=fn(array $names)=>$ids(fn($m)=>in_array($m['name'],$names,true));
+ $links=[];
+ foreach($kitchen as $m){
+  $addons=match(true){
+   $m['category']==='Burger'=>[...$dips,...$extras(['Extra Bacon','Extra Jalapenos','Extra Patty'])],
+   $m['category']==='Schlemmerpommes'=>[...$dips,...$extras(['Extra Bacon','Extra Jalapenos'])],
+   in_array($m['name'],['Currywurst Pommes','Pommes klein','Pommes groß','Schnitzel mit Pommes (Kids)','Hähnchennuggets mit Pommes (Kids)'],true)=>$dips,
+   default=>[]};
+  foreach($addons as $addon)$links[]=[(int)$m['id'],$addon];
+ }
+ foreach($links as $link)query('INSERT IGNORE INTO menu_addons(menu_id,addon_id) VALUES(?,?)',$link);
 }
 if (getenv('APP_ENV')==='local') {
  foreach ([['Admin','admin',['admin','service','kitchen','bar']],['Robin','robin',['kitchen']],['Mia','mia',['service']],['Tresen','tresen',['bar']]] as [$name,$username,$roles]) query('INSERT IGNORE INTO users(name,username,password,roles) VALUES(?,?,?,?)',[$name,$username,password_hash(getenv('DEMO_PASSWORD') ?: 'Stimbeck-Demo-2026!',PASSWORD_DEFAULT),json_encode($roles)]);

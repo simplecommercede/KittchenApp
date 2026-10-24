@@ -17,7 +17,17 @@ final class CatalogService
     public function handle(string $action, string $method, array $body, array $u): void
     {
         if ($action === 'menu' && $method === 'GET') {
-            out($this->repository->findMenu()->fetchAll());
+            // Each product lists the products that can optionally be added to it (sides, dips, extras).
+            $addons = [];
+            foreach ($this->repository->findAddons()->fetchAll() as $link) {
+                $addons[(int)$link['menu_id']][] = (int)$link['addon_id'];
+            }
+            $menu = $this->repository->findMenu()->fetchAll();
+            foreach ($menu as &$product) {
+                $product['addons'] = $addons[(int)$product['id']] ?? [];
+            }
+            unset($product);
+            out($menu);
         }
         if ($action === 'tables' && $method === 'GET') {
             out($this->repository->findDiningTables()->fetchAll());
