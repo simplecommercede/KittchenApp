@@ -2,130 +2,371 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zum Stimbeck · Gaststätte in Steinbeck an der Luhe</title>
-  <meta name="description" content="Familiäre Gaststätte mit bodenständigen Gerichten in Bispingen-Steinbeck (Luhe). Geöffnet Do–So ab 17 Uhr.">
-  <meta name="theme-color" content="#24483c">
+  <meta name="description" content="Familiäre Gaststätte mit bodenständigen Gerichten in Bispingen-Steinbeck (Luhe). Geöffnet Donnerstag bis Sonntag ab 17 Uhr.">
+  <meta name="theme-color" content="#17302a">
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="#top"><img src="img/logo.png" alt="" width="44" height="44"><span>Zum Stimbeck</span></a>
-      <nav class="nav" aria-label="Hauptnavigation">
+<body class="home">
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+  <header class="site-header" data-header>
+    <div class="wrap header-inner">
+      <a class="brand" href="#top" aria-label="Zum Stimbeck, zur Startseite">
+        <span class="brand-badge"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <span class="brand-text">Zum Stimbeck<small>Gaststätte · Steinbeck/Luhe</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hauptnav" data-nav-toggle>
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="sr-only">Menü</span>
+      </button>
+      <nav class="nav" id="hauptnav" aria-label="Hauptnavigation" data-nav>
+        <a href="#haus">Das Haus</a>
+        <a href="#karte">Speisekarte</a>
         <a href="#zeiten">Öffnungszeiten</a>
         <a href="#anfahrt">Anfahrt</a>
-        <a href="impressum.html">Impressum</a>
+        <a class="nav-cta" href="tel:+4951948789828">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+          Reservieren
+        </a>
       </nav>
     </div>
   </header>
 
   <main id="top">
-    <section class="hero" aria-roledescription="Karussell" aria-label="Willkommen" tabindex="0">
-      <div class="slide slide-1 is-active" aria-roledescription="Folie">
-        <div class="wrap slide-content">
-          <p class="eyebrow">Gaststätte in Steinbeck an der Luhe</p>
-          <h1>Willkommen im Zum Stimbeck</h1>
-          <p>Bodenständige Küche, freundliche Bedienung und eine heimelige Stube mitten in der Lüneburger Heide.</p>
-          <a class="btn" href="tel:+4951948789828">Tisch reservieren: 05194 878 98 28</a>
-        </div>
-      </div>
-      <div class="slide slide-2" aria-roledescription="Folie">
-        <div class="wrap slide-content">
-          <p class="eyebrow">Saisonal</p>
-          <h2>Unsere Herbstkarte</h2>
-          <p>Herbstliche Gerichte ergänzen bis zum 22. November 2026 unsere Speisekarte.</p>
-          <a class="btn" href="#zeiten">Wann wir für Sie kochen</a>
-        </div>
-      </div>
-      <div class="slide slide-3" aria-roledescription="Folie">
-        <div class="wrap slide-content">
-          <p class="eyebrow">Gut zu erreichen</p>
-          <h2>Einkehren nach dem Heidetag</h2>
-          <p>Ob nach der Wanderung oder mit der ganzen Familie: Wir freuen uns auf Ihren Besuch in Bispingen-Steinbeck.</p>
-          <a class="btn" href="#anfahrt">Zur Anfahrt</a>
-        </div>
-      </div>
-      <div class="hero-controls">
-        <button class="hero-arrow prev" type="button" aria-label="Vorheriges Bild">‹</button>
-        <div class="dots"></div>
-        <button class="hero-arrow next" type="button" aria-label="Nächstes Bild">›</button>
-      </div>
-    </section>
+    <section class="hero" data-mood="1" aria-roledescription="Karussell" aria-label="Willkommen im Zum Stimbeck" tabindex="0">
+      <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop class="sky-top" offset="0"/>
+            <stop class="sky-mid" offset=".55"/>
+            <stop class="sky-low" offset="1"/>
+          </linearGradient>
+          <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="1440" height="900" fill="url(#sky)"/>
+        <g class="stars">
+          <circle cx="120" cy="90" r="1.6"/><circle cx="260" cy="170" r="1.2"/><circle cx="410" cy="70" r="1.8"/>
+          <circle cx="560" cy="140" r="1.1"/><circle cx="700" cy="60" r="1.5"/><circle cx="860" cy="120" r="1.2"/>
+          <circle cx="1010" cy="50" r="1.7"/><circle cx="1180" cy="150" r="1.3"/><circle cx="1330" cy="80" r="1.6"/>
+          <circle cx="330" cy="260" r="1"/><circle cx="930" cy="240" r="1.1"/><circle cx="1260" cy="260" r="1"/>
+        </g>
+        <circle class="sun-glow" cx="1060" cy="430" r="260" fill="url(#glow)"/>
+        <circle class="sun" cx="1060" cy="430" r="62"/>
+        <path class="hill hill-far" d="M0 560 C 180 500 320 520 470 540 S 760 470 930 500 S 1230 540 1440 490 V900 H0 Z"/>
+        <path class="hill hill-mid" d="M0 640 C 160 590 340 610 520 630 S 820 580 1000 600 S 1300 650 1440 610 V900 H0 Z"/>
+        <g class="trees-mid">
+          <path d="M210 628 l14 -58 l14 58 z"/><path d="M236 630 l10 -40 l10 40 z"/>
+          <path d="M1240 622 l16 -66 l16 66 z"/><path d="M1270 626 l11 -44 l11 44 z"/><path d="M1300 628 l9 -34 l9 34 z"/>
+        </g>
+        <g class="house" transform="translate(860 548)">
+          <path class="house-body" d="M0 40 L50 6 L100 40 V84 H0 Z"/>
+          <path class="house-roof" d="M-8 44 L50 0 L108 44 L100 44 L50 8 L0 44 Z"/>
+          <rect class="house-chimney" x="74" y="8" width="10" height="20"/>
+          <rect class="window" x="16" y="52" width="16" height="14" rx="2"/>
+          <rect class="window" x="68" y="52" width="16" height="14" rx="2"/>
+          <rect class="window" x="42" y="58" width="16" height="26" rx="2"/>
+        </g>
+        <path class="hill hill-heath" d="M0 720 C 200 670 380 700 560 710 S 900 660 1100 690 S 1340 720 1440 700 V900 H0 Z"/>
+        <g class="heather">
+          <circle cx="90" cy="712" r="5"/><circle cx="130" cy="706" r="4"/><circle cx="310" cy="700" r="5"/>
+          <circle cx="350" cy="704" r="3.5"/><circle cx="640" cy="704" r="4.5"/><circle cx="700" cy="698" r="5"/>
+          <circle cx="1020" cy="690" r="4"/><circle cx="1150" cy="694" r="5"/><circle cx="1360" cy="706" r="4.5"/>
+        </g>
+        <path class="hill hill-near" d="M0 800 C 240 760 520 790 760 790 S 1180 750 1440 780 V900 H0 Z"/>
+        <g class="birch">
+          <path d="M96 800 V610" /><path d="M96 680 l-34 -40 M96 650 l30 -38 M96 720 l26 -24"/>
+        </g>
+        <g class="leaves">
+          <circle cx="62" cy="636" r="26"/><circle cx="104" cy="604" r="32"/><circle cx="130" cy="640" r="24"/><circle cx="84" cy="664" r="20"/>
+        </g>
+      </svg>
+      <div class="hero-shade" aria-hidden="true"></div>
 
-    <section id="zeiten">
-      <div class="wrap">
-        <h2>Besuchen Sie uns</h2>
-        <p class="lead">Familiäre Gaststätte mit bodenständigen Gerichten und freundlicher Bedienung in heimeliger Atmosphäre.</p>
-        <div class="grid">
-          <div class="card">
-            <h3>Öffnungszeiten</h3>
-            <table class="hours">
-              <tr class="closed"><td>Montag – Mittwoch</td><td>Ruhetag</td></tr>
-              <tr><td>Donnerstag</td><td>17:00 – 22:00</td></tr>
-              <tr><td>Freitag</td><td>17:00 – 22:00</td></tr>
-              <tr><td>Samstag</td><td>17:00 – 22:00</td></tr>
-              <tr><td>Sonntag</td><td>17:00 – 22:00</td></tr>
-            </table>
-            <p class="note">Warme Küche bis 21:00 Uhr.</p>
-          </div>
-          <div class="card">
-            <h3>Adresse</h3>
-            <address>
-              Gaststätte Zum Stimbeck<br>
-              Am Lütten Stimbeck 4<br>
-              29646 Bispingen – Steinbeck (Luhe)
-            </address>
-            <p>
-              Telefon: <a href="tel:+4951948789828">05194 878 98 28</a><br>
-              E-Mail: <a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a>
-            </p>
-          </div>
-          <div class="card">
-            <h3>Reservierung</h3>
-            <p>Für Tischreservierungen und Feiern rufen Sie uns während der Öffnungszeiten an oder schreiben Sie uns eine E-Mail.</p>
-            <div class="actions"><a class="btn" href="tel:+4951948789828">Jetzt anrufen</a></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="anfahrt" class="alt">
-      <div class="wrap">
-        <h2>Anfahrt</h2>
-        <p class="lead">Sie finden uns im Ortsteil Steinbeck an der Luhe der Gemeinde Bispingen, Landkreis Heidekreis.</p>
-        <div class="grid">
-          <div class="card">
-            <h3>Mit dem Auto</h3>
-            <ul class="directions">
-              <li>Über die A7 bis zur Anschlussstelle Bispingen.</li>
-              <li>Weiter Richtung Bispingen und der Beschilderung nach Steinbeck folgen.</li>
-              <li>Fürs Navi: <strong>Am Lütten Stimbeck 4, 29646 Bispingen</strong>.</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3>Route planen</h3>
-            <p>Starten Sie die Routenplanung direkt in Ihrer Karten-App.</p>
-            <div class="actions">
-              <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=Am+L%C3%BCtten+Stimbeck+4,+29646+Bispingen" target="_blank" rel="noopener">Google Maps</a>
-              <a class="btn btn-ghost" href="https://www.openstreetmap.org/search?query=Am%20L%C3%BCtten%20Stimbeck%204%2C%2029646%20Bispingen" target="_blank" rel="noopener">OpenStreetMap</a>
+      <div class="slides">
+        <div class="slide is-active" aria-roledescription="Folie">
+          <div class="wrap slide-content">
+            <p class="status" data-status hidden><span class="status-dot"></span><span data-status-text></span></p>
+            <p class="eyebrow">Gaststätte in der Lüneburger Heide</p>
+            <h1>Willkommen im<br><em>Zum Stimbeck</em></h1>
+            <p class="slide-text">Bodenständige Küche, freundliche Bedienung und eine heimelige Stube in Steinbeck an der Luhe.</p>
+            <div class="slide-actions">
+              <a class="btn btn-amber" href="tel:+4951948789828">Tisch reservieren</a>
+              <a class="btn btn-light" href="#karte">Zur Speisekarte</a>
             </div>
-            <p class="note">Die Karte öffnet sich beim jeweiligen Anbieter. Auf dieser Seite wird keine Karte eingebettet.</p>
           </div>
+        </div>
+        <div class="slide" aria-roledescription="Folie">
+          <div class="wrap slide-content">
+            <p class="eyebrow">Saisonal · bis 22. November</p>
+            <h2>Die <em>Herbstkarte</em> ist da</h2>
+            <p class="slide-text">Kürbiscremesuppe, Schnitzel mit Pfifferlingen und Hokkaido-Crème-brûlée: Jetzt kommt der Herbst auf den Teller.</p>
+            <div class="slide-actions">
+              <a class="btn btn-amber" href="#herbst">Herbstgerichte ansehen</a>
+            </div>
+          </div>
+        </div>
+        <div class="slide" aria-roledescription="Folie">
+          <div class="wrap slide-content">
+            <p class="eyebrow">Einkehren nach dem Heidetag</p>
+            <h2>Gemütlich <em>ankommen</em></h2>
+            <p class="slide-text">Nach der Wanderung, mit der Familie oder zum Feierabend: Bei uns ist ein Platz für Sie frei.</p>
+            <div class="slide-actions">
+              <a class="btn btn-amber" href="#anfahrt">So finden Sie uns</a>
+              <a class="btn btn-light" href="#zeiten">Öffnungszeiten</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-controls">
+        <button class="hero-arrow prev" type="button" aria-label="Vorheriges Bild">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="dots"></div>
+        <button class="hero-arrow next" type="button" aria-label="Nächstes Bild">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <a class="scroll-hint" href="#inhalt" aria-label="Weiter nach unten">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </a>
+    </section>
+
+    <div id="inhalt" class="quickfacts">
+      <div class="wrap quickfacts-grid">
+        <div class="fact">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <div><strong>Do – So</strong><span>17:00 – 22:00 Uhr</span></div>
+        </div>
+        <div class="fact">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          <div><strong>Am Lütten Stimbeck 4</strong><span>29646 Bispingen</span></div>
+        </div>
+        <a class="fact" href="tel:+4951948789828">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+          <div><strong>05194 878 98 28</strong><span>Reservierung</span></div>
+        </a>
+      </div>
+    </div>
+
+    <section id="haus" class="section about">
+      <div class="wrap about-grid">
+        <div class="about-text reveal">
+          <p class="kicker">Das Haus</p>
+          <h2>Gastlichkeit wie bei <em>Freunden</em></h2>
+          <p class="lead">Familiäre Gaststätte mit bodenständigen Gerichten und freundlicher Bedienung in heimeliger Atmosphäre.</p>
+          <p>Mitten in Steinbeck an der Luhe kochen wir, was schmeckt: knusprige Schnitzel, saftige Burger, frische Salate und zur Saison eine eigene Karte. Kinder bekommen ihre eigenen Teller, und für Gäste, die es etwas kleiner mögen, gibt es den Seniorenteller.</p>
+        </div>
+        <ul class="features reveal">
+          <li>
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/></svg></span>
+            <div><h3>Bodenständig gekocht</h3><p>Schnitzel, Burger, Schlemmerpommes und Salate, alles frisch zubereitet.</p></div>
+          </li>
+          <li>
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 20a4 4 0 0 1 8 0"/></svg></span>
+            <div><h3>Für die ganze Familie</h3><p>Kindergerichte und Seniorenteller, damit jeder satt und zufrieden ist.</p></div>
+          </li>
+          <li>
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l7-7"/></svg></span>
+            <div><h3>Mit Rücksicht auf Wünsche</h3><p>Vegane Patties und Würste gibt es auf Wunsch. Fragen Sie einfach unser Team.</p></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="karte" class="section menu">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="kicker kicker-light">Aus unserer Küche</p>
+          <h2>Ein Blick in die <em>Speisekarte</em></h2>
+          <p class="lead">Eine Auswahl unserer Gerichte. Die vollständige Karte können Sie unten ansehen und herunterladen.</p>
+        </div>
+        <div class="menu-grid">
+          <article id="herbst" class="menu-card menu-card-season reveal">
+            <header>
+              <h3>Herbstkarte</h3>
+              <span class="badge">Nur bis 22.11.</span>
+            </header>
+            <ul class="menu-list">
+              <li><span>Kürbiscremesuppe</span><i></i><b>7,90 €</b></li>
+              <li><span>Hausbrot mit zweierlei Chutneys</span><i></i><b>6,50 €</b></li>
+              <li><span>Herbst Burger</span><i></i><b>18,90 €</b></li>
+              <li><span>Schnitzel mit Pfifferlingen</span><i></i><b>20,50 €</b></li>
+              <li><span>Kartoffel-Kürbis-Auflauf</span><i></i><b>15,50 €</b></li>
+              <li><span>Roastbeef „kalt“</span><i></i><b>21,50 €</b></li>
+              <li><span>Hokkaido-Crème-brûlée</span><i></i><b>8,50 €</b></li>
+              <li><span>Apfelcrumble mit Vanilleeis</span><i></i><b>7,50 €</b></li>
+            </ul>
+          </article>
+          <article class="menu-card reveal">
+            <header><h3>Stimbeck-Klassiker</h3></header>
+            <ul class="menu-list">
+              <li><span>Schnitzel Wiener Art</span><i></i><b>16,90 €</b></li>
+              <li><span>Jäger Schnitzel</span><i></i><b>18,90 €</b></li>
+              <li><span>Currywurst Pommes</span><i></i><b>9,90 €</b></li>
+              <li><span>Stimbeck Salat mit Garnelen</span><i></i><b>15,00 €</b></li>
+            </ul>
+            <header><h3>Burger &amp; Pommes</h3></header>
+            <ul class="menu-list">
+              <li><span>Cheeseburger</span><i></i><b>16,90 €</b></li>
+              <li><span>Crispy Chilli Burger</span><i></i><b>18,90 €</b></li>
+              <li><span>Stimbeck Fries</span><i></i><b>12,50 €</b></li>
+            </ul>
+            <p class="menu-note">Seniorenteller zu den Schnitzeln 3,00 € günstiger. Kindergerichte ab 7,00 €.</p>
+          </article>
+        </div>
+
+        <!-- Karten zum Ansehen: Dateien in homepage/karte/ ablegen. Pro Eintrag gewinnt die erste vorhandene Datei aus data-files
+             (PDF öffnet in neuem Tab, PNG/JPG in der Großansicht). Fehlt jede Datei, bleibt der Eintrag ausgeblendet. -->
+        <div class="menu-files reveal">
+          <p class="menu-files-title">Komplette Karten ansehen</p>
+          <a class="menu-file" href="karte/speisekarte.pdf" target="_blank" rel="noopener"
+             data-menu-file data-files="karte/speisekarte.pdf karte/speisekarte.png karte/speisekarte.jpg">
+            <span class="menu-file-icon" data-type="pdf"><img src="karte/speisekarte-vorschau.png" alt="" loading="lazy" onerror="this.remove()"></span>
+            <span class="menu-file-text"><strong>Speisen- und Getränkekarte</strong><span data-file-meta>PDF · Stand September 2026</span></span>
+            <svg class="menu-file-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+          <a class="menu-file" href="karte/herbstkarte.pdf" target="_blank" rel="noopener" hidden
+             data-menu-file data-optional data-files="karte/herbstkarte.pdf karte/herbstkarte.png karte/herbstkarte.jpg">
+            <span class="menu-file-icon" data-type="pdf">PDF</span>
+            <span class="menu-file-text"><strong>Herbstkarte</strong><span data-file-meta>Gültig bis 22.11.2026</span></span>
+            <svg class="menu-file-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="zeiten" class="section visit">
+      <div class="wrap visit-grid">
+        <div class="visit-hours reveal">
+          <p class="kicker">Öffnungszeiten</p>
+          <h2>Wann wir für Sie <em>kochen</em></h2>
+          <table class="hours" data-hours>
+            <tbody>
+              <tr data-day="1" class="closed"><th scope="row">Montag</th><td>Ruhetag</td></tr>
+              <tr data-day="2" class="closed"><th scope="row">Dienstag</th><td>Ruhetag</td></tr>
+              <tr data-day="3" class="closed"><th scope="row">Mittwoch</th><td>Ruhetag</td></tr>
+              <tr data-day="4"><th scope="row">Donnerstag</th><td>17:00 – 22:00</td></tr>
+              <tr data-day="5"><th scope="row">Freitag</th><td>17:00 – 22:00</td></tr>
+              <tr data-day="6"><th scope="row">Samstag</th><td>17:00 – 22:00</td></tr>
+              <tr data-day="0"><th scope="row">Sonntag</th><td>17:00 – 22:00</td></tr>
+            </tbody>
+          </table>
+          <p class="note">Warme Küche bis 21:00 Uhr.</p>
+        </div>
+        <aside class="contact-card reveal">
+          <h3>Reservierung &amp; Kontakt</h3>
+          <p>Für Tischreservierungen und Feiern rufen Sie uns während der Öffnungszeiten an oder schreiben Sie uns.</p>
+          <a class="contact-line" href="tel:+4951948789828">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+            05194 878 98 28
+          </a>
+          <a class="contact-line" href="mailto:zumstimbeck@gmail.com">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>
+            zumstimbeck@gmail.com
+          </a>
+          <a class="btn btn-amber btn-block" href="tel:+4951948789828">Jetzt anrufen</a>
+        </aside>
+      </div>
+    </section>
+
+    <section id="anfahrt" class="section directions">
+      <div class="wrap directions-grid">
+        <div class="map reveal" role="img" aria-label="Lageskizze: Steinbeck an der Luhe liegt etwa 4 Kilometer nordöstlich des Ortskerns von Bispingen">
+          <svg viewBox="0 0 520 420" aria-hidden="true" focusable="false">
+            <rect width="520" height="420" rx="18" class="map-bg"/>
+            <path class="map-forest" d="M30 40 q40 -20 90 0 t80 30 q10 40 -30 60 t-110 10 q-40 -30 -30 -100z"/>
+            <path class="map-forest" d="M380 290 q50 -30 100 0 t10 70 q-40 40 -90 30 t-20 -100z"/>
+            <path class="map-heath" d="M60 200 q50 -20 90 10 t10 70 q-50 20 -90 0 t-10 -80z"/>
+            <path class="map-river" d="M120 410 C 140 360 170 320 220 280 S 300 220 330 170 S 380 80 420 0"/>
+            <path class="map-road" d="M20 330 C 60 330 90 330 120 330 S 230 260 330 170 S 450 110 510 90"/>
+            <path class="map-road map-small" d="M120 330 C 120 370 110 400 100 420"/>
+            <path class="map-road map-small" d="M120 330 C 90 300 60 270 0 250"/>
+            <circle class="map-town" cx="120" cy="330" r="10"/>
+            <text class="map-label" x="140" y="365">Bispingen</text>
+            <text class="map-label map-river-label" x="250" y="300">Luhe</text>
+            <text class="map-label map-dist" x="200" y="230">ca. 4 km</text>
+            <g class="map-pin" transform="translate(330 170)">
+              <circle r="30" class="map-pin-pulse"/>
+              <path d="M0 0 C -14 -18 -20 -26 -20 -36 a20 20 0 0 1 40 0 c0 10 -6 18 -20 36z"/>
+              <circle cy="-36" r="7" class="map-pin-dot"/>
+            </g>
+            <g class="map-tag" transform="translate(255 60)">
+              <rect width="150" height="40" rx="20"/>
+              <text x="75" y="26">Zum Stimbeck</text>
+            </g>
+            <g class="map-north" transform="translate(470 370)"><path d="M0 -22 L8 6 L0 0 L-8 6 Z"/><text y="22">N</text></g>
+          </svg>
+          <p class="map-caption">Lageskizze, nicht maßstabsgetreu</p>
+        </div>
+        <div class="directions-text reveal">
+          <p class="kicker">Anfahrt</p>
+          <h2>So finden Sie <em>zu uns</em></h2>
+          <address class="address">
+            <strong>Gaststätte Zum Stimbeck</strong>
+            Am Lütten Stimbeck 4<br>
+            29646 Bispingen – Steinbeck (Luhe)
+          </address>
+          <ol class="steps">
+            <li><span>1</span>Über die A7 bis zur Anschlussstelle Bispingen.</li>
+            <li><span>2</span>Der Beschilderung nach Steinbeck folgen. Der Ort liegt etwa 4 km nordöstlich vom Ortskern Bispingen.</li>
+            <li><span>3</span>Fürs Navi: Am Lütten Stimbeck 4, 29646 Bispingen.</li>
+          </ol>
+          <div class="btn-row">
+            <a class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=Am+L%C3%BCtten+Stimbeck+4,+29646+Bispingen" target="_blank" rel="noopener">Route mit Google Maps</a>
+            <a class="btn btn-outline" href="https://www.openstreetmap.org/search?query=Am%20L%C3%BCtten%20Stimbeck%204%2C%2029646%20Bispingen" target="_blank" rel="noopener">OpenStreetMap</a>
+          </div>
+          <p class="note">Die Karte öffnet sich beim jeweiligen Anbieter. Auf dieser Seite ist keine Karte eingebettet.</p>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <span>© 2026 Gaststätte Zum Stimbeck · Am Lütten Stimbeck 4 · 29646 Bispingen</span>
+    <svg class="footer-hills" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 80 V40 C 200 0 420 30 640 30 S 1080 0 1440 30 V80 Z"/></svg>
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <span class="brand-badge brand-badge-lg"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <p>Familiäre Gaststätte mit bodenständigen Gerichten in Steinbeck an der Luhe.</p>
+      </div>
+      <div>
+        <h4>Besuch</h4>
+        <p>Am Lütten Stimbeck 4<br>29646 Bispingen</p>
+      </div>
+      <div>
+        <h4>Geöffnet</h4>
+        <p>Do – So · 17 – 22 Uhr<br>Warme Küche bis 21 Uhr</p>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <p><a href="tel:+4951948789828">05194 878 98 28</a><br><a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a></p>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Gaststätte Zum Stimbeck</span>
       <a href="impressum.html">Impressum</a>
     </div>
   </footer>
 
+  <dialog class="lightbox" data-lightbox aria-label="Karte ansehen">
+    <div class="lightbox-bar">
+      <span class="lightbox-title" data-lightbox-title></span>
+      <div class="lightbox-actions">
+        <a data-lightbox-download download>Herunterladen</a>
+        <button type="button" data-lightbox-close>Schließen</button>
+      </div>
+    </div>
+    <div class="lightbox-body"><img data-lightbox-img alt=""></div>
+  </dialog>
+
+  <script src="site.js"></script>
   <script src="slider.js"></script>
 </body>
 </html>

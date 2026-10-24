@@ -2,72 +2,129 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Impressum · Zum Stimbeck</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#24483c">
+  <meta name="theme-color" content="#faf6ee">
   <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="index.html"><img src="img/logo.png" alt="" width="44" height="44"><span>Zum Stimbeck</span></a>
-      <nav class="nav" aria-label="Hauptnavigation">
+<body class="page-sub">
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+  <header class="site-header" data-header>
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html" aria-label="Zum Stimbeck, zur Startseite">
+        <span class="brand-badge"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <span class="brand-text">Zum Stimbeck<small>Gaststätte · Steinbeck/Luhe</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hauptnav" data-nav-toggle>
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="sr-only">Menü</span>
+      </button>
+      <nav class="nav" id="hauptnav" aria-label="Hauptnavigation" data-nav>
+        <a href="index.html#haus">Das Haus</a>
+        <a href="index.html#karte">Speisekarte</a>
         <a href="index.html#zeiten">Öffnungszeiten</a>
         <a href="index.html#anfahrt">Anfahrt</a>
-        <a href="impressum.html" aria-current="page">Impressum</a>
+        <a class="nav-cta" href="tel:+4951948789828">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+          Reservieren
+        </a>
       </nav>
     </div>
   </header>
 
-  <main class="page">
+  <main id="inhalt">
     <div class="wrap">
-      <h1>Impressum</h1>
+      <div class="page-hero">
+        <p class="kicker">Rechtliches</p>
+        <h1>Impressum</h1>
+      </div>
       <!-- Entwurf: Markierte Angaben vor der Veröffentlichung mit dem Betreiber prüfen und ergänzen. -->
 
-      <h2>Angaben gemäß § 5 DDG</h2>
-      <p>
-        Gaststätte Zum Stimbeck<br>
-        Inhaber: Michel Schadow <span class="todo">[Name und Rechtsform bestätigen]</span><br>
-        Am Lütten Stimbeck 4<br>
-        29646 Bispingen
-      </p>
+      <div class="legal">
+        <section class="legal-block">
+          <h2>Angaben gemäß § 5 DDG</h2>
+          <p>
+            <strong>Gaststätte Zum Stimbeck</strong><br>
+            Inhaber: Michel Schadow <span class="todo">Name und Rechtsform bestätigen</span><br>
+            Am Lütten Stimbeck 4<br>
+            29646 Bispingen
+          </p>
+        </section>
 
-      <h2>Kontakt</h2>
-      <p>
-        Telefon: <a href="tel:+4951948789828">05194 878 98 28</a><br>
-        E-Mail: <a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a>
-      </p>
+        <section class="legal-block">
+          <h2>Kontakt</h2>
+          <p>
+            Telefon: <a href="tel:+4951948789828">05194 878 98 28</a><br>
+            E-Mail: <a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a>
+          </p>
+        </section>
 
-      <h2>Umsatzsteuer-ID</h2>
-      <p>Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:<br>
-        <span class="todo">[DE … eintragen oder Abschnitt entfernen, falls keine vorhanden]</span></p>
+        <section class="legal-block">
+          <h2>Umsatzsteuer-ID</h2>
+          <p>Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:<br>
+            <span class="todo">DE … eintragen oder Abschnitt entfernen, falls keine vorhanden</span></p>
+        </section>
 
-      <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-      <p>Michel Schadow <span class="todo">[bestätigen]</span><br>Am Lütten Stimbeck 4, 29646 Bispingen</p>
+        <section class="legal-block">
+          <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+          <p>Michel Schadow <span class="todo">bestätigen</span><br>Am Lütten Stimbeck 4, 29646 Bispingen</p>
+        </section>
 
-      <h2>Verbraucherstreitbeilegung</h2>
-      <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+        <section class="legal-block">
+          <h2>Verbraucherstreitbeilegung</h2>
+          <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+        </section>
 
-      <h2>Haftung für Inhalte</h2>
-      <p>Die Inhalte dieser Seite wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte, insbesondere der Öffnungszeiten und Angebote, können wir jedoch keine Gewähr übernehmen. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen.</p>
+        <section class="legal-block">
+          <h2>Haftung für Inhalte</h2>
+          <p>Die Inhalte dieser Seite wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte, insbesondere der Öffnungszeiten, Preise und Angebote, können wir jedoch keine Gewähr übernehmen. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen.</p>
+        </section>
 
-      <h2>Haftung für Links</h2>
-      <p>Diese Seite enthält Links zu externen Websites Dritter (z. B. Kartendienste), auf deren Inhalte wir keinen Einfluss haben. Für diese Inhalte ist stets der jeweilige Anbieter verantwortlich. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+        <section class="legal-block">
+          <h2>Haftung für Links</h2>
+          <p>Diese Seite enthält Links zu externen Websites Dritter (z. B. Kartendienste), auf deren Inhalte wir keinen Einfluss haben. Für diese Inhalte ist stets der jeweilige Anbieter verantwortlich. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+        </section>
 
-      <h2>Urheberrecht</h2>
-      <p>Die Inhalte und Bilder dieser Seite unterliegen dem deutschen Urheberrecht. Vervielfältigung und Verwendung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung.</p>
+        <section class="legal-block">
+          <h2>Urheberrecht</h2>
+          <p>Die Inhalte und Bilder dieser Seite unterliegen dem deutschen Urheberrecht. Vervielfältigung und Verwendung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung.</p>
+        </section>
+      </div>
 
-      <p class="actions"><a class="btn btn-ghost" href="index.html">Zurück zur Startseite</a></p>
+      <p style="margin-top:32px"><a class="btn btn-outline" href="index.html">Zurück zur Startseite</a></p>
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <span>© 2026 Gaststätte Zum Stimbeck · Am Lütten Stimbeck 4 · 29646 Bispingen</span>
+    <svg class="footer-hills" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 80 V40 C 200 0 420 30 640 30 S 1080 0 1440 30 V80 Z"/></svg>
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <span class="brand-badge brand-badge-lg"><img src="img/logo.png" alt="" width="150" height="150"></span>
+        <p>Familiäre Gaststätte mit bodenständigen Gerichten in Steinbeck an der Luhe.</p>
+      </div>
+      <div>
+        <h4>Besuch</h4>
+        <p>Am Lütten Stimbeck 4<br>29646 Bispingen</p>
+      </div>
+      <div>
+        <h4>Geöffnet</h4>
+        <p>Do – So · 17 – 22 Uhr<br>Warme Küche bis 21 Uhr</p>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <p><a href="tel:+4951948789828">05194 878 98 28</a><br><a href="mailto:zumstimbeck@gmail.com">zumstimbeck@gmail.com</a></p>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Gaststätte Zum Stimbeck</span>
       <a href="index.html">Startseite</a>
     </div>
   </footer>
+
+  <script src="site.js"></script>
 </body>
 </html>
