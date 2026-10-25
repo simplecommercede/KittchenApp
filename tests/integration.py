@@ -405,8 +405,16 @@ class Workflow(unittest.TestCase):
     def test_17_unreachable_database_returns_json_503(self):
         # A session with a user forces a DB query, which must fail cleanly without a second connection attempt.
         out=in_app("session_id('dbfail'.bin2hex(random_bytes(4)));session_start();$_SESSION['uid']=1;session_write_close();$_GET['action']='tickets';$_SERVER['REQUEST_METHOD']='GET';register_shutdown_function(function(){fwrite(STDERR,(string)http_response_code());});include '/var/www/html/api/index.php';",
-            env={'DB_HOST':'127.0.0.1','DB_PASSWORD':'wrong'},require_db=False)
-        self.assertEqual(json.loads(out),{'error':'Datenbank vorübergehend nicht erreichbar.'})
+            env={'DB_HOST':'127.0.0.1','DB_PASSWORD':'wrong-db-secret','LOG_FILE':(log:=f'/tmp/kitchen-{uuid.uuid4().hex}.log')},require_db=False)
+        data=json.loads(out)
+        self.assertEqual(data['error'],'Datenbank vorübergehend nicht erreichbar.')
+        # The log entry carries the reference, event and SQLSTATE, but neither the password nor a stack trace with arguments.
+        raw=in_app(f"echo file_get_contents('{log}');unlink('{log}');",require_db=False)
+        self.assertNotIn('wrong-db-secret',raw)
+        entry=next(json.loads(line) for line in raw.splitlines() if json.loads(line)['request_id']==data['reference'])
+        self.assertEqual((entry['event_id'],entry['status'],entry['level'],entry['user_id']),(4000,503,'error',1))
+        self.assertEqual(entry['exception']['class'],'PDOException')
+        self.assertTrue(entry['exception']['trace'])
     def test_18_admin_drinks_need_volume(self):
         suffix=uuid.uuid4().hex[:8];name='Testgetränk '+suffix
         self.assertEqual(self.admin.call('admin_menu',{'name':name,'category':'Tests','station':'bar','price':300})[0],400)

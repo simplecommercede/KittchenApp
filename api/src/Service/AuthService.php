@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kitchen\Service;
 
+use Kitchen\Logging\EventId;
+use Kitchen\Logging\Log;
 use Kitchen\Repository\AuthRepository;
 
 use function Kitchen\Support\{out, fail, user, shortText, passwordText, loginFailure};
@@ -27,10 +29,14 @@ final class AuthService
             $key = hash('sha256', strtolower($username).'|'.$ip);
             $ipKey = hash('sha256', 'ip|'.$ip);
             if ($this->repository->findLoginAttempts($key, $ipKey)->fetch()) {
+                Log::event(EventId::LoginLocked);
                 fail('Zu viele Versuche. Bitte später erneut versuchen.', 429);
             }
             $u = $this->repository->findUsers($username)->fetch();
             if (!$u || !password_verify($password, $u['password'])) {
+                // The typed username is never logged (it may be a mistyped password); a known account is named by its ID.
+                Log::event(EventId::LoginFailed);
+                Log::context($u ? ['reason' => 'wrong_password','target_user_id' => (int)$u['id']] : ['reason' => 'unknown_or_inactive_user']);
                 loginFailure($key, 5, 5);
                 loginFailure($ipKey, 30, 15);
                 $this->repository->deleteLoginAttempts();

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require __DIR__.'/db.php';
+Kitchen\Logging\Log::event(Kitchen\Logging\EventId::Migration);
 if(Kitchen\Infrastructure\Database::instance()->driver()==='pgsql'){require __DIR__.'/migrate-postgres.php';exit;}
 
 $sql = [
@@ -46,3 +47,4 @@ foreach (query('SELECT DISTINCT o.table_id FROM orders o JOIN tickets t ON t.ord
 }
 require_once __DIR__.'/seed.php';
     seedDatabase($hadAddons);
+Kitchen\Logging\Log::write('info', Kitchen\Logging\EventId::Migration, 'Migration abgeschlossen.', ['driver' => 'mysql','outcome' => 'ok']);

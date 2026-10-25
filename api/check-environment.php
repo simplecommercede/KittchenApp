@@ -17,10 +17,14 @@ try {
     $database->query('SELECT 1');
     echo "PHP und PostgreSQL-Verbindung OK; Live-Konfiguration geladen.\n";
     echo "Keine Migration und keine Datenänderung ausgeführt.\n";
+    Kitchen\Logging\Log::write('info', Kitchen\Logging\EventId::EnvironmentCheck, 'Umgebung geprüft.', ['outcome' => 'ok']);
 } catch (PDOException $e) {
+    Kitchen\Logging\Log::write('error', Kitchen\Logging\EventId::EnvironmentCheck, 'Datenbankverbindung fehlgeschlagen.', ['outcome' => 'error'], $e);
     fwrite(STDERR, "Datenbankverbindung fehlgeschlagen. Host, Port, TLS und Zugangsdaten prüfen.\n");
     exit(1);
 } catch (Throwable $e) {
+    // Before bootstrap (wrong PHP version, missing extension) the autoloader and thus the log are not available yet.
+    if (class_exists(Kitchen\Logging\Log::class)) Kitchen\Logging\Log::write('error', Kitchen\Logging\EventId::EnvironmentCheck, 'Umgebungsprüfung fehlgeschlagen.', ['outcome' => 'error'], $e);
     fwrite(STDERR, $e->getMessage()."\n");
     exit(1);
 }

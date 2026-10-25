@@ -117,6 +117,26 @@ docker compose down
 
 Das benannte Volume behält die Daten. `docker compose down -v` löscht ausdrücklich die lokale Datenbank; die nächste Migration legt Speisekarte, Demo-Konten und Tische neu an.
 
+## Logging und EventIDs
+
+Jede API-Anfrage und jedes CLI-Skript schreibt genau eine JSON-Zeile mit fester `event_id` (Kontrolle: `api/src/Logging/EventId.php`). Ziel ist `LOG_FILE`, sonst das PHP-/Webserver-Fehlerlog (Docker: `docker compose logs app`). `LOG_LEVEL` filtert: erfolgreiche Lese-Anfragen (Polling) sind `debug`, Änderungen und fachliche Ablehnungen `info`, 401/403/429 und Konflikte durch Exceptions `warning`, 5xx `error`.
+
+| Bereich | EventIDs |
+| --- | --- |
+| Anfrage/Laufzeit | 1000 unbekannte Route, 1001 ungültige Anfrage, 1002 CSRF fehlgeschlagen, 1010 PHP-Warnung, 1011 fataler Fehler |
+| Anmeldung | 2000 Sitzung, 2001 Login, 2002 Login fehlgeschlagen, 2003 Login gesperrt, 2010 Logout |
+| Katalog/Tische | 3000 Speisekarte, 3001 Tischliste, 3100 Tischstatus, 3101 Tischrechnung |
+| Bons | 4000 Bonliste, 4001 Statuswechsel, 4002 Stornohinweis bestätigt |
+| Bestellungen | 5000 anlegen, 5001 korrigieren, 5002 stornieren |
+| Zahlungen | 6000 Zahlungsliste, 6001 Tisch bezahlt, 6002 Bestellung bezahlt, 6003 Zahlung zurückgenommen |
+| Service-Rufe | 7000 Liste, 7001 rufen, 7002 bestätigen, 7003 zurückziehen |
+| Administration | 8000 Mitarbeiterliste, 8001 anlegen, 8002 ändern, 8003 Status, 8010 Produkt speichern, 8011 Produktstatus, 8012 Getränk speichern, 8020 Tisch speichern, 8021 Tischstatus |
+| CLI | 9000 Migration, 9010 Admin anlegen, 9020 Umgebungsprüfung, 9099 abgebrochenes Skript |
+
+Jede Zeile enthält `request_id`, `status`, `outcome` (`ok`, `rejected`, `denied`, `not_found`, `conflict`, `rate_limited`, `error`), Dauer, Benutzer-ID und gekürzte IP (IPv4 /24, IPv6 /48). Aus Anfrage und Antwort werden nur IDs, Mengen, Beträge und feste Codes übernommen (`table_id`, `order_id`, `status`, …), nie Namen, Benutzernamen, Passwörter, Notizen, Gründe oder Tokens. Der bei einem Fehlversuch eingetippte Benutzername wird nicht geloggt; bei bekanntem Konto steht nur `target_user_id`.
+
+Exceptions werden geschwärzt: Klasse, Code, SQLSTATE/Treibercode, Datei:Zeile, Vorgänger-Exceptions und Stacktrace ohne Argumente. In Meldungen werden Werte in Anführungszeichen, PostgreSQL-Details (`Key (username)=(***)`), `password=…`, E-Mail-Adressen und lange Token maskiert; Tabellen-, Spalten- und Constraint-Namen bleiben zur Fehlersuche erhalten. Bei 5xx enthält die Antwort `reference` = `request_id`, damit sich eine Meldung des Personals der Logzeile zuordnen lässt (`grep <reference> app.log`). Jede Antwort trägt dieselbe ID im Header `X-Request-Id`.
+
 ## PHP-Struktur und Qualitätsprüfungen
 
 Das Backend verwendet Composer-PSR-4-Autoloading unter `Kitchen\`:
@@ -126,6 +146,7 @@ Das Backend verwendet Composer-PSR-4-Autoloading unter `Kitchen\`:
 - `api/src/Service`: Auth, Katalog, Tische, Bons, Bestellungen, Zahlungen und Administration; hier liegen Workflow und Transaktionen.
 - `api/src/Repository`: zugehörige SQL-Abfragen mit injizierter Datenbankverbindung.
 - `api/src/Infrastructure`: verzögerter PDO-Verbindungsaufbau mit UTC.
+- `api/src/Logging`: EventIDs, JSON-Log und Schwärzung sensibler Daten in Exceptions.
 - `api/src/Support`: gemeinsame Validierung und Berechtigungsfunktionen.
 
 `api/index.php` ist nur noch der Einstieg. Die CLI-Migration und Adminanlage nutzen `api/db.php` als kleine Kompatibilitätsschicht. API-Routen und JSON-Formate bleiben erhalten. Die bestehenden Datensätze benötigen für dieses Refactoring keine Schemaänderung.

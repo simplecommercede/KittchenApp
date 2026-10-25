@@ -11,3 +11,7 @@ DB_PASSWORD = "EINTRAGEN"
 ; Für verify-full zusätzlich den passenden CA-Pfad unter DB_SSLROOTCERT eintragen.
 DB_SSLMODE = "require"
 MENU_SEED = "speisekarte"
+; Optional: JSON-Log außerhalb des Webroots, z. B. <remote-app-root>/shared/logs/app.log (Verzeichnis muss für PHP schreibbar sein).
+; Ohne LOG_FILE landet das Log im PHP-/Webserver-Fehlerlog. LOG_LEVEL: debug, info (Standard), warning, error.
+; LOG_FILE = "EINTRAGEN"
+; LOG_LEVEL = "info"

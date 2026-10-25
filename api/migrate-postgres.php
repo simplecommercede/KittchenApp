@@ -2,6 +2,7 @@
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
 require_once __DIR__.'/db.php';
+Kitchen\Logging\Log::event(Kitchen\Logging\EventId::Migration);
 $connection=db();
 try {
     $connection->beginTransaction();
@@ -20,8 +21,10 @@ try {
     require_once __DIR__.'/seed.php';
     seedDatabase($hadAddons);
     $connection->commit();
+    Kitchen\Logging\Log::write('info', Kitchen\Logging\EventId::Migration, 'Migration abgeschlossen.', ['driver' => 'pgsql','outcome' => 'ok']);
 } catch(Throwable $e) {
     if($connection->inTransaction())$connection->rollBack();
-    fwrite(STDERR,'Migration fehlgeschlagen: '.$e->getMessage()."\n");
+    Kitchen\Logging\Log::write('error', Kitchen\Logging\EventId::Migration, 'Migration fehlgeschlagen.', ['driver' => 'pgsql','outcome' => 'error'], $e);
+    fwrite(STDERR,'Migration fehlgeschlagen: '.Kitchen\Logging\Redactor::message($e->getMessage())."\n");
     exit(1);
 }
