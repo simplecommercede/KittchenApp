@@ -7,35 +7,16 @@ namespace Kitchen\Logging;
 use PDOException;
 use Throwable;
 
-/**
- * Turns exceptions into log data without personal data or secrets: values in messages are masked,
- * stack frames carry file, line and function but never arguments. Identifiers (tables, columns,
- * constraints), SQLSTATE and driver codes stay, because they are what locates the fault.
- */
+/** Exceptions keep location, codes and argument-free traces, never raw messages or SQL details. */
 final class Redactor
 {
-    private const MASK = '***';
-    private const MAX_MESSAGE = 500;
     private const MAX_FRAMES = 20;
     private const MAX_PREVIOUS = 3;
-    // A quoted word after one of these is a schema identifier, not user data.
-    private const IDENTIFIERS = ['key','column','table','constraint','relation','index','database','schema','function','type','field','trigger','sequence','view'];
 
+    /** Arbitrary exception messages may contain any user data; never persist them. */
     public static function message(string $message): string
     {
-        // Quoted values ('max', "Mia") unless they name a schema object.
-        $message = (string)preg_replace_callback('/(?<word>\b[A-Za-z_]+\s+)?(?<q>[\'"])(?<value>.*?)(?P=q)/su', function (array $m): string {
-            $word = strtolower(trim($m['word'] ?? ''));
-            return in_array($word, self::IDENTIFIERS, true) ? $m[0] : $m['word'].$m['q'].self::MASK.$m['q'];
-        }, $message);
-        // PostgreSQL details: Key (username)=(max) / Failing row contains (1, Mia, ...).
-        $message = (string)preg_replace('/\)=\([^)]*\)/u', ')=('.self::MASK.')', $message);
-        $message = (string)preg_replace('/\bcontains\s*\([^)]*\)/iu', 'contains ('.self::MASK.')', $message);
-        $message = (string)preg_replace('/\b(password|passwd|pwd|secret|token|api[_-]?key|authorization|csrf)\b(\s*[=:]\s*)\S+/iu', '$1$2'.self::MASK, $message);
-        $message = (string)preg_replace('/[^\s@\'"()<>]+@[^\s@\'"()<>]+\.[A-Za-z]{2,}/u', self::MASK, $message);
-        // Long mixed letter/digit strings: tokens, session IDs, hashes.
-        $message = (string)preg_replace('/\b(?=[A-Za-z0-9+=_$.-]*\d)(?=[A-Za-z0-9+=_$.-]*[A-Za-z])[A-Za-z0-9+=_$.-]{24,}/u', self::MASK, $message);
-        return mb_strlen($message) > self::MAX_MESSAGE ? mb_substr($message, 0, self::MAX_MESSAGE).'…' : $message;
+        return 'Fehlerdetails aus Datenschutzgründen nicht protokolliert.';
     }
 
     /** @return array<string, mixed> */
@@ -43,13 +24,13 @@ final class Redactor
     {
         $data = [
             'class' => $e::class,
-            'code' => $e->getCode(),
+            'code' => is_int($e->getCode()) || preg_match('/^[0-9A-Z]{5}$/', (string)$e->getCode()) ? $e->getCode() : null,
             'message' => self::message($e->getMessage()),
             'at' => self::path($e->getFile()).':'.$e->getLine(),
         ];
         if ($e instanceof PDOException && is_array($e->errorInfo)) {
-            $data['sqlstate'] = $e->errorInfo[0] ?? null;
-            $data['driver_code'] = $e->errorInfo[1] ?? null;
+            $data['sqlstate'] = is_string($e->errorInfo[0] ?? null) && preg_match('/^[0-9A-Z]{5}$/', $e->errorInfo[0]) ? $e->errorInfo[0] : null;
+            $data['driver_code'] = is_int($e->errorInfo[1] ?? null) ? $e->errorInfo[1] : null;
         }
         $data['trace'] = self::frames($e->getTrace());
         if ($e->getPrevious() !== null && $depth < self::MAX_PREVIOUS) {
@@ -76,7 +57,7 @@ final class Redactor
         return str_starts_with($file, $root) ? substr($file, strlen($root)) : basename($file);
     }
 
-    /** IPv4 without the last octet, IPv6 reduced to /48: enough for abuse patterns, not a person. */
+    /** IPv4 without the last octet, IPv6 reduced to /48: reduced precision, still potentially personal data. */
     public static function ip(string $ip): ?string
     {
         $packed = @inet_pton($ip);

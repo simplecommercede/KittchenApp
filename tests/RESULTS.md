@@ -178,3 +178,7 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 ## 24.10.2026 – Erstinstallation auf Hetzner
 
 Öffentliche HTTPS-Prüfung erfolgreich: Zertifikat, Basic-Auth, SPA und Assets, Secure-Session-Cookie, Admin-Anmeldung, Menü (107 Einträge), Tische, Bons, Benutzerverwaltung (lesend), Abmeldung. Keine Testbestellungen in Live erzeugt. Server-PHP 8.4.27, PostgreSQL-Verbindung mit TLS und initiale Migration erfolgreich. Details: deploy/STATUS.md.
+
+## 25.10.2026 – Private Tageslogs
+
+23 PHPUnit-Tests (70 Assertions) erfolgreich: private Verzeichnis-/Dateirechte, Anhängen, kalenderbasierte Sieben-Tage-Grenze, Schutz fremder Dateien/Symlinks und Regressionen für durchgelassene Freitexte. PHPStan Level 5 fehlerfrei. Rohtexte von Exceptions werden nicht mehr persistiert; IDs und Zustände sind typisiert/auf erlaubte Werte begrenzt.

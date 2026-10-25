@@ -87,3 +87,15 @@ sh deploy/homepage.sh --live   # überträgt wirklich
 - `homepage/README.md` wird nicht hochgeladen.
 - Das SSH-Passwort fragt `ssh` ab. Bequemer und sicherer ist ein SSH-Schlüssel (`ssh-copy-id -p 222 <benutzer>@<host>`).
 - Nach dem Upload im Browser neu laden; bei alten Ständen den Cache leeren (Bilder und `style.css` werden vom Browser zwischengespeichert).
+
+## Tageslogs im privaten SEC-Verzeichnis
+
+`LOG_DIR="/usr/home/zumsth/SEC"` liegt im Account neben `public_html`, nicht im aufgelösten Elternpfad des Webroot-Symlinks. Die App legt Verzeichnis (0700) und `debug_YYYY-MM-DD.log` (0600) selbst an. Datum nach Europe/Berlin; einzelne JSON-Zeitstempel bleiben UTC. `LOG_LEVEL=info` protokolliert Änderungen, Ablehnungen und Fehler; erfolgreiche Lesezugriffe erst mit `debug`.
+
+Aufbewahrung: aktueller Kalendertag plus sechs Vortage. Bereinigung bei geschriebenen Ereignissen und alle fünf Minuten per Cron, damit sie auch ohne Zugriffe läuft:
+
+```cron
+*/5 * * * * /usr/bin/php84 /usr/www/users/zumsth/app/api/cleanup-logs.php >/dev/null
+```
+
+Cronfehler bleiben auf stderr sichtbar; bestehende Cronjobs erhalten. Nur Dateien mit gültigem `debug_YYYY-MM-DD.log`-Namen werden gelöscht, keine Symlinks oder fremden Dateien. Die aktive Aufbewahrung ist von eventuellen Hosting-Backups und fachlichen Datenbankprotokollen zu unterscheiden. `LOG_FILE` wird nicht mehr unterstützt; vorhandene Altdateien werden nicht automatisch entfernt.

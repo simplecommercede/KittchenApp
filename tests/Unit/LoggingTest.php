@@ -16,11 +16,12 @@ final class LoggingTest extends TestCase
     private array $previous = [];
     protected function setUp(): void
     {
-        foreach (['LOG_FILE','LOG_LEVEL'] as $key) {
+        foreach (['LOG_DIR','LOG_LEVEL'] as $key) {
             $this->previous[$key] = getenv($key);
         }
-        $this->file = (string)tempnam(sys_get_temp_dir(), 'kitchen-log-');
-        putenv('LOG_FILE='.$this->file);
+        $dir = sys_get_temp_dir().'/kitchen-log-'.bin2hex(random_bytes(8));
+        $this->file = $dir.'/debug_'.\Kitchen\Logging\DailyLog::today()->format('Y-m-d').'.log';
+        putenv('LOG_DIR='.$dir);
         putenv('LOG_LEVEL');
         Log::begin();
     }
@@ -30,6 +31,7 @@ final class LoggingTest extends TestCase
             putenv($value === false ? $key : $key.'='.$value);
         }
         @unlink($this->file);
+        @rmdir(dirname($this->file));
     }
     private function entries(): array
     {
@@ -45,12 +47,9 @@ final class LoggingTest extends TestCase
     }
     public function testMessagesKeepIdentifiersButMaskValues(): void
     {
-        self::assertSame("SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '***' for key 'users.username'", Redactor::message("SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'mia.k' for key 'users.username'"));
-        self::assertSame('duplicate key value violates unique constraint "users_username_key" DETAIL: Key (username)=(***) already exists.', Redactor::message('duplicate key value violates unique constraint "users_username_key" DETAIL: Key (username)=(mia.k) already exists.'));
-        self::assertSame('FATAL: password authentication failed for user "***"', Redactor::message('FATAL: password authentication failed for user "kitchen"'));
-        self::assertSame('Failing row contains (***).', Redactor::message('Failing row contains (7, Mia, Ohne Zwiebeln).'));
-        self::assertSame('password=*** token: *** mail *** session ***', Redactor::message('password=Geheim123! token: abc mail mia@example.org session 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b'));
-        self::assertSame("Data too long for column 'name' at row 1", Redactor::message("Data too long for column 'name' at row 1"));
+        foreach (["Failing row contains (1, Gast (Fenster), PRIVATE_NOTE_MARKER).", 'Key (name)=(Gast (Fenster) PRIVATE_NOTE_MARKER)', 'password=PRIVATE_NOTE_MARKER', 'PRIVATE_NOTE_MARKER'] as $message) {
+            self::assertStringNotContainsString('PRIVATE_NOTE_MARKER', Redactor::message($message));
+        }
     }
     public function testExceptionsCarryLocationButNoArguments(): void
     {
@@ -72,7 +71,7 @@ final class LoggingTest extends TestCase
         self::assertSame(7, $entry['exception']['code']);
         self::assertMatchesRegularExpression('/^LoggingTest\.php:\d+$/', $entry['exception']['at']);
         self::assertStringContainsString('LoggingTest', $entry['exception']['trace'][0]);
-        self::assertSame("Duplicate entry '***' for key 'users.username'", $entry['exception']['previous']['message']);
+        self::assertSame(Redactor::message(''), $entry['exception']['previous']['message']);
     }
     public function testLevelFilterAndInputWhitelist(): void
     {
@@ -81,7 +80,7 @@ final class LoggingTest extends TestCase
         Log::write('warning', EventId::LoginFailed, 'Benutzername oder Passwort falsch.');
         self::assertSame([2002], array_column($this->entries(), 'event_id'));
         self::assertSame(['id' => 4,'status' => 'ready','ids' => [1, 2]], Kernel::safeFields(['id' => 4,'status' => 'ready','ids' => [1, 2],'password' => 'x','note' => 'Ohne Zwiebeln','reason' => 'Gast','username' => 'mia']));
-        self::assertSame([], Kernel::safeFields(['status' => 'Bitte <script>','mode' => ['nested' => 1]]));
+        self::assertSame([], Kernel::safeFields(['status' => 'my_private_note','id' => 'secret123','mode' => ['nested' => 1]]));
     }
     public function testIpAddressesAreShortened(): void
     {

@@ -7,7 +7,7 @@ namespace Kitchen\Logging;
 use Throwable;
 
 /**
- * One JSON line per entry, to LOG_FILE or the PHP error log (Docker: container output).
+ * One JSON line per entry, to daily files in LOG_DIR or the PHP error log (Docker: container output).
  * Non-ASCII is \u-escaped, because Apache's error log would otherwise turn it into invalid \x escapes.
  * Entries carry only IDs, codes and fixed texts; free text from requests is never written.
  * LOG_LEVEL (debug|info|warning|error, default info) filters; logging never breaks a request.
@@ -77,11 +77,15 @@ final class Log
                 $entry['exception'] = Redactor::exception($exception);
             }
             $line = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
-            $file = getenv('LOG_FILE');
-            if ($file === false || $file === '' || @file_put_contents($file, $line."\n", FILE_APPEND | LOCK_EX) === false) {
+            $directory = getenv('LOG_DIR');
+            if ($directory !== false && $directory !== '') {
+                // Do not copy personal event data into an uncontrolled fallback log.
+                DailyLog::append($directory, (string)$line);
+            } else {
                 error_log((string)$line);
             }
         } catch (Throwable) {
+            error_log("Kitchen logging unavailable; check private LOG_DIR and permissions.");
         }
     }
 }

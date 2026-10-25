@@ -8,6 +8,7 @@ parameters:
         - api/migrate-postgres.php
         - api/seed.php
         - api/check-environment.php
+        - api/cleanup-logs.php
         - api/bootstrap.php
         - api/create-admin.php
         - api/speisekarte.php

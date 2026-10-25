@@ -152,10 +152,28 @@ final class Kernel
         $safe = [];
         foreach (self::LOGGED_FIELDS as $field) {
             $value = $values[$field] ?? null;
-            if (is_int($value) || is_bool($value) || (is_string($value) && preg_match('/^[a-z0-9_]{1,20}$/', $value))) {
+            $enums = [
+                'status' => ['new','working','ready','collected','cancelled'],
+                'station' => ['kitchen','bar'],
+                'view' => ['service','kitchen','bar','admin'],
+                'mode' => ['add','replace','remove','note'],
+            ];
+            if (isset($enums[$field])) {
+                if (is_string($value) && in_array($value, $enums[$field], true)) {
+                    $safe[$field] = $value;
+                }
+            } elseif ($field === 'ids') {
+                if (is_array($value) && array_is_list($value) && count($value) <= 20 && count(array_filter($value, fn ($id) => is_int($id) && $id > 0)) === count($value)) {
+                    $safe[$field] = $value;
+                }
+            } elseif (in_array($field, ['active','archive','duplicate','order_cancelled','visit_closed'], true)) {
+                if (is_bool($value) || in_array($value, [0,1,'0','1'], true)) {
+                    $safe[$field] = (bool)$value;
+                }
+            } elseif (is_int($value) && $value >= 0) {
                 $safe[$field] = $value;
-            } elseif (is_array($value) && array_is_list($value) && count($value) <= 20 && array_filter($value, 'is_int') === $value) {
-                $safe[$field] = $value;
+            } elseif (is_string($value) && preg_match('/^[0-9]{1,9}$/', $value)) {
+                $safe[$field] = (int)$value;
             }
         }
         return $safe;

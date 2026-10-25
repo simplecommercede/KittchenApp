@@ -119,7 +119,7 @@ Das benannte Volume behält die Daten. `docker compose down -v` löscht ausdrüc
 
 ## Logging und EventIDs
 
-Jede API-Anfrage und jedes CLI-Skript schreibt genau eine JSON-Zeile mit fester `event_id` (Kontrolle: `api/src/Logging/EventId.php`). Ziel ist `LOG_FILE`, sonst das PHP-/Webserver-Fehlerlog (Docker: `docker compose logs app`). `LOG_LEVEL` filtert: erfolgreiche Lese-Anfragen (Polling) sind `debug`, Änderungen und fachliche Ablehnungen `info`, 401/403/429 und Konflikte durch Exceptions `warning`, 5xx `error`.
+Jede API-Anfrage und jedes CLI-Skript schreibt genau eine JSON-Zeile mit fester `event_id` (Kontrolle: `api/src/Logging/EventId.php`). Mit `LOG_DIR` entstehen private Tagesdateien `debug_YYYY-MM-DD.log` (Datum Europe/Berlin, JSON-Zeitstempel UTC). Ohne `LOG_DIR` wird das PHP-/Webserver-Fehlerlog verwendet (Docker: `docker compose logs app`). Das alte `LOG_FILE` wird nicht mehr verwendet. `LOG_LEVEL` filtert: erfolgreiche Lese-Anfragen (Polling) sind `debug`, Änderungen und fachliche Ablehnungen `info`, 401/403/429 und Konflikte durch Exceptions `warning`, 5xx `error`.
 
 | Bereich | EventIDs |
 | --- | --- |
@@ -135,7 +135,11 @@ Jede API-Anfrage und jedes CLI-Skript schreibt genau eine JSON-Zeile mit fester 
 
 Jede Zeile enthält `request_id`, `status`, `outcome` (`ok`, `rejected`, `denied`, `not_found`, `conflict`, `rate_limited`, `error`), Dauer, Benutzer-ID und gekürzte IP (IPv4 /24, IPv6 /48). Aus Anfrage und Antwort werden nur IDs, Mengen, Beträge und feste Codes übernommen (`table_id`, `order_id`, `status`, …), nie Namen, Benutzernamen, Passwörter, Notizen, Gründe oder Tokens. Der bei einem Fehlversuch eingetippte Benutzername wird nicht geloggt; bei bekanntem Konto steht nur `target_user_id`.
 
-Exceptions werden geschwärzt: Klasse, Code, SQLSTATE/Treibercode, Datei:Zeile, Vorgänger-Exceptions und Stacktrace ohne Argumente. In Meldungen werden Werte in Anführungszeichen, PostgreSQL-Details (`Key (username)=(***)`), `password=…`, E-Mail-Adressen und lange Token maskiert; Tabellen-, Spalten- und Constraint-Namen bleiben zur Fehlersuche erhalten. Bei 5xx enthält die Antwort `reference` = `request_id`, damit sich eine Meldung des Personals der Logzeile zuordnen lässt (`grep <reference> app.log`). Jede Antwort trägt dieselbe ID im Header `X-Request-Id`.
+Exceptions enthalten Klasse, validierte Codes/SQLSTATE, Datei:Zeile und Stacktrace ohne Argumente. Rohe Fehlermeldungen und SQL-Details werden vollständig durch einen festen Hinweis ersetzt; Regex-Schwärzung kann beliebige Freitexte nicht zuverlässig bereinigen. IDs werden als Zahlen, Zustände als bekannte Codes geprüft. Bei 5xx enthält die Antwort `reference` = `request_id`, jede Antwort den Header `X-Request-Id`.
+
+Live: `LOG_DIR=/usr/home/zumsth/SEC`, also neben dem Account-Verzeichnis `public_html` (das selbst ein Symlink ist). Verzeichnis wird automatisch mit 0700, Dateien mit 0600 angelegt. Behalten werden der aktuelle Berliner Kalendertag und sechs Vortage. Ältere Dateien mit exakt passendem Namen werden beim nächsten geschriebenen Ereignis oder per `php api/cleanup-logs.php` entfernt. Fremde Dateien und Symlinks werden nicht gelöscht. Ein Cronjob alle fünf Minuten übernimmt dies auch ohne Zugriffe. Bei Schreibfehlern wird nur ein fester technischer Hinweis ins PHP-Fehlerlog geschrieben, keine Kopie personenbezogener Ereignisse.
+
+Die Benutzer-IDs und Aktionsdaten sind personenbezogen, auch bei gekürzten IP-Adressen. Zugriff ist auf den Hosting-Account beschränkt; Daten dienen Fehleranalyse, Sicherheit und Nachvollziehbarkeit, nicht pauschaler Leistungskontrolle. Die Homepage-Datenschutzerklärung deckt die interne Mitarbeiter-App nicht ab; Mitarbeiterinformationen und betriebliche Verantwortlichkeiten sind gesondert festzulegen. Die Löschfrist betrifft diese aktiven Logdateien, nicht automatisch Hosting-Backups oder die bestehenden fachlichen Ereignistabellen in der Datenbank.
 
 ## PHP-Struktur und Qualitätsprüfungen
 
