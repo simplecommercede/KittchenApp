@@ -417,6 +417,8 @@ a.fact:hover strong { color: var(--amber-soft); }
 .site-footer a { color: #fff; text-decoration: none; }
 .site-footer a:hover { color: var(--amber-soft); text-decoration: underline; }
 .footer-links { display: flex; gap: 20px; }
+.site-footer .footer-social { margin-top: 12px; }
+.footer-social a { display: inline-flex; align-items: center; gap: 8px; }
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: .85rem; }
 
 /* ---------- Unterseite (Impressum) ---------- */
