@@ -19,3 +19,15 @@ HTTPS und HTTP-Basic-Schutz (401 ohne Zugang), SPA und Assets, Session-Cookie Se
 ## Weiter offen
 
 Echte Tische/Mitarbeiter konfigurieren, Betriebsablauf auf den vorgesehenen Geräten abnehmen, regelmäßige Datenbanksicherung und Wiederherstellung bei Hetzner einrichten/prüfen. Spätere Updates müssen die privaten Konfigurations- und Auth-Dateien erhalten. Keine Zugangsdaten in Git speichern.
+
+## Logging-Update 25.10.2026
+
+API-Stand a0a7c33 installiert, einschließlich des zuvor hinzugekommenen Event-Loggings. Keine Migration, keine Änderung fachlicher Daten, keine Veröffentlichung der Homepage-Rechtsentwürfe.
+
+- LOG_DIR=/usr/home/zumsth/SEC; Verzeichnis 0700, Tagesdatei 0600. Erste Datei debug_2026-10-25.log erfolgreich über CLI und HTTPS beschrieben und als JSON geprüft.
+- Aufbewahrung heute plus sechs Vortage (Europe/Berlin); Bereinigung zusätzlich per Benutzer-Crontab alle fünf Minuten, bestehende Crontab vor Installation gesichert.
+- API und private app.ini vor Austausch unter /usr/home/zumsth/kitchen/backups/before-a0a7c33 gesichert. Staging muss den Ordnernamen api behalten, da Composer relative Pfade darauf bezieht.
+- PHPStan erfolgreich; 23 PHPUnit-Tests/70 Assertions und 28 PostgreSQL-Integrationstests erfolgreich.
+- HTTPS-Session, Login mit lokal hinterlegtem Admin-Zugang, Menü, Tische, Bons, Benutzerliste und Logout geprüft. Vorhandene Live-Tische bleiben erhalten.
+- Das vom Benutzer zuvor genannte gemeinsame Demo-Passwort wurde beim Admin-Test abgelehnt; keine Passwörter zurückgesetzt.
+- Produktive Fehlversuchs-Logzeile geprüft: Event 2002 vorhanden, eingegebenes Passwort nicht gespeichert. Keine Log-Inhalte mit Benutzerbezug in dieser Dokumentation.

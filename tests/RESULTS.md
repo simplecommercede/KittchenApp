@@ -182,3 +182,5 @@ Die HTTP-Tests legen zusätzliche lokale Beispieldaten an. Keine produktiven Sys
 ## 25.10.2026 – Private Tageslogs
 
 23 PHPUnit-Tests (70 Assertions) erfolgreich: private Verzeichnis-/Dateirechte, Anhängen, kalenderbasierte Sieben-Tage-Grenze, Schutz fremder Dateien/Symlinks und Regressionen für durchgelassene Freitexte. PHPStan Level 5 fehlerfrei. Rohtexte von Exceptions werden nicht mehr persistiert; IDs und Zustände sind typisiert/auf erlaubte Werte begrenzt.
+
+Zusätzlich 28 PostgreSQL-Integrationstests einschließlich Fehlerreferenz und Tageslogablage erfolgreich. Live am 25.10.2026: private Dateirechte und JSON-Zeilen geprüft, fehlgeschlagene HTTPS-Anmeldung ohne Passwort im Log, erfolgreiche Admin-Anmeldung mit lokal hinterlegtem Zugang und lesende API-Aufrufe geprüft. Bereinigungs-CLI erfolgreich, Cronjob alle fünf Minuten installiert.
