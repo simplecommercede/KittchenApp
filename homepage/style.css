@@ -416,7 +416,7 @@ a.fact:hover strong { color: var(--amber-soft); }
 .site-footer p { margin: 0; }
 .site-footer a { color: #fff; text-decoration: none; }
 .site-footer a:hover { color: var(--amber-soft); text-decoration: underline; }
-.footer-links { display: flex; gap: 20px; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 12px 20px; }
 .site-footer .footer-social { margin-top: 12px; }
 .footer-social a { display: inline-flex; align-items: center; gap: 8px; }
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: .85rem; }
@@ -560,3 +560,9 @@ a.fact:hover strong { color: var(--amber-soft); }
   .js .reveal { opacity: 1; transform: none; }
   body { background: #fff; }
 }
+
+/* Rechtliche Hinweise: lange Adressen und Listen auch auf kleinen Displays lesbar. */
+.legal-block { overflow-wrap: anywhere; }
+.legal-block ul { padding-left: 1.3em; color: var(--muted); }
+.legal-block li { margin-bottom: .45em; }
+.legal-review { max-width: 760px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid var(--amber); background: #fff1d6; color: #65420f; border-radius: 6px; }
