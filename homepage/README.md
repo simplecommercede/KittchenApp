@@ -6,7 +6,8 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 | --- | --- |
 | `index.html` | Startseite: Willkommensbereich, Das Gasthaus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt mit Karte |
 | `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
-| `impressum.html` | Impressum (Entwurf) |
+| `impressum.html` | Impressum mit bestätigtem Betreiber (Entwurf bis Klärung weiterer Angaben) |
+| `datenschutz.html` | Datenschutzhinweise für die öffentliche Homepage (Entwurf) |
 | `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1440 px Desktop |
 | `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Speisekarten-Ansicht mit Großansicht |
 | `karte/` | Erzeugte Seitenbilder und `karten.js`; nicht von Hand bearbeiten |
@@ -54,7 +55,7 @@ Die Karte ist ein fest gespeichertes Bild aus OpenStreetMap, keine eingebettete 
 ## Vor der Veröffentlichung
 
 - Kontaktdaten und Öffnungszeiten stammen vom Eintrag auf bispingen.de (abgerufen 24.10.2026) und sind mit dem Betreiber abzugleichen. Die Öffnungszeiten stehen auch in `site.js` (`OPEN_DAYS`, `OPEN_FROM`, `OPEN_TO`).
-- Im Impressum die gelb markierten Stellen klären: Inhaber und Rechtsform, Umsatzsteuer-ID, inhaltlich Verantwortlicher.
-- Eine Datenschutzerklärung fehlt noch. Sie ist auch ohne Cookies nötig (Server-Logs beim Hoster) und sollte vom Betreiber bzw. mit einem Generator erstellt werden.
+- Rechtliche Entwürfe und offene Punkte: siehe `../docs/RECHTLICHE-ANGABEN.md`. Insbesondere Restaurant-IDs/Register, mögliche Teilnahmeverpflichtung an Streitbeilegung und konkrete Gmail-Konfiguration klären.
+- Datenschutzerklärung ist als Entwurf vorhanden und im Footer aller Seiten verlinkt. Die beschriebenen Verarbeitungen/Löschabläufe bestätigen, bevor die Entwurfskennzeichnung entfernt wird.
 - Die Anfahrtsbeschreibung ist aus der Karte abgelesen (A7, Anschlussstelle 43 Bispingen, über Hützel und K 4). Mit Ortskenntnis prüfen.
-- Auf der Seite sind keine Fotos. Wer echte Bilder möchte, kann im Hero hinter der Landschaft ein Foto ergänzen.
+- Nutzungsrechte am eingebundenen Gastraumfoto, Logo und Speisekartenmaterial bestätigen.
