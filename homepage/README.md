@@ -55,7 +55,7 @@ Die Karte ist ein fest gespeichertes Bild aus OpenStreetMap, keine eingebettete 
 ## Vor der Veröffentlichung
 
 - Kontaktdaten und Öffnungszeiten stammen vom Eintrag auf bispingen.de (abgerufen 24.10.2026) und sind mit dem Betreiber abzugleichen. Die Öffnungszeiten stehen auch in `site.js` (`OPEN_DAYS`, `OPEN_FROM`, `OPEN_TO`).
-- Rechtliche Entwürfe und offene Punkte: siehe `../docs/RECHTLICHE-ANGABEN.md`. Insbesondere Restaurant-IDs/Register, mögliche Teilnahmeverpflichtung an Streitbeilegung und konkrete Gmail-Konfiguration klären.
+- Rechtliche Entwürfe und offene Punkte: siehe `../docs/RECHTLICHE-ANGABEN.md`. Insbesondere Restaurant-IDs/Register, mögliche Teilnahmeverpflichtung an Streitbeilegung und konkrete E-Mail-Konfiguration klären.
 - Datenschutzerklärung ist als Entwurf vorhanden und im Footer aller Seiten verlinkt. Die beschriebenen Verarbeitungen/Löschabläufe bestätigen, bevor die Entwurfskennzeichnung entfernt wird.
 - Die Anfahrtsbeschreibung ist aus der Karte abgelesen (A7, Anschlussstelle 43 Bispingen, über Hützel und K 4). Mit Ortskenntnis prüfen.
 - Nutzungsrechte am eingebundenen Gastraumfoto, Logo und Speisekartenmaterial bestätigen.
