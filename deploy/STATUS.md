@@ -31,3 +31,12 @@ API-Stand a0a7c33 installiert, einschließlich des zuvor hinzugekommenen Event-L
 - HTTPS-Session, Login mit lokal hinterlegtem Admin-Zugang, Menü, Tische, Bons, Benutzerliste und Logout geprüft. Vorhandene Live-Tische bleiben erhalten.
 - Das vom Benutzer zuvor genannte gemeinsame Demo-Passwort wurde beim Admin-Test abgelehnt; keine Passwörter zurückgesetzt.
 - Produktive Fehlversuchs-Logzeile geprüft: Event 2002 vorhanden, eingegebenes Passwort nicht gespeichert. Keine Log-Inhalte mit Benutzerbezug in dieser Dokumentation.
+
+## Homepage-Deployment vom 29.10.2026
+
+- Git-Stand `29028d9` auf main per Fast-forward übernommen und Homepage nach `/usr/www/users/zumsth` veröffentlicht.
+- Neun HTML-Seiten, darunter Küche, Über uns, Feiern, Veranstaltungen und Kontakt; aktualisierte Navigation und Reservierungsdialog.
+- Vorherige Homepage privat unter `kitchen/backups/homepage-before-29028d9/homepage.tar.gz` gesichert.
+- JavaScript-Syntax und lokale Linkziele einschließlich Sprungmarken geprüft; Datenschutzlinks auf allen neun Seiten vorhanden.
+- Alle 24 veröffentlichten Dateien über HTTPS bytegleich mit dem lokalen Stand geprüft.
+- App, Datenbank und bestehende Zugriffsschutzdateien nicht verändert.
