@@ -22,6 +22,8 @@ Texte der Startseite, von „Über uns“ und „Feiern & Catering“ stammen vo
 
 Kopf- und Fußzeile stehen in jeder HTML-Datei einzeln (kein Build-Schritt). Bei Änderungen an Menü, Kontaktdaten oder Fußzeile alle Seiten anpassen.
 
+`style.css` und `site.js` sind mit einer Version eingebunden (`style.css?v=2026-10-29`), damit Browser nach einem Upload die neue Fassung laden. Nach jeder Änderung an einer der beiden Dateien die Version in allen HTML-Seiten hochsetzen, z. B. mit `sed -i '' 's/?v=2026-10-29/?v=2026-11-05/g' homepage/*.html`.
+
 ## Tisch reservieren
 
 Es gibt kein Buchungssystem. Der Knopf „Tisch reservieren“ steht auf jeder Seite oben in der Kopfzeile (Handy: neben dem Menü-Knopf). Er öffnet ein kleines Fenster mit „Anrufen“ (`tel:`) und „E-Mail schreiben“ (`mailto:` mit Betreff „Tischreservierung“ und Vorlage für Datum, Uhrzeit, Personen). Ohne JavaScript führt er zu `kontakt.html#reservierung`. Telefonnummer und E-Mail-Adresse für das Fenster stehen oben in `site.js` (`RESERVE_PHONE`, `RESERVE_MAIL`).
