@@ -1,0 +1,20 @@
+#!/bin/sh
+# Vor dem Push auf main: neue Homepage-Version vergeben und committen.
+# Git hat die zu pushenden Commits schon festgelegt, deshalb wird der Push
+# danach abgebrochen; ein zweites „git push“ nimmt den Versions-Commit mit.
+
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 0
+[ "$branch" = "main" ] || exit 0
+
+pushes_main=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] && pushes_main=1
+done
+[ "$pushes_main" = 1 ] || exit 0
+
+sh "$(git rev-parse --show-toplevel)/scripts/homepage-version.sh"
+case $? in
+  0) echo "Neue Homepage-Version committet. Bitte „git push“ noch einmal ausführen." >&2; exit 1 ;;
+  3) exit 0 ;;
+  *) exit 1 ;;
+esac

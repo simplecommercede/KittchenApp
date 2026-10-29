@@ -1,0 +1,8 @@
+#!/bin/sh
+# Nach einem Merge (auch „git pull“) auf main: neue Homepage-Version vergeben und committen.
+
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 0
+[ "$branch" = "main" ] || exit 0
+
+sh "$(git rev-parse --show-toplevel)/scripts/homepage-version.sh" || true
+exit 0

@@ -22,7 +22,11 @@ Texte der Startseite, von „Über uns“ und „Feiern & Catering“ stammen vo
 
 Kopf- und Fußzeile stehen in jeder HTML-Datei einzeln (kein Build-Schritt). Bei Änderungen an Menü, Kontaktdaten oder Fußzeile alle Seiten anpassen.
 
-`style.css` und `site.js` sind mit einer Version eingebunden (`style.css?v=2026-10-29`), damit Browser nach einem Upload die neue Fassung laden. Nach jeder Änderung an einer der beiden Dateien die Version in allen HTML-Seiten hochsetzen, z. B. mit `sed -i '' 's/?v=2026-10-29/?v=2026-11-05/g' homepage/*.html`.
+`style.css` und `site.js` sind mit einer Version eingebunden (`style.css?v=2026-10-29`), damit Browser nach einem Upload die neue Fassung laden. Die Version setzt `scripts/homepage-version.sh` automatisch (Format `JJJJ-MM-TT-HHMM`) und committet sie als „Homepage-Version …“, aber nur, wenn sich in `homepage/` seit der letzten Version etwas geändert hat:
+
+- **Vor dem Push auf main** (Hook `scripts/git-hooks/pre-push`): Der Hook committet die neue Version und bricht den Push ab, weil Git die Commits schon festgelegt hat. Einfach `git push` noch einmal ausführen.
+- **Nach einem Merge auf main**, auch bei `git pull` (Hook `scripts/git-hooks/post-merge`).
+- Einmalig pro Klon einschalten: `git config core.hooksPath scripts/git-hooks`. Merges über die GitHub-Oberfläche lösen keine Hooks aus; dann vor dem Upload `sh scripts/homepage-version.sh` von Hand ausführen.
 
 ## Tisch reservieren
 
