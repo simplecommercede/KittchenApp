@@ -40,3 +40,9 @@ API-Stand a0a7c33 installiert, einschließlich des zuvor hinzugekommenen Event-L
 - JavaScript-Syntax und lokale Linkziele einschließlich Sprungmarken geprüft; Datenschutzlinks auf allen neun Seiten vorhanden.
 - Alle 24 veröffentlichten Dateien über HTTPS bytegleich mit dem lokalen Stand geprüft.
 - App, Datenbank und bestehende Zugriffsschutzdateien nicht verändert.
+
+## Weiteres Homepage-Deployment vom 29.10.2026
+
+- Stand `570f050` veröffentlicht: versionierte CSS- und JavaScript-URLs auf allen neun HTML-Seiten, damit Browser die aktuelle Gestaltung laden.
+- Sicherung: `kitchen/backups/homepage-before-570f050/homepage.tar.gz`.
+- Alle 24 Live-Dateien sowie beide Asset-URLs mit `?v=2026-10-29` über HTTPS bytegleich geprüft.
