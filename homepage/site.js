@@ -1,4 +1,4 @@
-// Seitenlogik: Menü, Kopfzeile, Öffnungsstatus, Einblenden, Speisekarten-Ansicht mit Großansicht.
+// Seitenlogik: Menü, Kopfzeile, Tisch reservieren, Öffnungsstatus, Einblenden, Speisekarten-Ansicht mit Großansicht.
 (() => {
   document.documentElement.classList.add('js');
 
@@ -16,7 +16,7 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { setOpen(false); toggle.focus(); }
     });
-    window.matchMedia('(min-width: 1024px)').addEventListener('change', e => { if (e.matches) setOpen(false); });
+    window.matchMedia('(min-width: 1200px)').addEventListener('change', e => { if (e.matches) setOpen(false); });
   }
 
   // Kopfzeile wird deckend, sobald die Seite gescrollt ist (sonst läge sie auf dem Foto)
@@ -27,6 +27,49 @@
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
+  }
+
+  // Tisch reservieren: Fenster mit Anruf und E-Mail; ohne <dialog> führt der Link zur Kontaktseite
+  const RESERVE_PHONE = '+4951948789828';
+  const RESERVE_PHONE_TEXT = '05194 878 98 28';
+  const RESERVE_MAIL = 'info@zumstimbeck.de';
+  const reserveMail = `mailto:${RESERVE_MAIL}?subject=${encodeURIComponent('Tischreservierung')}&body=${encodeURIComponent('Hallo Stimbeck-Team,\n\nich möchte gern einen Tisch reservieren:\n\nDatum:\nUhrzeit:\nPersonen:\nName:\nTelefon:\n\nViele Grüße\n')}`;
+  document.querySelectorAll('a[href^="mailto:"][data-reserve-mail]').forEach(a => { a.href = reserveMail; });
+  let reserveBox = null;
+  function openReserve() {
+    if (!reserveBox) {
+      reserveBox = document.createElement('dialog');
+      reserveBox.className = 'reserve-dialog';
+      reserveBox.setAttribute('aria-labelledby', 'reserve-title');
+      reserveBox.innerHTML = `
+        <div class="reserve-dialog-inner">
+          <button class="reserve-close" type="button" aria-label="Schließen">×</button>
+          <h2 id="reserve-title">Tisch <em>reservieren</em></h2>
+          <p>Ruft uns an oder schreibt uns. Nennt uns bitte Datum, Uhrzeit und Personenzahl.</p>
+          <div class="reserve-actions">
+            <a class="btn btn-green" href="tel:${RESERVE_PHONE}">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+              <span>Anrufen<small>${RESERVE_PHONE_TEXT}</small></span>
+            </a>
+            <a class="btn btn-outline" href="${reserveMail}">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>
+              <span>E-Mail schreiben<small>${RESERVE_MAIL}</small></span>
+            </a>
+          </div>
+          <p class="note">Telefonisch erreicht ihr uns Donnerstag bis Sonntag ab 17 Uhr.</p>
+        </div>`;
+      document.body.appendChild(reserveBox);
+      reserveBox.querySelector('.reserve-close').addEventListener('click', () => reserveBox.close());
+      reserveBox.addEventListener('click', e => { if (e.target === reserveBox) reserveBox.close(); });
+    }
+    reserveBox.showModal();
+  }
+  if (typeof HTMLDialogElement === 'function') {
+    document.querySelectorAll('[data-reserve]').forEach(link => link.addEventListener('click', e => {
+      e.preventDefault();
+      if (document.body.classList.contains('nav-open') && toggle) toggle.click();
+      openReserve();
+    }));
   }
 
   // Öffnungsstatus nach deutscher Zeit: Do–So 17–22 Uhr
@@ -91,7 +134,7 @@
   const viewer = document.querySelector('[data-karten]');
   const karten = Array.isArray(window.STIMBECK_KARTEN) ? window.STIMBECK_KARTEN.filter(k => k.seiten && k.seiten.length) : [];
   if (viewer && !karten.length) {
-    viewer.innerHTML = '<p class="karte-empty">Die Speisekarte wird gerade aktualisiert. Fragen Sie gern telefonisch nach: 05194 878 98 28.</p>';
+    viewer.innerHTML = '<p class="karte-empty">Die Speisekarte wird gerade aktualisiert. Fragt gern telefonisch nach: 05194 878 98 28.</p>';
   }
   if (viewer && karten.length) {
     const tabs = viewer.querySelector('[data-karte-tabs]');

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Zum Stimbeck · Gaststätte in Steinbeck an der Luhe</title>
-  <meta name="description" content="Familiäre Gaststätte mit bodenständigen Gerichten in Bispingen-Steinbeck (Luhe). Geöffnet Donnerstag bis Sonntag ab 17 Uhr.">
+  <title>Zum Stimbeck · Restaurant in Steinbeck an der Luhe</title>
+  <meta name="description" content="Zum Stimbeck in Bispingen-Steinbeck (Luhe): regional verwurzelt, modern gekocht, persönlich geführt. Frische, saisonale Küche, Donnerstag bis Sonntag ab 17 Uhr.">
   <meta name="theme-color" content="#17302a">
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -15,24 +15,27 @@
 
   <header class="site-header" data-header>
     <div class="wrap header-inner">
-      <a class="brand" href="#top" aria-label="Zum Stimbeck, zur Startseite">
+      <a class="brand" href="index.html" aria-label="Zum Stimbeck, zur Startseite">
         <span class="brand-badge"><img src="img/logo.png" alt="" width="150" height="150"></span>
         <span class="brand-text">Zum Stimbeck<small>Gaststätte · Steinbeck/Luhe</small></span>
+      </a>
+      <nav class="nav" id="hauptnav" aria-label="Hauptnavigation" data-nav>
+        <a href="index.html" class="nav-home" aria-current="page">Startseite</a>
+        <a href="kueche.html">Unsere Küche</a>
+        <a href="speisekarte.html">Speisekarte</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="feiern.html">Feiern &amp; Catering</a>
+        <a href="veranstaltungen.html">Veranstaltungen</a>
+        <a href="kontakt.html">Kontakt<span class="nav-long"> &amp; Reservierung</span></a>
+      </nav>
+      <a class="header-reserve" href="kontakt.html#reservierung" data-reserve>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 9h18M5 9v11M19 9v11M8 9V6a4 4 0 0 1 8 0v3"/></svg>
+        Tisch reservieren
       </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hauptnav" data-nav-toggle>
         <span class="nav-toggle-bars" aria-hidden="true"></span>
         <span class="sr-only">Menü</span>
       </button>
-      <nav class="nav" id="hauptnav" aria-label="Hauptnavigation" data-nav>
-        <a href="#haus">Das Gasthaus</a>
-        <a href="#zeiten">Öffnungszeiten</a>
-        <a href="#kontakt">Kontakt</a>
-        <a href="#anfahrt">Anfahrt</a>
-        <a class="nav-cta" href="speisekarte.html">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>
-          Speisekarte
-        </a>
-      </nav>
     </div>
   </header>
 
@@ -42,31 +45,34 @@
         <picture>
           <source type="image/webp" media="(min-width: 700px)" srcset="img/hero.webp">
           <img src="img/hero.jpg" srcset="img/hero-900.jpg 900w, img/hero.jpg 1672w" sizes="100vw" width="1672" height="941"
-               alt="Gastraum des Zum Stimbeck mit Backsteingewölbe, gedeckten Tischen, Kerzen und Heidekraut; oben das Logo mit dem Spruch „schlemmen &amp; schnacken im Herzen Steinbecks“" fetchpriority="high">
+               alt="Gastraum des Zum Stimbeck mit Backsteingewölbe, gedeckten Tischen, Kerzen und Heidekraut" fetchpriority="high">
         </picture>
         <div class="hero-shade" aria-hidden="true"></div>
+        <!-- Logo über dem Foto: einblenden (hidden entfernen), sobald ein Foto ohne eingebautes Logo als img/hero.* liegt -->
+        <span class="hero-logo" hidden><img src="img/logo.png" alt="Zum Stimbeck" width="150" height="150"></span>
       </div>
       <div class="wrap hero-content">
-        <h1 class="sr-only">Zum Stimbeck – Gaststätte in Steinbeck an der Luhe, Lüneburger Heide</h1>
         <p class="status" data-status hidden><span class="status-dot"></span><span data-status-text></span></p>
-        <p class="hero-text">Bodenständige Küche, freundliche Bedienung und eine heimelige Stube in Steinbeck an der Luhe.</p>
+        <h1><span>Regional verwurzelt.</span> <span><em>Modern gekocht.</em></span> <span>Persönlich geführt.</span></h1>
+        <p class="hero-text">Frische, saisonale Küche, eigene Ideen und eine entspannte Atmosphäre. Bei uns treffen regionale Produkte auf moderne Interpretationen bekannter Gerichte.</p>
+        <p class="hero-text">Unkompliziert, persönlich und mit Freude am guten Essen.</p>
         <div class="hero-actions">
-          <a class="btn btn-amber" href="speisekarte.html">Zur Speisekarte</a>
-          <a class="btn btn-light" href="#anfahrt">Anfahrt</a>
+          <a class="btn btn-amber" href="speisekarte.html">Speisekarte entdecken</a>
+          <a class="btn btn-light" href="kontakt.html#reservierung" data-reserve>Tisch reservieren</a>
         </div>
       </div>
     </section>
 
     <div id="inhalt" class="quickfacts">
       <div class="wrap quickfacts-grid">
-        <div class="fact">
+        <a class="fact" href="kontakt.html#zeiten">
           <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           <div><strong>Do – So</strong><span>17:00 – 22:00 Uhr</span></div>
-        </div>
-        <div class="fact">
+        </a>
+        <a class="fact" href="kontakt.html#anfahrt">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
           <div><strong>Am Lütten Stimbeck 4</strong><span>29646 Bispingen</span></div>
-        </div>
+        </a>
         <a class="fact" href="tel:+4951948789828">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
           <div><strong>05194 878 98 28</strong><span>Telefon</span></div>
@@ -74,109 +80,87 @@
       </div>
     </div>
 
-    <section id="haus" class="section about">
-      <div class="wrap about-grid">
-        <div class="about-text reveal">
-          <p class="kicker">Das Gasthaus</p>
-          <h2>Gastlichkeit wie bei <em>Freunden</em></h2>
-          <p class="lead">Familiäre Gaststätte mit bodenständigen Gerichten und freundlicher Bedienung in heimeliger Atmosphäre.</p>
-          <p>Mitten in Steinbeck an der Luhe kochen wir, was schmeckt: knusprige Schnitzel, saftige Burger, frische Salate und zur Saison eine eigene Karte. Kinder bekommen ihre eigenen Teller, und für Gäste, die es etwas kleiner mögen, gibt es den Seniorenteller.</p>
+    <section id="das-stimbeck" class="section">
+      <div class="wrap story-grid">
+        <div class="prose reveal">
+          <p class="kicker">Das Stimbeck</p>
+          <h2>Ein vertrauter Ort, eine neue <em>Handschrift</em></h2>
+          <p class="lead">Das Zum Stimbeck ist ein Ort zum Zusammenkommen, Genießen und Verweilen.</p>
+          <p>Seit Februar 2026 führen wir das Restaurant mit einer eigenen Vorstellung von guter Gastronomie: frisch gekocht, saisonal gedacht und mit einem besonderen Blick für die Menschen, die bei uns zu Gast sind.</p>
+          <p>Wir mögen es unkompliziert. Gutes Essen braucht für uns keine großen Worte, sondern gute Zutaten, handwerkliches Können und die Freude daran, etwas Eigenes zu schaffen.</p>
+          <p>Ob für ein entspanntes Abendessen, einen besonderen Anlass oder einfach einen schönen Abend mit Freunden: Bei uns sollt ihr euch wohlfühlen.</p>
+        </div>
+        <figure class="photo-frame reveal">
+          <img src="img/hero-900.jpg" width="900" height="506" loading="lazy" alt="Gastraum des Zum Stimbeck mit Backsteingewölbe und gedeckten Tischen">
+          <figcaption class="photo-badge"><small>Neu geführt</small>seit Februar 2026</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="kueche" class="menu-teaser">
+      <div class="wrap kitchen-grid reveal">
+        <div>
+          <p class="kicker kicker-light">Unsere Küche</p>
+          <h2>Saisonal und mit eigener <em>Handschrift</em></h2>
+          <p class="lead">Wir kochen mit dem, was die Jahreszeiten zu bieten haben.</p>
+        </div>
+        <div>
+          <p>Unsere Speisekarte ist bewusst klein gehalten und verändert sich im Laufe des Jahres. Neben unseren hausgemachten Burgern und Schnitzelgerichten findet ihr wechselnde saisonale Spezialitäten und eigene Kreationen.</p>
+          <p>Dabei setzen wir auf frische Zubereitung, ausgewählte Produkte und, wo immer es passt, auf Lieferanten aus unserer Region.</p>
+          <p class="kitchen-motto">Bodenständig im Ursprung. <em>Offen für Neues.</em></p>
+          <a class="btn btn-amber menu-teaser-btn" href="speisekarte.html">
+            Speisekarte entdecken
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="inhaber" class="section">
+      <div class="wrap person reveal">
+        <p class="kicker">Der Mensch hinter dem Stimbeck</p>
+        <h2>Gastronomie. <em>Auf meine Art.</em></h2>
+        <div class="person-text">
+          <p>Ich glaube daran, dass gute Gastronomie nicht nur von gutem Essen lebt, sondern vor allem von den Menschen dahinter.</p>
+          <p>Mit dem Zum Stimbeck habe ich mir den Wunsch erfüllt, ein Restaurant nach meinen eigenen Vorstellungen zu führen. Mit einer klaren Idee, einem starken Team und dem Anspruch, dass sich Gäste und Mitarbeiter gleichermaßen wohlfühlen.</p>
+          <blockquote class="person-quote">Nicht immer nach den üblichen Regeln. Aber immer mit Überzeugung.</blockquote>
+          <p class="signature">Michel Schadow<small>Inhaber &amp; Koch</small></p>
+        </div>
+        <a class="btn btn-outline" href="ueber-uns.html#inhaber">Meine Geschichte</a>
+      </div>
+    </section>
+
+    <section id="feiern" class="section cream">
+      <div class="wrap story-grid flip">
+        <div class="prose reveal">
+          <p class="kicker">Gemeinsam feiern</p>
+          <h2>Besondere Momente. <em>Gemeinsam genießen.</em></h2>
+          <p class="lead">Ob Geburtstag, Familienfeier oder Firmenveranstaltung: Im Zum Stimbeck bieten wir euch den passenden Rahmen für Feiern mit bis zu 30 Personen.</p>
+          <p>Auch außerhalb unseres Restaurants begleiten wir eure Veranstaltungen mit individuellem Catering. Persönlich geplant, frisch zubereitet und passend zu eurem Anlass.</p>
+          <a class="btn btn-green" href="feiern.html">Feiern &amp; Catering entdecken</a>
         </div>
         <ul class="features reveal">
           <li>
-            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/></svg></span>
-            <div><h3>Bodenständig gekocht</h3><p>Schnitzel, Burger, Schlemmerpommes und Salate, alles frisch zubereitet.</p></div>
-          </li>
-          <li>
             <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 20a4 4 0 0 1 8 0"/></svg></span>
-            <div><h3>Für die ganze Familie</h3><p>Kindergerichte und Seniorenteller, damit jeder satt und zufrieden ist.</p></div>
+            <div><h3>Bis zu 30 Personen</h3><p>Geburtstag, Familienfeier oder Firmenveranstaltung bei uns im Haus.</p></div>
           </li>
           <li>
-            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l7-7"/></svg></span>
-            <div><h3>Mit Rücksicht auf Wünsche</h3><p>Vegane Patties und Würste gibt es auf Wunsch. Fragen Sie einfach unser Team.</p></div>
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/></svg></span>
+            <div><h3>Individuelles Catering</h3><p>Auch außerhalb des Restaurants, frisch zubereitet und passend zu eurem Anlass.</p></div>
           </li>
         </ul>
       </div>
     </section>
 
-    <section id="karte" class="menu-teaser">
-      <div class="wrap menu-teaser-inner reveal">
-        <div class="menu-teaser-text">
-          <p class="kicker kicker-light">Aus unserer Küche</p>
-          <h2>Schnitzel, Burger &amp; <em>Herbstkarte</em></h2>
-          <p>Bodenständige Klassiker, Schlemmerpommes und Salate, dazu bis zum 22. November unsere Herbstgerichte.</p>
-        </div>
-        <a class="btn btn-amber menu-teaser-btn" href="speisekarte.html">
-          Speisekarte ansehen
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-      </div>
-    </section>
-
-    <section id="zeiten" class="section visit">
-      <div class="wrap visit-grid">
-        <div class="visit-hours reveal">
-          <p class="kicker">Öffnungszeiten</p>
-          <h2>Wann wir für Sie <em>kochen</em></h2>
-          <table class="hours" data-hours>
-            <tbody>
-              <tr data-day="1" class="closed"><th scope="row">Montag</th><td>Ruhetag</td></tr>
-              <tr data-day="2" class="closed"><th scope="row">Dienstag</th><td>Ruhetag</td></tr>
-              <tr data-day="3" class="closed"><th scope="row">Mittwoch</th><td>Ruhetag</td></tr>
-              <tr data-day="4"><th scope="row">Donnerstag</th><td>17:00 – 22:00</td></tr>
-              <tr data-day="5"><th scope="row">Freitag</th><td>17:00 – 22:00</td></tr>
-              <tr data-day="6"><th scope="row">Samstag</th><td>17:00 – 22:00</td></tr>
-              <tr data-day="0"><th scope="row">Sonntag</th><td>17:00 – 22:00</td></tr>
-            </tbody>
-          </table>
-          <p class="note">Warme Küche bis 21:00 Uhr.</p>
-        </div>
-        <aside id="kontakt" class="contact-card reveal">
-          <h3>Kontakt</h3>
-          <p>Fragen zu Gerichten, Allergenen oder Feiern? Rufen Sie uns während der Öffnungszeiten an oder schreiben Sie uns.</p>
-          <a class="contact-line" href="tel:+4951948789828">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
-            05194 878 98 28
-          </a>
-          <a class="contact-line" href="mailto:info@zumstimbeck.de">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>
-            info@zumstimbeck.de
-          </a>
-        </aside>
-      </div>
-    </section>
-
-    <section id="anfahrt" class="section directions">
-      <div class="wrap directions-grid">
-        <div class="map reveal">
-          <a class="map-real" href="https://www.google.com/maps/search/?api=1&amp;query=Zum+Stimbeck%2C+Am+L%C3%BCtten+Stimbeck+4%2C+29646+Bispingen" target="_blank" rel="noopener" aria-label="Lage von Zum Stimbeck in Google Maps öffnen (neues Fenster)">
-            <img src="img/anfahrt-karte.jpg" width="1600" height="900" loading="lazy" alt="Karte: Zum Stimbeck in Steinbeck (Luhe), nordöstlich von Bispingen">
-            <span class="map-marker" aria-hidden="true"><span class="map-pin"></span><span class="map-marker-label">Zum Stimbeck</span></span>
-            <span class="map-open" aria-hidden="true">
-              In Google Maps öffnen
-              <svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>
-            </span>
-          </a>
-          <p class="map-caption">Kartendaten © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap-Mitwirkende</a></p>
-        </div>
-        <div class="directions-text reveal">
-          <p class="kicker">Anfahrt</p>
-          <h2>So finden Sie <em>zu uns</em></h2>
-          <address class="address">
-            <strong>Gaststätte Zum Stimbeck</strong>
-            Am Lütten Stimbeck 4<br>
-            29646 Bispingen – Steinbeck (Luhe)
-          </address>
-          <ol class="steps">
-            <li><span>1</span>Über die A7 bis zur Anschlussstelle 43 Bispingen.</li>
-            <li><span>2</span>Durch Bispingen Richtung Hützel und weiter auf der K 4 nach Steinbeck (Luhe), etwa 4 km nordöstlich vom Ortskern.</li>
-            <li><span>3</span>Fürs Navi: Am Lütten Stimbeck 4, 29646 Bispingen.</li>
-          </ol>
-          <div class="btn-row">
-            <a class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=Am+L%C3%BCtten+Stimbeck+4,+29646+Bispingen" target="_blank" rel="noopener">Route mit Google Maps</a>
-            <a class="btn btn-outline" href="https://www.openstreetmap.org/search?query=Am%20L%C3%BCtten%20Stimbeck%204%2C%2029646%20Bispingen" target="_blank" rel="noopener">OpenStreetMap</a>
-          </div>
-          <p class="note">Ein Klick auf die Karte öffnet Google Maps. Erst dann werden Daten an Google übertragen.</p>
+    <section id="besuch" class="motto">
+      <div class="wrap reveal">
+        <p class="kicker kicker-light">Besuch uns im Stimbeck</p>
+        <p class="motto-title">Wir freuen uns auf <em>euch.</em></p>
+        <p class="motto-text">Ein gutes Essen, nette Gespräche und ein entspannter Abend. Kommt vorbei und macht euch selbst ein Bild.</p>
+        <p class="motto-place">Zum Stimbeck · Steinbeck an der Luhe</p>
+        <div class="btn-row">
+          <a class="btn btn-amber" href="kontakt.html#reservierung" data-reserve>Tisch reservieren</a>
+          <a class="btn btn-light" href="kontakt.html#anfahrt">Anfahrt</a>
         </div>
       </div>
     </section>
@@ -187,7 +171,7 @@
     <div class="wrap footer-grid">
       <div class="footer-brand">
         <span class="brand-badge brand-badge-lg"><img src="img/logo.png" alt="" width="150" height="150"></span>
-        <p>Familiäre Gaststätte mit bodenständigen Gerichten in Steinbeck an der Luhe.</p>
+        <p>Regional verwurzelt. Modern gekocht. Persönlich geführt.</p>
       </div>
       <div>
         <h4>Besuch</h4>
@@ -205,7 +189,7 @@
     </div>
     <div class="wrap footer-bottom">
       <span>© 2026 Gaststätte Zum Stimbeck</span>
-      <span class="footer-links"><a href="speisekarte.html">Speisekarte</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></span>
+      <span class="footer-links"><a href="kontakt.html">Kontakt</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></span>
     </div>
   </footer>
 

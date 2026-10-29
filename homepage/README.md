@@ -4,21 +4,29 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 
 | Datei | Inhalt |
 | --- | --- |
-| `index.html` | Startseite: Willkommensbereich, Das Gasthaus, Hinweis auf die Speisekarte, Öffnungszeiten, Kontakt, Anfahrt mit Karte |
+| `index.html` | Startseite: Willkommen (Foto, Leitsatz, „Speisekarte entdecken“, „Tisch reservieren“), Das Stimbeck, Unsere Küche, Der Mensch hinter dem Stimbeck, Gemeinsam feiern, Besuch uns |
+| `kueche.html` | Unsere Küche |
 | `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
-| `impressum.html` | Impressum mit bestätigtem Betreiber (Entwurf bis Klärung weiterer Angaben) |
+| `ueber-uns.html` | Über uns mit „Der Mensch hinter dem Stimbeck“ (`#inhaber`, Ziel von „Meine Geschichte“) |
+| `feiern.html` | Feiern & Catering mit Anfrage per Telefon/E-Mail |
+| `veranstaltungen.html` | Termine und Aktionen; neue Termine als `<article class="event">` eintragen, alte löschen |
+| `kontakt.html` | Kontakt & Reservierung (`#reservierung`), Öffnungszeiten (`#zeiten`), Anfahrt mit Karte (`#anfahrt`) |
+| `impressum.html` | Impressum |
 | `datenschutz.html` | Datenschutzhinweise für die öffentliche Homepage (Entwurf) |
-| `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1440 px Desktop |
-| `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Speisekarten-Ansicht mit Großansicht |
+| `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1200 px volle Navigation, ab 1440 px Desktop |
+| `site.js` | Handy-Menü, Kopfzeile beim Scrollen, Fenster „Tisch reservieren“, Öffnungsstatus „Jetzt geöffnet“ (deutsche Zeit), heutiger Tag, Einblenden, Speisekarten-Ansicht mit Großansicht |
 | `karte/` | Erzeugte Seitenbilder und `karten.js`; nicht von Hand bearbeiten |
 | `img/anfahrt-karte.jpg` | Kartenausschnitt aus OpenStreetMap (Zoom 14, 1600 × 900 px), Standort bei 60 % / 40 % |
 
-Der Willkommensbereich zeigt das Foto `img/hero.webp` (Gastraum mit Logo, 1672 × 941 px), dazu `img/hero.jpg` und `img/hero-900.jpg` für Browser ohne WebP und für Handys. Weil Logo und Name im Foto stehen, liegt kein Text darauf; die Überschrift ist nur für Suchmaschinen und Screenreader im Code.
+Texte der Startseite, von „Über uns“ und „Feiern & Catering“ stammen vom Inhaber (29.10.2026). Die Anfrage-Box auf `feiern.html` und die Seite `veranstaltungen.html` sind eigene Formulierungen und mit ihm abzustimmen.
 
-- Handy (unter 640 px): Ausschnitt 4:3 unter der Kopfzeile, Text und Knöpfe darunter.
-- Tablet (640–1023 px): Foto vollständig, Text darunter.
-- Laptop und Desktop (ab 1024 px): Foto füllt den Bildschirm unter der Kopfzeile, Text und Knöpfe unten auf einem dunklen Verlauf.
-- Neues Foto: alle drei Dateien ersetzen (`sips -s format jpeg -s formatOptions 82 neu.webp --out img/hero.jpg` und mit `-Z 900` für `hero-900.jpg`). Liegt das Logo woanders als oben, `--hero-focus` unter `.hero` in `style.css` anpassen (z. B. `50% 42%` für mittig). Für große Bildschirme wäre eine Vorlage ab 1920 px Breite schärfer.
+Kopf- und Fußzeile stehen in jeder HTML-Datei einzeln (kein Build-Schritt). Bei Änderungen an Menü, Kontaktdaten oder Fußzeile alle Seiten anpassen.
+
+## Tisch reservieren
+
+Es gibt kein Buchungssystem. Der Knopf „Tisch reservieren“ steht auf jeder Seite oben in der Kopfzeile (Handy: neben dem Menü-Knopf). Er öffnet ein kleines Fenster mit „Anrufen“ (`tel:`) und „E-Mail schreiben“ (`mailto:` mit Betreff „Tischreservierung“ und Vorlage für Datum, Uhrzeit, Personen). Ohne JavaScript führt er zu `kontakt.html#reservierung`. Telefonnummer und E-Mail-Adresse für das Fenster stehen oben in `site.js` (`RESERVE_PHONE`, `RESERVE_MAIL`).
+
+Ab 1200 px Breite ist die Navigation ausgeschrieben; „Startseite“ steckt dort im Logo und „Kontakt & Reservierung“ heißt kurz „Kontakt“. Darunter öffnet der Menü-Knopf die vollständige Liste.
 
 Lokal ansehen:
 
@@ -43,7 +51,7 @@ swift scripts/homepage-karte.swift "Speisekarte=speisekarte/Zum Stimbeck - Speis
 - Jeder Aufruf erzeugt `homepage/karte/` komplett neu: Seitenbilder (JPG, 1400 px breit) und `karten.js`. Danach den Ordner `homepage/` hochladen.
 - Der erste Lauf dauert gut eine Minute, weil Swift das Skript übersetzt.
 - Auf der Seite: Wischen oder Pfeile zum Blättern, Seitenzahlen zum Springen, Antippen öffnet die Großansicht mit Blättern. Es gibt keinen Download-Link; Rechtsklick und langes Tippen auf die Bilder sind gesperrt. Ganz verhindern lässt sich das Speichern von Bildern im Web nicht (z. B. per Bildschirmfoto).
-- Die Herbstkarte auf `speisekarte.html` (`#herbst`) steht fest im HTML und stammt aus `api/speisekarte.php`. Nach dem 22.11.2026 den Abschnitt entfernen und den Hinweistext „Schnitzel, Burger & Herbstkarte“ auf der Startseite anpassen.
+- Die Herbstkarte auf `speisekarte.html` (`#herbst`) steht fest im HTML und stammt aus `api/speisekarte.php`. Nach dem 22.11.2026 den Abschnitt entfernen und den Eintrag „Herbstkarte“ auf `veranstaltungen.html` löschen.
 
 ## Karte in der Anfahrt
 
