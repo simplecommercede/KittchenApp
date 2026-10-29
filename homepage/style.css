@@ -466,12 +466,20 @@ a.fact:hover strong { color: var(--amber-soft); }
 .kitchen-grid h2 em { color: var(--amber-soft); }
 .kitchen-grid .lead { color: rgba(255, 255, 255, .85); }
 .kitchen-grid p { color: rgba(255, 255, 255, .8); max-width: 58ch; }
-.kitchen-motto { margin: 1.4em 0 1.6em; font-family: var(--serif); font-size: 1.4rem; line-height: 1.3; }
-.kitchen-grid .kitchen-motto { color: #fff; }
-.kitchen-motto em { color: var(--amber-soft); }
 
-.kitchen-quote { margin: 0; font-family: var(--serif); font-style: italic; font-size: clamp(1.6rem, 1.2rem + 2vw, 2.6rem); line-height: 1.2; color: var(--green-dark); border-left: 3px solid var(--amber); padding-left: 24px; }
-.kitchen-quote em { color: var(--amber-dark); }
+
+.prose-narrow { max-width: 760px; }
+.prose-narrow .lead { margin-bottom: .8em; }
+
+/* Startseite: Küchen-Details auf dunklem Grund */
+.detail-list { list-style: none; margin: 0 0 28px; padding: 0; display: grid; gap: 2px; }
+.detail-list li { position: relative; padding: 12px 0 12px 34px; border-bottom: 1px solid rgba(255, 255, 255, .12); color: #fff; font-family: var(--serif); font-size: 1.15rem; }
+.detail-list li::before {
+  content: ""; position: absolute; left: 4px; top: 50%; width: 14px; height: 8px; margin-top: -6px;
+  border-left: 2px solid var(--amber-soft); border-bottom: 2px solid var(--amber-soft); transform: rotate(-45deg);
+}
+.kitchen-grid .btn-row { margin: 0; }
+.person-actions { justify-content: center; margin-top: 8px; }
 
 /* Der Mensch hinter dem Stimbeck */
 .person { max-width: 820px; text-align: center; }
@@ -561,7 +569,9 @@ a.fact:hover strong { color: var(--amber-soft); }
 /* ---------- Unterseite (Impressum) ---------- */
 .page-sub main { padding: calc(var(--header-h) + 48px) 0 80px; }
 .page-hero { max-width: 760px; margin-bottom: 40px; }
-.page-hero h1 { font-size: clamp(2.4rem, 1.8rem + 3vw, 3.6rem); color: var(--green-dark); hyphens: auto; overflow-wrap: break-word; }
+.page-hero h1 { font-size: clamp(2.4rem, 1.8rem + 3vw, 3.6rem); color: var(--green-dark); overflow-wrap: break-word; text-wrap: balance; }
+/* Nur auf schmalen Handys trennen, damit lange Wörter wie „Datenschutzerklärung“ passen */
+@media (max-width: 479px) { .page-hero h1 { hyphens: auto; } }
 .legal { display: grid; gap: 18px; max-width: 760px; }
 .legal-block { background: #fff; border-radius: var(--radius); padding: 24px 22px; box-shadow: var(--shadow); }
 .legal-block h2 { font-size: 1.35rem; margin-bottom: .6em; }
@@ -595,6 +605,7 @@ a.fact:hover strong { color: var(--amber-soft); }
   .page-card-arrow { margin-top: auto; }
   .reserve-actions { grid-template-columns: 1fr 1fr; }
   .reserve-card { padding: 34px 32px; }
+  .features-row { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 640px) and (max-width: 1023px) {
   .fact strong { font-size: 1rem; white-space: nowrap; }
@@ -650,6 +661,8 @@ a.fact:hover strong { color: var(--amber-soft); }
   .features { grid-template-columns: 1fr; }
   .features li:last-child:nth-child(odd) { grid-column: auto; }
   .features li:nth-child(2) { margin-left: 40px; }
+  .features-row { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .features-row li:nth-child(2) { margin-left: 0; }
 
   .menu-grid { grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
   .js .menu-card-season.reveal.is-visible, .menu-card-season { transform: rotate(-.8deg); }
