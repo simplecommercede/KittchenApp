@@ -4,13 +4,13 @@ Statische Landingpage ohne Build-Schritt und ohne externe Dienste (keine Webfont
 
 | Datei | Inhalt |
 | --- | --- |
-| `index.html` | Startseite: Willkommen (Foto, Leitsatz, „Speisekarte entdecken“, „Tisch reservieren“), Das Stimbeck, Unsere Küche, Der Mensch hinter dem Stimbeck, Gemeinsam feiern, Besuch uns |
+| `index.html` | Startseite: Willkommen (Foto, Leitsatz, „Speisekarte entdecken“, „Tisch reservieren“), Das Stimbeck, Unsere Küche, Der Mensch hinter dem Stimbeck, Gemeinsam feiern, Besuch uns mit Adresse, Telefon, Öffnungszeiten und Anfahrtskarte (`#anfahrt`) |
 | `kueche.html` | Unsere Küche |
 | `speisekarte.html` | Speisekarte zum Blättern (Seitenbilder) und Herbstkarte |
 | `ueber-uns.html` | Über uns mit „Der Mensch hinter dem Stimbeck“ (`#inhaber`, Ziel von „Meine Geschichte“) |
 | `feiern.html` | Feiern & Catering mit Anfrage per Telefon/E-Mail |
 | `veranstaltungen.html` | Termine und Aktionen; neue Termine als `<article class="event">` eintragen, alte löschen |
-| `kontakt.html` | Kontakt & Reservierung (`#reservierung`), Öffnungszeiten (`#zeiten`), Anfahrt mit Karte (`#anfahrt`) |
+| `kontakt.html` | Kontakt & Reservierung (`#reservierung`), Öffnungszeiten (`#zeiten`), Anfahrt mit Karte (`#anfahrt`). Öffnungszeiten stehen auch auf der Startseite und in `site.js`; bei Änderungen alle drei Stellen anpassen. |
 | `impressum.html` | Impressum |
 | `datenschutz.html` | Datenschutzhinweise für die öffentliche Homepage (Entwurf) |
 | `style.css` | Gestaltung; Breakpoints Handy (Basis), ab 640 px Tablet, ab 1024 px Laptop, ab 1200 px volle Navigation, ab 1440 px Desktop |

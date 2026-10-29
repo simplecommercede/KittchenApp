@@ -111,7 +111,7 @@
       status.classList.toggle('is-open', info.open);
       status.hidden = false;
     }
-    const today = document.querySelector(`[data-hours] tr[data-day="${now.day}"]`);
+    const today = document.querySelector(`[data-hours] tr[data-day~="${now.day}"]`);
     if (today) today.classList.add('is-today');
   } catch (e) {
     // Ohne Intl-Zeitzonen bleibt der Status einfach ausgeblendet.
