@@ -46,3 +46,12 @@ API-Stand a0a7c33 installiert, einschließlich des zuvor hinzugekommenen Event-L
 - Stand `570f050` veröffentlicht: versionierte CSS- und JavaScript-URLs auf allen neun HTML-Seiten, damit Browser die aktuelle Gestaltung laden.
 - Sicherung: `kitchen/backups/homepage-before-570f050/homepage.tar.gz`.
 - Alle 24 Live-Dateien sowie beide Asset-URLs mit `?v=2026-10-29` über HTTPS bytegleich geprüft.
+
+## Homepage-Deployment vom 30.10.2026
+
+- Stand `e8b8cbe` per Fast-forward übernommen und veröffentlicht: überarbeitete Texte, kompaktere Unterseiten und angepasste Darstellung der Küchen-Details.
+- JavaScript- und Shell-Syntax, interne Links und Sprungmarken sowie Datenschutzlinks aller neun HTML-Seiten geprüft.
+- Neue Git-Hook-Skripte gelesen und syntaktisch geprüft; lokal nicht automatisch aktiviert.
+- Vorherigen Stand unter `kitchen/backups/homepage-before-e8b8cbe/homepage.tar.gz` gesichert.
+- Alle 24 veröffentlichten Dateien und versionierten CSS-/JavaScript-URLs über HTTPS bytegleich geprüft.
+- App, Datenbank und Zugriffsschutz unverändert.
